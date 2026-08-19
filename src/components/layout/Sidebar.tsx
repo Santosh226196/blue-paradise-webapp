@@ -20,6 +20,7 @@ interface NavItemData {
   iconOutline: React.ComponentType<{ size: number; className?: string }>;
   iconFilled: React.ComponentType<{ size: number; className?: string }>;
   label: string;
+  badge?: number;
 }
 
 interface SubItemData {
@@ -78,12 +79,13 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden animate-fade-in"
+          className="fixed inset-0 z-40 backdrop-blur-sm lg:hidden animate-fade-in"
+          style={{ background: "rgba(0,0,0,0.5)" }}
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar — desktop: always visible; mobile: slide-in overlay */}
+      {/* Sidebar */}
       <aside
         className={`
           fixed top-0 z-50 h-screen w-[260px] flex flex-col
@@ -98,184 +100,191 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
           borderRight: "1px solid var(--glass-border)",
         }}
       >
-      {/* Logo */}
-      <div className="px-5 pt-6 pb-5">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
-          >
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-              <path d="M4 20c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M4 12c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-            </svg>
-          </div>
-          <div className="min-w-0">
-            <h1 className="font-display text-[15px] font-bold truncate" style={{ color: "var(--text-primary)" }}>
-              Blue Paradise
-            </h1>
-            <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>Water Club</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="mx-5 mb-2" style={{ borderTop: "1px solid var(--glass-border)" }} />
-
-      {/* Main Nav */}
-      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto" role="navigation" aria-label="Main navigation">
-        {navItems.map((item) => (
-          <SidebarLink key={item.to} item={item} location={location} />
-        ))}
-
-        {/* Divider before Management */}
-        <div className="pt-3 pb-1 px-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-            Management
-          </p>
-        </div>
-
-        {/* Management — expandable section */}
-        <div>
-          <button
-            onClick={toggleMgmt}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                toggleMgmt();
-              }
-            }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] group"
-            style={{
-              background: isMgmtActive ? "var(--glow-aqua)" : "transparent",
-              color: isMgmtActive ? "var(--accent-aqua)" : "var(--text-secondary)",
-              borderLeft: isMgmtActive ? "3px solid var(--accent-aqua)" : "3px solid transparent",
-            }}
-            onMouseEnter={(e) => {
-              if (!isMgmtActive) {
-                e.currentTarget.style.background = "var(--glass-bg-hover)";
-                e.currentTarget.style.color = "var(--text-primary)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isMgmtActive) {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "var(--text-secondary)";
-              }
-            }}
-            aria-expanded={mgmtExpanded}
-            aria-controls="mgmt-submenu"
-          >
-            {isMgmtActive ? (
-              <managementParent.iconFilled size={18} className="transition-transform duration-200 group-hover:scale-110" />
-            ) : (
-              <managementParent.iconOutline size={18} className="transition-transform duration-200 group-hover:scale-110" />
-            )}
-            <span className="flex-1 text-left">{managementParent.label}</span>
-            <span
-              className="transition-transform duration-300"
-              style={{
-                color: "var(--text-muted)",
-                transform: mgmtExpanded ? "rotate(0deg)" : "rotate(-90deg)",
-              }}
-            >
-              <IoChevronDown size={14} />
-            </span>
-          </button>
-
-          {/* Sub-items with connector lines */}
-          <div
-            id="mgmt-submenu"
-            role="group"
-            aria-label="Management submenu"
-            className="overflow-hidden transition-all duration-300 ease-in-out"
-            style={{
-              maxHeight: mgmtExpanded ? "300px" : "0px",
-              opacity: mgmtExpanded ? 1 : 0,
-            }}
-          >
-            <div className="relative ml-[19px] py-1">
-              {/* Vertical connector line */}
+        {/* Logo */}
+        <div className="px-5 pt-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="relative">
               <div
-                className="absolute left-0 top-1 bottom-1 w-px"
-                style={{ background: "var(--glass-border)" }}
+                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
+                style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
+              >
+                <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                  <path d="M4 20c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M4 12c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+                </svg>
+              </div>
+              <div
+                className="absolute -inset-1 rounded-2xl opacity-40 blur-md -z-0"
+                style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
               />
-              {managementParent.children.map((child) => {
-                const isChildActive = location.pathname.startsWith(child.to);
-                return (
-                  <NavLink
-                    key={child.to}
-                    to={child.to}
-                    className="relative flex items-center gap-3 pl-[26px] pr-4 py-[7px] rounded-lg text-[12px] font-medium transition-all duration-200 min-h-[34px] group"
-                    style={{
-                      color: isChildActive ? "var(--text-primary)" : "var(--text-secondary)",
-                      background: isChildActive ? "var(--glow-aqua)" : "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isChildActive) {
-                        e.currentTarget.style.background = "var(--glass-bg-hover)";
-                        e.currentTarget.style.color = "var(--text-primary)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isChildActive) {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.color = "var(--text-secondary)";
-                      }
-                    }}
-                  >
-                    {/* Horizontal connector branch */}
-                    <div
-                      className="absolute left-0 top-1/2 w-[18px] h-px -translate-y-1/2"
-                      style={{ background: isChildActive ? "var(--accent-aqua)" : "var(--glass-border)" }}
-                    />
-                    {/* Dot indicator */}
-                    <div
-                      className="absolute left-0 top-1/2 w-[6px] h-[6px] rounded-full -translate-x-[3px] -translate-y-1/2 transition-all duration-200"
-                      style={{
-                        background: isChildActive ? "var(--accent-aqua)" : "var(--glass-border-strong)",
-                        boxShadow: isChildActive ? "0 0 8px var(--accent-aqua)" : "none",
-                      }}
-                    />
-                    <span className="flex-1">{child.label}</span>
-                    {isChildActive && (
-                      <IoChevronForward size={12} style={{ color: "var(--accent-aqua)" }} />
-                    )}
-                  </NavLink>
-                );
-              })}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-display text-[15px] font-bold truncate" style={{ color: "var(--text-primary)" }}>
+                Blue Paradise
+              </h1>
+              <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>Water Club</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom items */}
-        <div className="pt-2 space-y-0.5">
-          {bottomItems.map((item) => (
+        {/* Divider */}
+        <div className="mx-5 mb-1" style={{ borderTop: "1px solid var(--glass-border)" }} />
+
+        {/* Main Nav */}
+        <nav className="flex-1 px-3 pt-2 space-y-0.5 overflow-y-auto" role="navigation" aria-label="Main navigation">
+          {navItems.map((item) => (
             <SidebarLink key={item.to} item={item} location={location} />
           ))}
-        </div>
-      </nav>
 
-      {/* Logout */}
-      <div className="px-3 pb-4" style={{ borderTop: "1px solid var(--glass-border)" }}>
-        <div className="pt-3">
+          {/* Divider before Management */}
+          <div className="pt-4 pb-1 px-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+              Management
+            </p>
+          </div>
+
+          {/* Management — expandable section */}
+          <div>
+            <button
+              onClick={toggleMgmt}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleMgmt();
+                }
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] group"
+              style={{
+                background: isMgmtActive ? "var(--glow-aqua)" : "transparent",
+                color: isMgmtActive ? "var(--accent-aqua)" : "var(--text-secondary)",
+              }}
+              onMouseEnter={(e) => {
+                if (!isMgmtActive) {
+                  e.currentTarget.style.background = "var(--glass-bg-hover)";
+                  e.currentTarget.style.color = "var(--text-primary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isMgmtActive) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                }
+              }}
+              aria-expanded={mgmtExpanded}
+              aria-controls="mgmt-submenu"
+            >
+              <div className="flex items-center justify-center w-5">
+                {isMgmtActive ? (
+                  <managementParent.iconFilled size={18} className="transition-transform duration-200 group-hover:scale-110" />
+                ) : (
+                  <managementParent.iconOutline size={18} className="transition-transform duration-200 group-hover:scale-110" />
+                )}
+              </div>
+              <span className="flex-1 text-left">{managementParent.label}</span>
+              <span
+                className="transition-transform duration-300"
+                style={{
+                  color: "var(--text-muted)",
+                  transform: mgmtExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                }}
+              >
+                <IoChevronDown size={14} />
+              </span>
+            </button>
+
+            {/* Sub-items with connector lines */}
+            <div
+              id="mgmt-submenu"
+              role="group"
+              aria-label="Management submenu"
+              className="overflow-hidden transition-all duration-300 ease-in-out"
+              style={{
+                maxHeight: mgmtExpanded ? "300px" : "0px",
+                opacity: mgmtExpanded ? 1 : 0,
+              }}
+            >
+              <div className="relative ml-[19px] py-1">
+                {/* Vertical connector line */}
+                <div
+                  className="absolute left-0 top-1 bottom-1 w-px"
+                  style={{ background: "var(--glass-border)" }}
+                />
+                {managementParent.children.map((child) => {
+                  const isChildActive = location.pathname.startsWith(child.to);
+                  return (
+                    <NavLink
+                      key={child.to}
+                      to={child.to}
+                      className="relative flex items-center gap-3 pl-[26px] pr-4 py-[7px] rounded-lg text-[12px] font-medium transition-all duration-200 min-h-[34px] group"
+                      style={{
+                        color: isChildActive ? "var(--text-primary)" : "var(--text-secondary)",
+                        background: isChildActive ? "var(--glow-aqua)" : "transparent",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isChildActive) {
+                          e.currentTarget.style.background = "var(--glass-bg-hover)";
+                          e.currentTarget.style.color = "var(--text-primary)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isChildActive) {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = "var(--text-secondary)";
+                        }
+                      }}
+                    >
+                      {/* Horizontal connector branch */}
+                      <div
+                        className="absolute left-0 top-1/2 w-[18px] h-px -translate-y-1/2"
+                        style={{ background: isChildActive ? "var(--accent-aqua)" : "var(--glass-border)" }}
+                      />
+                      {/* Dot indicator */}
+                      <div
+                        className="absolute left-0 top-1/2 w-[6px] h-[6px] rounded-full -translate-x-[3px] -translate-y-1/2 transition-all duration-200"
+                        style={{
+                          background: isChildActive ? "var(--accent-aqua)" : "var(--glass-border-strong)",
+                          boxShadow: isChildActive ? "0 0 8px var(--accent-aqua)" : "none",
+                        }}
+                      />
+                      <span className="flex-1">{child.label}</span>
+                      {isChildActive && (
+                        <IoChevronForward size={12} style={{ color: "var(--accent-aqua)" }} />
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom items */}
+          <div className="pt-2 space-y-0.5">
+            {bottomItems.map((item) => (
+              <SidebarLink key={item.to} item={item} location={location} />
+            ))}
+          </div>
+        </nav>
+
+        {/* Logout */}
+        <div className="mt-auto px-3 pb-4 pt-2" style={{ borderTop: "1px solid var(--glass-border)" }}>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] w-full group"
             style={{ color: "var(--accent-coral)" }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255,122,89,0.1)";
+              e.currentTarget.style.background = "var(--glow-coral)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
             }}
           >
-            <IoLogOutOutline size={18} className="transition-transform duration-200 group-hover:scale-110 group-hover:-translate-x-0.5" />
+            <div className="flex items-center justify-center w-5">
+              <IoLogOutOutline size={18} className="transition-transform duration-200 group-hover:scale-110 group-hover:-translate-x-0.5" />
+            </div>
             Logout
           </button>
         </div>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }
@@ -294,11 +303,10 @@ function SidebarLink({
     <NavLink
       to={item.to}
       end={item.to === "/"}
-      className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] group"
+      className="relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] group"
       style={{
         background: isActive ? "var(--glow-aqua)" : "transparent",
         color: isActive ? "var(--accent-aqua)" : "var(--text-secondary)",
-        borderLeft: isActive ? "3px solid var(--accent-aqua)" : "3px solid transparent",
       }}
       onMouseEnter={(e) => {
         if (!isActive) {
@@ -313,8 +321,31 @@ function SidebarLink({
         }
       }}
     >
-      <Icon size={18} className="transition-transform duration-200 group-hover:scale-110" />
+      {/* Active indicator bar */}
+      {isActive && (
+        <div
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full transition-all duration-300"
+          style={{
+            background: "var(--accent-aqua)",
+            boxShadow: "0 0 10px var(--accent-aqua)",
+          }}
+        />
+      )}
+      <div className="flex items-center justify-center w-5">
+        <Icon size={18} className="transition-transform duration-200 group-hover:scale-110" />
+      </div>
       <span className="flex-1">{item.label}</span>
+      {item.badge !== undefined && item.badge > 0 && (
+        <span
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+          style={{
+            background: "var(--accent-coral)",
+            color: "white",
+          }}
+        >
+          {item.badge > 99 ? "99+" : item.badge}
+        </span>
+      )}
     </NavLink>
   );
 }

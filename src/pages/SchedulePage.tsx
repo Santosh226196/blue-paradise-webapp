@@ -318,7 +318,7 @@ export function SchedulePage() {
         </div>
       ) : displaySlots && displaySlots.length > 0 ? (
         <div className="space-y-2">
-          {displaySlots
+          {[...displaySlots]
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
             .map((slot, i) => {
               const pct = slot.maxCapacity > 0 ? (slot.currentBookings / slot.maxCapacity) * 100 : 0;

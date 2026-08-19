@@ -60,7 +60,7 @@ export function AddCustomerPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumb */}
       <Breadcrumb items={[
         { label: "Customers", href: "/customers" },
@@ -78,28 +78,29 @@ export function AddCustomerPage() {
 
       <GlassCard>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Name */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }} htmlFor="name">
-              <IoPerson size={12} /> Full Name *
-            </label>
-            <input id="name" {...register("name")}
-              className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[48px]"
-              style={inputStyle} placeholder="Enter full name"
-            />
-            {errors.name && <p className="text-xs font-medium" style={{ color: "var(--accent-coral)" }}>{errors.name.message}</p>}
-          </div>
+          {/* Name + Mobile — side by side on desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }} htmlFor="name">
+                <IoPerson size={12} /> Full Name *
+              </label>
+              <input id="name" {...register("name")}
+                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[48px]"
+                style={inputStyle} placeholder="Enter full name"
+              />
+              {errors.name && <p className="text-xs font-medium" style={{ color: "var(--accent-coral)" }}>{errors.name.message}</p>}
+            </div>
 
-          {/* Mobile */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }} htmlFor="mobile">
-              <IoPhonePortrait size={12} /> Mobile Number *
-            </label>
-            <input id="mobile" {...register("mobile")}
-              className="w-full px-4 py-3.5 rounded-xl text-sm font-medium font-mono transition-all duration-200 min-h-[48px]"
-              style={inputStyle} placeholder="10-digit mobile number" maxLength={10}
-            />
-            {errors.mobile && <p className="text-xs font-medium" style={{ color: "var(--accent-coral)" }}>{errors.mobile.message}</p>}
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }} htmlFor="mobile">
+                <IoPhonePortrait size={12} /> Mobile Number *
+              </label>
+              <input id="mobile" {...register("mobile")}
+                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium font-mono transition-all duration-200 min-h-[48px]"
+                style={inputStyle} placeholder="10-digit mobile number" maxLength={10}
+              />
+              {errors.mobile && <p className="text-xs font-medium" style={{ color: "var(--accent-coral)" }}>{errors.mobile.message}</p>}
+            </div>
           </div>
 
           {/* Aadhaar */}
