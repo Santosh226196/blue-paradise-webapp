@@ -1,5 +1,4 @@
-import { useState, useCallback } from "react";
-import { NavLink, useLocation } from "react-router";
+import { NavLink, useLocation, useNavigate } from "react-router";
 import {
   IoHomeOutline, IoHome,
   IoPeopleOutline, IoPeople,
@@ -8,12 +7,15 @@ import {
   IoSettingsOutline, IoSettings,
   IoLogOutOutline,
   IoFootstepsOutline, IoFootsteps,
-  IoChevronDown, IoChevronForward,
+  IoCalendarOutline, IoCalendar,
+  IoCardOutline, IoCard,
+  IoMegaphoneOutline, IoMegaphone,
+  IoFitnessOutline, IoFitness,
 } from "react-icons/io5";
-import { useAppDispatch } from "@/hooks/store";
+import { useAppDispatch, useAppSelector } from "@/hooks/store";
 import { useLogoutMutation } from "@/store/api/authApi";
 import { logout as logoutAction } from "@/store/slices/authSlice";
-import { useNavigate } from "react-router";
+import { Logo } from "@/components/Logo";
 
 interface NavItemData {
   to: string;
@@ -23,266 +25,156 @@ interface NavItemData {
   badge?: number;
 }
 
-interface SubItemData {
-  to: string;
-  label: string;
-}
-
-const navItems: NavItemData[] = [
+const mainNavItems: NavItemData[] = [
   { to: "/", iconOutline: IoHomeOutline, iconFilled: IoHome, label: "Dashboard" },
   { to: "/customers", iconOutline: IoPeopleOutline, iconFilled: IoPeople, label: "Customers" },
-  { to: "/billing", iconOutline: IoReceiptOutline, iconFilled: IoReceipt, label: "Billing" },
+  { to: "/billing", iconOutline: IoReceiptOutline, iconFilled: IoReceipt, label: "Billing & POS" },
   { to: "/reports", iconOutline: IoStatsChartOutline, iconFilled: IoStatsChart, label: "Reports" },
 ];
 
-const managementParent: NavItemData & { children: SubItemData[] } = {
-  to: "/management",
-  iconOutline: IoFootstepsOutline,
-  iconFilled: IoFootsteps,
-  label: "Management",
-  children: [
-    { to: "/attendance", label: "Attendance" },
-    { to: "/membership-plans", label: "Plans" },
-    { to: "/staff", label: "Staff" },
-    { to: "/schedule", label: "Schedule" },
-    { to: "/due-payments", label: "Due Payments" },
-    { to: "/announcements", label: "Announcements" },
-  ],
-};
+const operationsNavItems: NavItemData[] = [
+  { to: "/attendance", iconOutline: IoFootstepsOutline, iconFilled: IoFootsteps, label: "Attendance" },
+  { to: "/membership-plans", iconOutline: IoCardOutline, iconFilled: IoCard, label: "Membership Plans" },
+  { to: "/staff", iconOutline: IoFitnessOutline, iconFilled: IoFitness, label: "Staff & Coaches" },
+  { to: "/schedule", iconOutline: IoCalendarOutline, iconFilled: IoCalendar, label: "Pool Schedule" },
+  { to: "/due-payments", iconOutline: IoReceiptOutline, iconFilled: IoReceipt, label: "Due Payments" },
+  { to: "/announcements", iconOutline: IoMegaphoneOutline, iconFilled: IoMegaphone, label: "Announcements" },
+];
 
-const bottomItems: NavItemData[] = [
+const systemNavItems: NavItemData[] = [
   { to: "/settings", iconOutline: IoSettingsOutline, iconFilled: IoSettings, label: "Settings" },
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [logoutMutation] = useLogoutMutation();
   const location = useLocation();
-  const [mgmtExpanded, setMgmtExpanded] = useState(true);
-
-  const isMgmtActive = managementParent.children.some((c) => location.pathname.startsWith(c.to));
-
-  const toggleMgmt = useCallback(() => {
-    setMgmtExpanded((prev) => !prev);
-  }, []);
+  const user = useAppSelector((state) => state.auth.user);
+  const [logoutMutation] = useLogoutMutation();
 
   async function handleLogout() {
-    try { await logoutMutation(); } catch {}
+    try {
+      await logoutMutation();
+    } catch {}
     dispatch(logoutAction());
     navigate("/login");
     onClose?.();
   }
+
+  const userInitial = user?.username?.charAt(0).toUpperCase() ?? "A";
 
   return (
     <>
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 backdrop-blur-sm lg:hidden animate-fade-in"
-          style={{ background: "rgba(0,0,0,0.5)" }}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity animate-fade-in"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <aside
         className={`
-          fixed top-0 z-50 h-screen w-[260px] flex flex-col
-          transition-transform duration-300 ease-in-out
+          fixed top-0 left-0 z-50 h-screen w-[260px] flex flex-col
+          transition-transform duration-300 ease-in-out border-r
           lg:translate-x-0 lg:z-40
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}
         `}
         style={{
           background: "var(--sidebar-bg)",
-          backdropFilter: "blur(32px)",
-          WebkitBackdropFilter: "blur(32px)",
-          borderRight: "1px solid var(--glass-border)",
+          backdropFilter: "var(--glass-blur, 32px)",
+          WebkitBackdropFilter: "var(--glass-blur, 32px)",
+          borderColor: "var(--glass-border)",
         }}
       >
-        {/* Logo */}
-        <div className="px-5 pt-6 pb-4">
+        {/* Brand Header */}
+        <div className="px-5 pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
-                style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
-              >
-                <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                  <path d="M4 20c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M4 12c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-                </svg>
-              </div>
-              <div
-                className="absolute -inset-1 rounded-2xl opacity-40 blur-md -z-0"
-                style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
-              />
-            </div>
+            <Logo size={44} />
             <div className="min-w-0">
-              <h1 className="font-display text-[15px] font-bold truncate" style={{ color: "var(--text-primary)" }}>
+              <h1 className="font-display text-[15px] font-bold tracking-tight truncate" style={{ color: "var(--text-primary)" }}>
                 Blue Paradise
               </h1>
-              <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>Water Club</p>
+              <p className="text-[11px] font-semibold tracking-wider uppercase text-cyan-400 truncate">
+                Water Club
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="mx-5 mb-1" style={{ borderTop: "1px solid var(--glass-border)" }} />
+        {/* Separator */}
+        <div className="mx-4 mb-2 border-t" style={{ borderColor: "var(--glass-border)" }} />
 
-        {/* Main Nav */}
-        <nav className="flex-1 px-3 pt-2 space-y-0.5 overflow-y-auto" role="navigation" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <SidebarLink key={item.to} item={item} location={location} />
-          ))}
-
-          {/* Divider before Management */}
-          <div className="pt-4 pb-1 px-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-              Management
+        {/* Scrollable Nav Items */}
+        <nav
+          className="flex-1 px-3 space-y-4 overflow-y-auto"
+          role="navigation"
+          aria-label="Main navigation"
+        >
+          {/* Group 1: Main */}
+          <div className="space-y-1">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Main Menu
             </p>
+            {mainNavItems.map((item) => (
+              <SidebarLink key={item.to} item={item} location={location} onClick={onClose} />
+            ))}
           </div>
 
-          {/* Management — expandable section */}
-          <div>
-            <button
-              onClick={toggleMgmt}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggleMgmt();
-                }
-              }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] group"
-              style={{
-                background: isMgmtActive ? "var(--glow-aqua)" : "transparent",
-                color: isMgmtActive ? "var(--accent-aqua)" : "var(--text-secondary)",
-              }}
-              onMouseEnter={(e) => {
-                if (!isMgmtActive) {
-                  e.currentTarget.style.background = "var(--glass-bg-hover)";
-                  e.currentTarget.style.color = "var(--text-primary)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isMgmtActive) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "var(--text-secondary)";
-                }
-              }}
-              aria-expanded={mgmtExpanded}
-              aria-controls="mgmt-submenu"
-            >
-              <div className="flex items-center justify-center w-5">
-                {isMgmtActive ? (
-                  <managementParent.iconFilled size={18} className="transition-transform duration-200 group-hover:scale-110" />
-                ) : (
-                  <managementParent.iconOutline size={18} className="transition-transform duration-200 group-hover:scale-110" />
-                )}
-              </div>
-              <span className="flex-1 text-left">{managementParent.label}</span>
-              <span
-                className="transition-transform duration-300"
-                style={{
-                  color: "var(--text-muted)",
-                  transform: mgmtExpanded ? "rotate(0deg)" : "rotate(-90deg)",
-                }}
-              >
-                <IoChevronDown size={14} />
-              </span>
-            </button>
-
-            {/* Sub-items with connector lines */}
-            <div
-              id="mgmt-submenu"
-              role="group"
-              aria-label="Management submenu"
-              className="overflow-hidden transition-all duration-300 ease-in-out"
-              style={{
-                maxHeight: mgmtExpanded ? "300px" : "0px",
-                opacity: mgmtExpanded ? 1 : 0,
-              }}
-            >
-              <div className="relative ml-[19px] py-1">
-                {/* Vertical connector line */}
-                <div
-                  className="absolute left-0 top-1 bottom-1 w-px"
-                  style={{ background: "var(--glass-border)" }}
-                />
-                {managementParent.children.map((child) => {
-                  const isChildActive = location.pathname.startsWith(child.to);
-                  return (
-                    <NavLink
-                      key={child.to}
-                      to={child.to}
-                      className="relative flex items-center gap-3 pl-[26px] pr-4 py-[7px] rounded-lg text-[12px] font-medium transition-all duration-200 min-h-[34px] group"
-                      style={{
-                        color: isChildActive ? "var(--text-primary)" : "var(--text-secondary)",
-                        background: isChildActive ? "var(--glow-aqua)" : "transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isChildActive) {
-                          e.currentTarget.style.background = "var(--glass-bg-hover)";
-                          e.currentTarget.style.color = "var(--text-primary)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isChildActive) {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.color = "var(--text-secondary)";
-                        }
-                      }}
-                    >
-                      {/* Horizontal connector branch */}
-                      <div
-                        className="absolute left-0 top-1/2 w-[18px] h-px -translate-y-1/2"
-                        style={{ background: isChildActive ? "var(--accent-aqua)" : "var(--glass-border)" }}
-                      />
-                      {/* Dot indicator */}
-                      <div
-                        className="absolute left-0 top-1/2 w-[6px] h-[6px] rounded-full -translate-x-[3px] -translate-y-1/2 transition-all duration-200"
-                        style={{
-                          background: isChildActive ? "var(--accent-aqua)" : "var(--glass-border-strong)",
-                          boxShadow: isChildActive ? "0 0 8px var(--accent-aqua)" : "none",
-                        }}
-                      />
-                      <span className="flex-1">{child.label}</span>
-                      {isChildActive && (
-                        <IoChevronForward size={12} style={{ color: "var(--accent-aqua)" }} />
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </div>
+          {/* Group 2: Operations */}
+          <div className="space-y-1">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Operations & Facility
+            </p>
+            {operationsNavItems.map((item) => (
+              <SidebarLink key={item.to} item={item} location={location} onClick={onClose} />
+            ))}
           </div>
 
-          {/* Bottom items */}
-          <div className="pt-2 space-y-0.5">
-            {bottomItems.map((item) => (
-              <SidebarLink key={item.to} item={item} location={location} />
+          {/* Group 3: System */}
+          <div className="space-y-1">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              System
+            </p>
+            {systemNavItems.map((item) => (
+              <SidebarLink key={item.to} item={item} location={location} onClick={onClose} />
             ))}
           </div>
         </nav>
 
-        {/* Logout */}
-        <div className="mt-auto px-3 pb-4 pt-2" style={{ borderTop: "1px solid var(--glass-border)" }}>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] w-full group"
-            style={{ color: "var(--accent-coral)" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--glow-coral)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            <div className="flex items-center justify-center w-5">
-              <IoLogOutOutline size={18} className="transition-transform duration-200 group-hover:scale-110 group-hover:-translate-x-0.5" />
+        {/* User Profile & Logout Footer */}
+        <div
+          className="mt-auto p-3 border-t bg-black/10"
+          style={{ borderColor: "var(--glass-border)" }}
+        >
+          <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10 mb-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-slate-950 shrink-0"
+                style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
+              >
+                {userInitial}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold truncate text-white">
+                  {user?.username ?? "Admin"}
+                </p>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>Logged in</span>
+                </div>
+              </div>
             </div>
-            Logout
-          </button>
+
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/15 transition-colors"
+            >
+              <IoLogOutOutline size={18} />
+            </button>
+          </div>
         </div>
       </aside>
     </>
@@ -292,9 +184,11 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
 function SidebarLink({
   item,
   location,
+  onClick,
 }: {
   item: NavItemData;
   location: ReturnType<typeof useLocation>;
+  onClick?: () => void;
 }) {
   const isActive = item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to);
   const Icon = isActive ? item.iconFilled : item.iconOutline;
@@ -303,38 +197,33 @@ function SidebarLink({
     <NavLink
       to={item.to}
       end={item.to === "/"}
-      className="relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all duration-200 min-h-[40px] group"
-      style={{
-        background: isActive ? "var(--glow-aqua)" : "transparent",
-        color: isActive ? "var(--accent-aqua)" : "var(--text-secondary)",
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.background = "var(--glass-bg-hover)";
-          e.currentTarget.style.color = "var(--text-primary)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.color = "var(--text-secondary)";
-        }
-      }}
+      onClick={onClick}
+      className={`
+        relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold
+        transition-all duration-200 group
+        ${isActive ? "text-cyan-300 font-bold bg-cyan-400/10 shadow-sm" : "text-slate-300 hover:text-white hover:bg-white/5"}
+      `}
     >
-      {/* Active indicator bar */}
+      {/* Active Glowing Bar Indicator */}
       {isActive && (
         <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full transition-all duration-300"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
           style={{
             background: "var(--accent-aqua)",
             boxShadow: "0 0 10px var(--accent-aqua)",
           }}
         />
       )}
+
       <div className="flex items-center justify-center w-5">
-        <Icon size={18} className="transition-transform duration-200 group-hover:scale-110" />
+        <Icon
+          size={18}
+          className={`transition-transform duration-200 ${isActive ? "scale-110 text-cyan-300" : "text-slate-400 group-hover:text-white group-hover:scale-105"}`}
+        />
       </div>
-      <span className="flex-1">{item.label}</span>
+
+      <span className="flex-1 truncate">{item.label}</span>
+
       {item.badge !== undefined && item.badge > 0 && (
         <span
           className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"

@@ -16,7 +16,7 @@ export const attendanceApi = createApi({
       query: (date) => `/${date}`,
       providesTags: ["Attendance"],
     }),
-    checkIn: builder.mutation<AttendanceRecord, { customerId: string; customerName: string; visitType: string; lane?: number }>({
+    checkIn: builder.mutation<AttendanceRecord, { customerId: string; customerName: string; visitType: string; lane?: number; photoUrl?: string }>({
       query: (body) => ({ url: "/check-in", method: "POST", body }),
       invalidatesTags: ["Attendance"],
     }),

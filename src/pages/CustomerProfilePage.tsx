@@ -1,37 +1,38 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link } from "react-router";
 import {
   useGetCustomerQuery,
+  useUpdateCustomerMutation,
   useGetCustomerVisitsQuery,
   useGetCustomerTransactionsQuery,
   useGetCustomerMembershipsQuery,
-  useGetCustomerCoachingQuery,
 } from "@/store/api/customersApi";
 import { useGetSettingsQuery } from "@/store/api/settingsApi";
-import { GlassCard, PrimaryButton, SkeletonGlass, StatCard } from "@/components/ui";
+import { GlassCard, PrimaryButton, SkeletonGlass, StatCard, CameraCaptureModal } from "@/components/ui";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { ReceiptCard } from "@/components/ui/ReceiptCard";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { VisitType } from "@/types";
 import {
   IoArrowBack, IoCalendar, IoCard, IoFootsteps, IoReceipt,
   IoPerson, IoPhonePortrait, IoLocationSharp, IoWater,
-  IoFitness, IoTime, IoTrophy, IoChevronForward,
-  IoWallet, IoStar, IoClipboard, IoCall,
+  IoFitness, IoTime, IoChevronForward,
+  IoWallet, IoStar, IoClipboard, IoCall, IoCamera,
 } from "react-icons/io5";
 
 type Tab = "overview" | "visits" | "membership" | "payments";
 
 export function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: customer, isLoading } = useGetCustomerQuery(id!);
+  const [updateCustomer] = useUpdateCustomerMutation();
   const { data: visits } = useGetCustomerVisitsQuery(id!);
   const { data: transactions } = useGetCustomerTransactionsQuery(id!);
   const { data: memberships } = useGetCustomerMembershipsQuery(id!);
-  const { data: coaching } = useGetCustomerCoachingQuery(id!);
   const { data: settings } = useGetSettingsQuery();
+
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<"avatar" | "idCard">("avatar");
 
   if (isLoading) return (
     <div className="space-y-6">
@@ -44,8 +45,20 @@ export function CustomerProfilePage() {
 
   const totalSpent = transactions?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
   const activeMembership = memberships?.find((m) => m.status === "ACTIVE");
-  const activeCoaching = coaching?.find((c) => c.status === "ACTIVE");
   const initials = customer.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  function openCamera(target: "avatar" | "idCard") {
+    setCameraTarget(target);
+    setCameraModalOpen(true);
+  }
+
+  async function handleCapturedPhoto(photoDataUrl: string) {
+    if (cameraTarget === "avatar") {
+      await updateCustomer({ id: customer!.id, data: { photoUrl: photoDataUrl } });
+    } else {
+      await updateCustomer({ id: customer!.id, data: { idCardPhoto: photoDataUrl } });
+    }
+  }
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: "overview", label: "Overview", icon: <IoPerson size={16} /> },
@@ -56,6 +69,16 @@ export function CustomerProfilePage() {
 
   return (
     <div className="space-y-6">
+      {/* Camera Capture Modal */}
+      <CameraCaptureModal
+        isOpen={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        onCapture={handleCapturedPhoto}
+        title={cameraTarget === "avatar" ? `Capture Photo for ${customer.name}` : `Capture ID Card for ${customer.name}`}
+        guideMode={cameraTarget === "avatar" ? "avatar" : "document"}
+        initialFacingMode={cameraTarget === "avatar" ? "user" : "environment"}
+      />
+
       {/* Breadcrumb */}
       <Breadcrumb items={[
         { label: "Customers", href: "/customers" },
@@ -64,7 +87,7 @@ export function CustomerProfilePage() {
 
       {/* Back */}
       <Link to="/customers"
-        className="inline-flex liquid-glass p-2.5 rounded-xl transition-all duration-200 min-w-[44px] min-h-[44px] items-center justify-center active:scale-95 animate-fade-up"
+        className="inline-flex liquid-glass p-2.5 rounded-xl transition-all duration-200 min-w-[44px] min-h-[44px] items-center justify-center active:scale-95 animate-fade-up border border-white/10"
       >
         <IoArrowBack size={20} style={{ color: "var(--text-primary)" }} />
       </Link>
@@ -80,12 +103,32 @@ export function CustomerProfilePage() {
         />
 
         <div className="relative z-10">
-          <div className="flex items-start gap-5">
-            {/* Avatar */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 text-white font-display text-xl sm:text-2xl font-bold"
-              style={{ background: "linear-gradient(135deg, #5FD9D6, #146C8E)", boxShadow: "0 8px 24px rgba(95,217,214,0.3)" }}
-            >
-              {initials}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* Avatar with Camera Trigger Overlay */}
+            <div className="relative group">
+              {customer.photoUrl ? (
+                <img
+                  src={customer.photoUrl}
+                  alt={customer.name}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-cyan-400 shadow-lg shadow-cyan-500/30"
+                />
+              ) : (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center shrink-0 text-white font-display text-2xl font-bold border-2 border-cyan-400/40"
+                  style={{ background: "linear-gradient(135deg, #5FD9D6, #146C8E)", boxShadow: "0 8px 24px rgba(95,217,214,0.3)" }}
+                >
+                  {initials}
+                </div>
+              )}
+
+              {/* Camera Snap Button Overlay */}
+              <button
+                type="button"
+                onClick={() => openCamera("avatar")}
+                className="absolute -bottom-1.5 -right-1.5 p-2 rounded-xl bg-slate-900 border border-cyan-400/60 text-cyan-300 shadow-md hover:bg-cyan-400 hover:text-slate-950 transition-all active:scale-90"
+                title="Snap new photo with Camera"
+              >
+                <IoCamera size={16} />
+              </button>
             </div>
 
             <div className="flex-1 min-w-0">
@@ -94,20 +137,18 @@ export function CustomerProfilePage() {
                   {customer.name}
                 </h1>
                 {activeMembership && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                    style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)", border: "1px solid var(--accent-aqua)" }}
-                  >
-                    Member
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-400/15 border border-cyan-400 text-cyan-300">
+                    Active Member
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-1.5" style={{ color: "var(--text-secondary)" }}>
-                <IoPhonePortrait size={14} />
+              <div className="flex items-center gap-2 mt-1.5 text-slate-300">
+                <IoPhonePortrait size={14} className="text-cyan-400" />
                 <span className="font-mono text-sm font-semibold">{customer.mobile}</span>
               </div>
               {customer.address && (
-                <div className="flex items-center gap-1.5 mt-1" style={{ color: "var(--text-muted)" }}>
-                  <IoLocationSharp size={12} />
+                <div className="flex items-center gap-1.5 mt-1 text-slate-400">
+                  <IoLocationSharp size={13} className="text-cyan-400" />
                   <span className="text-xs truncate">{customer.address}</span>
                 </div>
               )}
@@ -122,6 +163,14 @@ export function CustomerProfilePage() {
                 New Billing
               </PrimaryButton>
             </Link>
+            <button
+              type="button"
+              onClick={() => openCamera("avatar")}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold border border-cyan-400/40 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-300 transition-all"
+            >
+              <IoCamera size={16} />
+              <span>Update Face Photo</span>
+            </button>
             <a href={`tel:${customer.mobile}`} className="flex-1">
               <PrimaryButton fullWidth size="sm" className="w-full"
                 style={{ background: "linear-gradient(135deg, #146C8E, #0E8E8A)" }}
@@ -171,6 +220,66 @@ export function CustomerProfilePage() {
       {/* ─── Overview Tab ─── */}
       {activeTab === "overview" && (
         <div className="space-y-4 animate-fade-up">
+          {/* Photos & Documents Verification Card */}
+          <GlassCard>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <IoCamera size={18} style={{ color: "var(--accent-aqua)" }} />
+                <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                  Photo & ID Verification
+                </h3>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Profile Photo */}
+              <div className="p-4 rounded-xl border border-white/10 bg-black/20 flex items-center gap-4">
+                {customer.photoUrl ? (
+                  <img src={customer.photoUrl} alt="Member" className="w-16 h-16 rounded-xl object-cover border border-cyan-400" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
+                    <IoPerson size={28} />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-white">Profile Photo</p>
+                  <p className="text-[11px] text-slate-400">{customer.photoUrl ? "Captured & verified" : "No photo recorded"}</p>
+                  <button
+                    type="button"
+                    onClick={() => openCamera("avatar")}
+                    className="mt-2 text-xs font-bold text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <IoCamera size={14} />
+                    {customer.photoUrl ? "Retake Photo" : "Click Live Photo"}
+                  </button>
+                </div>
+              </div>
+
+              {/* ID Document Photo */}
+              <div className="p-4 rounded-xl border border-white/10 bg-black/20 flex items-center gap-4">
+                {customer.idCardPhoto ? (
+                  <img src={customer.idCardPhoto} alt="ID Document" loading="lazy" className="w-20 h-14 rounded-lg object-cover border border-cyan-400" />
+                ) : (
+                  <div className="w-20 h-14 rounded-lg bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
+                    <IoCard size={24} />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-white">ID Card / Aadhaar Snap</p>
+                  <p className="text-[11px] text-slate-400">{customer.idCardPhoto ? "Document attached" : "No document photo"}</p>
+                  <button
+                    type="button"
+                    onClick={() => openCamera("idCard")}
+                    className="mt-2 text-xs font-bold text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <IoCamera size={14} />
+                    {customer.idCardPhoto ? "Retake ID Snap" : "Snap ID Card"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+
           {/* Personal Info */}
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
@@ -233,7 +342,7 @@ export function CustomerProfilePage() {
             </div>
             {visits && visits.length > 0 ? (
               <div className="space-y-2">
-                {visits.slice(0, 3).map((visit, i) => (
+                {visits.slice(0, 3).map((visit) => (
                   <div key={visit.id} className="flex items-center gap-3 p-3 rounded-xl transition-all"
                     style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}
                   >

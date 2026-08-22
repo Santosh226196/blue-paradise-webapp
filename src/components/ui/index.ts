@@ -9,3 +9,5 @@ export { EmptyState } from "./EmptyState";
 export { SkeletonGlass } from "./SkeletonGlass";
 export { Breadcrumb } from "./Breadcrumb";
 export type { BreadcrumbItem } from "./Breadcrumb";
+export { CameraCaptureModal } from "./CameraCaptureModal";
+export { Modal } from "./Modal";

@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { IoCheckmark } from "react-icons/io5";
 

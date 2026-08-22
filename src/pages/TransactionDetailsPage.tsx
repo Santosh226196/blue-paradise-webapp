@@ -5,11 +5,11 @@ import { useGetSettingsQuery } from "@/store/api/settingsApi";
 import { GlassCard, PrimaryButton, GhostButton, SkeletonGlass } from "@/components/ui";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { ReceiptCard } from "@/components/ui/ReceiptCard";
-import { formatCurrency, formatDateTime, formatDate, formatTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
 import {
   IoArrowBack, IoCheckmarkCircle, IoReceipt, IoPerson,
-  IoCalendar, IoTime, IoCard, IoCash, IoPrint, IoReceiptOutline,
-  IoChevronForward, IoCall, IoShareOutline,
+  IoCalendar, IoTime, IoCard, IoReceiptOutline,
+  IoChevronForward,
 } from "react-icons/io5";
 
 export function TransactionDetailsPage() {

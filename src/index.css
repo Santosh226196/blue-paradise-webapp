@@ -8,9 +8,9 @@
   --color-foam: #F3FBFC;
   --color-ink: #08222B;
 
-  --font-display: "Fraunces", serif;
-  --font-body: "Manrope", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-display: "Montserrat", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Lato, sans-serif;
+  --font-mono: "Roboto Mono", "IBM Plex Mono", monospace;
 }
 
 /* ── Base Reset ── */
@@ -21,41 +21,52 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  background-color: #071927;
+  min-height: 100%;
+}
+
+html[data-theme="aqua"] {
+  background-color: #E6FAFA;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   color: var(--color-foam);
-  transition: background 0.6s ease, color 0.3s ease;
+  background-color: #071927;
+  background-attachment: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-#root { min-height: 100vh; }
+#root {
+  min-height: 100vh;
+  background-color: transparent;
+}
 
 /* ── Theme: Dark (default) ── */
 [data-theme="dark"] {
-  --bg-deep: #060E14;
-  --bg-mid: #0A3B4A;
-  --bg-surface: #0E4D63;
-  --glass-bg: rgba(255,255,255,0.04);
-  --glass-bg-hover: rgba(255,255,255,0.08);
-  --glass-border: rgba(255,255,255,0.08);
-  --glass-border-strong: rgba(255,255,255,0.14);
-  --glass-blur: 28px;
+  --bg-deep: #071927;
+  --bg-mid: #0B3548;
+  --bg-surface: #0E4F66;
+  --glass-bg: rgba(14, 55, 74, 0.45);
+  --glass-bg-hover: rgba(20, 75, 100, 0.6);
+  --glass-border: rgba(95, 217, 214, 0.15);
+  --glass-border-strong: rgba(95, 217, 214, 0.3);
+  --glass-blur: 24px;
   --text-primary: #F3FBFC;
-  --text-secondary: rgba(243,251,252,0.55);
-  --text-muted: rgba(243,251,252,0.3);
+  --text-secondary: rgba(243,251,252,0.72);
+  --text-muted: rgba(243,251,252,0.45);
   --accent-aqua: #5FD9D6;
   --accent-coral: #FF7A59;
   --accent-pool: #146C8E;
-  --glow-aqua: rgba(95,217,214,0.12);
-  --glow-coral: rgba(255,122,89,0.08);
-  --glow-pool: rgba(20,108,142,0.15);
-  --sidebar-bg: rgba(6,14,20,0.85);
-  --input-bg: rgba(255,255,255,0.04);
-  --input-border: rgba(255,255,255,0.08);
+  --glow-aqua: rgba(95, 217, 214, 0.28);
+  --glow-coral: rgba(255, 122, 89, 0.2);
+  --glow-pool: rgba(20, 108, 142, 0.35);
+  --sidebar-bg: rgba(7, 25, 39, 0.94);
+  --input-bg: rgba(11, 43, 60, 0.65);
+  --input-border: rgba(95, 217, 214, 0.2);
   --input-focus-ring: #5FD9D6;
-  --receipt-bg: #F3FBFC;
+  --receipt-bg: #FFFFFF;
   --receipt-text: #08222B;
   --receipt-muted: rgba(8,34,43,0.45);
   --receipt-divider: rgba(8,34,43,0.15);
@@ -64,26 +75,26 @@ body {
 
 /* ── Theme: Aqua ── */
 [data-theme="aqua"] {
-  --bg-deep: #E8F8F8;
+  --bg-deep: #E6FAFA;
   --bg-mid: #B8EEED;
   --bg-surface: #D4F5F4;
-  --glass-bg: rgba(255,255,255,0.55);
-  --glass-bg-hover: rgba(255,255,255,0.72);
-  --glass-border: rgba(20,108,142,0.12);
-  --glass-border-strong: rgba(20,108,142,0.22);
-  --glass-blur: 28px;
+  --glass-bg: rgba(255,255,255,0.68);
+  --glass-bg-hover: rgba(255,255,255,0.85);
+  --glass-border: rgba(20,108,142,0.16);
+  --glass-border-strong: rgba(20,108,142,0.28);
+  --glass-blur: 24px;
   --text-primary: #08222B;
-  --text-secondary: rgba(8,34,43,0.6);
-  --text-muted: rgba(8,34,43,0.3);
+  --text-secondary: rgba(8,34,43,0.72);
+  --text-muted: rgba(8,34,43,0.45);
   --accent-aqua: #0E8E8A;
   --accent-coral: #E85D3A;
   --accent-pool: #146C8E;
-  --glow-aqua: rgba(95,217,214,0.18);
-  --glow-coral: rgba(255,122,89,0.1);
-  --glow-pool: rgba(20,108,142,0.12);
-  --sidebar-bg: rgba(232,248,248,0.88);
-  --input-bg: rgba(255,255,255,0.6);
-  --input-border: rgba(20,108,142,0.15);
+  --glow-aqua: rgba(95,217,214,0.28);
+  --glow-coral: rgba(255,122,89,0.18);
+  --glow-pool: rgba(20,108,142,0.25);
+  --sidebar-bg: rgba(230, 250, 250, 0.94);
+  --input-bg: rgba(255,255,255,0.8);
+  --input-border: rgba(20,108,142,0.2);
   --input-focus-ring: #0E8E8A;
   --receipt-bg: #FFFFFF;
   --receipt-text: #08222B;
@@ -94,12 +105,135 @@ body {
 
 body[data-theme="dark"],
 [data-theme="dark"] body {
-  background: linear-gradient(145deg, var(--bg-deep) 0%, var(--bg-mid) 40%, var(--bg-surface) 100%);
+  background:
+    radial-gradient(ellipse 90% 70% at 20% 0%, rgba(20, 108, 142, 0.42), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 30%, rgba(95, 217, 214, 0.22), transparent 60%),
+    radial-gradient(ellipse 80% 70% at 15% 85%, rgba(14, 77, 99, 0.55), transparent 70%),
+    radial-gradient(ellipse 60% 60% at 85% 95%, rgba(20, 108, 142, 0.35), transparent 65%),
+    linear-gradient(175deg, #071927 0%, #0A2E40 35%, #0C435A 70%, #071E2B 100%);
+  background-attachment: fixed;
+  background-color: #071927;
 }
 
 body[data-theme="aqua"],
 [data-theme="aqua"] body {
-  background: linear-gradient(145deg, #E8F8F8 0%, #C8F0EF 40%, #A8E6E4 100%);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(95, 217, 214, 0.45), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 40%, rgba(20, 108, 142, 0.18), transparent 65%),
+    radial-gradient(ellipse 80% 70% at 10% 85%, rgba(174, 238, 237, 0.6), transparent 70%),
+    linear-gradient(175deg, #E6FAFA 0%, #C8F3F2 40%, #A6ECE9 80%, #C0F0EE 100%);
+  background-attachment: fixed;
+  background-color: #E6FAFA;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Brand Themes (navbar dropdown)
+   Remaps Tailwind palette vars + app accent vars so the whole
+   site re-colors per business type.
+   ───────────────────────────────────────────────────────── */
+
+/* ── Brand: Gym (fiery orange / red) ── */
+[data-brand="gym"] {
+  --color-cyan-300: #FDBA74;
+  --color-cyan-400: #FB923C;
+  --color-cyan-500: #F97316;
+  --color-cyan-600: #EA580C;
+  --color-teal-300: #FCA5A5;
+  --color-teal-400: #F87171;
+  --color-teal-500: #EF4444;
+
+  --accent-aqua: #FB923C;
+  --accent-pool: #B91C1C;
+  --accent-coral: #EF4444;
+  --glow-aqua: rgba(251, 146, 60, 0.28);
+  --glow-pool: rgba(185, 28, 28, 0.35);
+  --glow-coral: rgba(239, 68, 68, 0.2);
+  --input-focus-ring: #FB923C;
+}
+[data-brand="gym"][data-theme="dark"] {
+  --glass-border: rgba(251, 146, 60, 0.15);
+  --glass-border-strong: rgba(251, 146, 60, 0.3);
+  --input-border: rgba(251, 146, 60, 0.2);
+}
+[data-brand="gym"][data-theme="aqua"] {
+  --accent-aqua: #EA580C;
+  --glass-border: rgba(185, 28, 28, 0.16);
+  --glass-border-strong: rgba(185, 28, 28, 0.28);
+}
+body[data-brand="gym"][data-theme="dark"],
+[data-brand="gym"][data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 90% 70% at 20% 0%, rgba(249, 115, 22, 0.4), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 30%, rgba(251, 146, 60, 0.18), transparent 60%),
+    radial-gradient(ellipse 80% 70% at 15% 85%, rgba(120, 20, 20, 0.5), transparent 70%),
+    radial-gradient(ellipse 60% 60% at 85% 95%, rgba(239, 68, 68, 0.3), transparent 65%),
+    linear-gradient(175deg, #1A0E08 0%, #140A08 50%, #0D0706 100%);
+  background-attachment: fixed;
+  background-color: #140A08;
+}
+html[data-brand="gym"] { background-color: #140A08; }
+html[data-brand="gym"][data-theme="aqua"] { background-color: #FFF7ED; }
+body[data-brand="gym"][data-theme="aqua"],
+[data-brand="gym"][data-theme="aqua"] body {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(251, 146, 60, 0.4), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 40%, rgba(185, 28, 28, 0.12), transparent 65%),
+    radial-gradient(ellipse 80% 70% at 10% 85%, rgba(253, 186, 116, 0.5), transparent 70%),
+    linear-gradient(175deg, #FFF7ED 0%, #FFEDD5 40%, #FED7AA 80%, #FFEDD5 100%);
+  background-attachment: fixed;
+  background-color: #FFF7ED;
+}
+
+/* ── Brand: Other (violet / purple) ── */
+[data-brand="other"] {
+  --color-cyan-300: #C4B5FD;
+  --color-cyan-400: #A78BFA;
+  --color-cyan-500: #8B5CF6;
+  --color-cyan-600: #7C3AED;
+  --color-teal-300: #F0ABFC;
+  --color-teal-400: #E879F9;
+  --color-teal-500: #D946EF;
+
+  --accent-aqua: #A78BFA;
+  --accent-pool: #6D28D9;
+  --accent-coral: #EC4899;
+  --glow-aqua: rgba(167, 139, 250, 0.28);
+  --glow-pool: rgba(109, 40, 217, 0.35);
+  --glow-coral: rgba(236, 72, 153, 0.2);
+  --input-focus-ring: #A78BFA;
+}
+[data-brand="other"][data-theme="dark"] {
+  --glass-border: rgba(167, 139, 250, 0.15);
+  --glass-border-strong: rgba(167, 139, 250, 0.3);
+  --input-border: rgba(167, 139, 250, 0.2);
+}
+[data-brand="other"][data-theme="aqua"] {
+  --accent-aqua: #7C3AED;
+  --glass-border: rgba(109, 40, 217, 0.16);
+  --glass-border-strong: rgba(109, 40, 217, 0.28);
+}
+body[data-brand="other"][data-theme="dark"],
+[data-brand="other"][data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 90% 70% at 20% 0%, rgba(124, 58, 237, 0.42), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 30%, rgba(167, 139, 250, 0.2), transparent 60%),
+    radial-gradient(ellipse 80% 70% at 15% 85%, rgba(76, 29, 149, 0.55), transparent 70%),
+    radial-gradient(ellipse 60% 60% at 85% 95%, rgba(236, 72, 153, 0.28), transparent 65%),
+    linear-gradient(175deg, #12081F 0%, #0E0618 50%, #0A0512 100%);
+  background-attachment: fixed;
+  background-color: #0E0618;
+}
+html[data-brand="other"] { background-color: #0E0618; }
+html[data-brand="other"][data-theme="aqua"] { background-color: #FAF5FF; }
+body[data-brand="other"][data-theme="aqua"],
+[data-brand="other"][data-theme="aqua"] body {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(167, 139, 250, 0.45), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 40%, rgba(109, 40, 217, 0.14), transparent 65%),
+    radial-gradient(ellipse 80% 70% at 10% 85%, rgba(196, 181, 253, 0.55), transparent 70%),
+    linear-gradient(175deg, #FAF5FF 0%, #F3E8FF 40%, #E9D5FF 80%, #F3E8FF 100%);
+  background-attachment: fixed;
+  background-color: #FAF5FF;
 }
 
 /* ── Ambient Glow Blobs ── */
@@ -123,22 +257,19 @@ body[data-theme="aqua"],
 .ambient-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(85px);
   pointer-events: none;
   will-change: transform;
 }
 .blob-1 {
-  width: 500px; height: 500px;
   background: var(--glow-aqua);
   animation: blob-drift-1 25s ease-in-out infinite;
 }
 .blob-2 {
-  width: 400px; height: 400px;
   background: var(--glow-pool);
   animation: blob-drift-2 30s ease-in-out infinite;
 }
 .blob-3 {
-  width: 350px; height: 350px;
   background: var(--glow-coral);
   animation: blob-drift-3 22s ease-in-out infinite;
 }
@@ -196,17 +327,17 @@ body[data-theme="aqua"],
 .liquid-glass:hover::before { opacity: 1; }
 .liquid-glass > * { position: relative; z-index: 1; }
 
-/* ── Animations ── */
+/* ── Snappy, Smooth Modern Animations ── */
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeSlideDown {
-  from { opacity: 0; transform: translateY(-12px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 @keyframes shimmer {
@@ -215,28 +346,33 @@ body[data-theme="aqua"],
 }
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 0 0 var(--glow-aqua); }
-  50% { box-shadow: 0 0 20px 4px var(--glow-aqua); }
-}
-@keyframes ripple {
-  0% { transform: scale(0); opacity: 0.6; }
-  100% { transform: scale(4); opacity: 0; }
+  50% { box-shadow: 0 0 16px 3px var(--glow-aqua); }
 }
 @keyframes float-gentle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-4px); }
 }
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
+  from { opacity: 0; transform: translateX(-14px); }
   to { opacity: 1; transform: translateX(0); }
 }
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(14px); }
   to { opacity: 1; transform: translateX(0); }
 }
 
-.animate-fade-up { animation: fadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-fade-down { animation: fadeSlideDown 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-up {
+  animation: fadeSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+.animate-fade-down {
+  animation: fadeSlideDown 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+.animate-scale-in {
+  animation: scaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
 .animate-shimmer-bg {
   background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%);
   background-size: 200% 100%;
@@ -244,24 +380,105 @@ body[data-theme="aqua"],
 }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-float-gentle { animation: float-gentle 4s ease-in-out infinite; }
-.animate-slide-left { animation: slideInLeft 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-slide-right { animation: slideInRight 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-slide-left {
+  animation: slideInLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+.animate-slide-right {
+  animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+.stagger-1 { animation-delay: 0.03s; }
+.stagger-2 { animation-delay: 0.06s; }
+.stagger-3 { animation-delay: 0.09s; }
+.stagger-4 { animation-delay: 0.12s; }
+.stagger-5 { animation-delay: 0.15s; }
 
-/* ── Receipt Zigzag Edge ── */
-.receipt-edge {
-  clip-path: polygon(
-    0% 0%, 3% 50%, 6% 0%, 9% 50%, 12% 0%, 15% 50%, 18% 0%, 21% 50%,
-    24% 0%, 27% 50%, 30% 0%, 33% 50%, 36% 0%, 39% 50%, 42% 0%, 45% 50%,
-    48% 0%, 51% 50%, 54% 0%, 57% 50%, 60% 0%, 63% 50%, 66% 0%, 69% 50%,
-    72% 0%, 75% 50%, 78% 0%, 81% 50%, 84% 0%, 87% 50%, 90% 0%, 93% 50%,
-    96% 0%, 100% 50%, 100% 100%, 0% 100%
-  );
+/* ── Authentic Thermal Receipt Styling ── */
+.thermal-receipt-paper {
+  background: #FFFFFF;
+  color: #111827;
+  border-radius: 1rem 1rem 0 0;
+  box-shadow:
+    0 20px 40px -15px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  position: relative;
+}
+
+[data-theme="aqua"] .thermal-receipt-paper {
+  box-shadow:
+    0 16px 36px -12px rgba(10, 59, 74, 0.18),
+    0 0 0 1px rgba(20, 108, 142, 0.12);
+}
+
+.receipt-tear-bottom {
+  height: 12px;
+  width: 100%;
+  background: radial-gradient(circle at 6px 0px, transparent 6px, #FFFFFF 6.5px);
+  background-size: 12px 12px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.12));
+}
+
+.receipt-notch-left {
+  position: absolute;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg-deep, #060E14);
+}
+
+.receipt-notch-right {
+  position: absolute;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg-deep, #060E14);
+}
+
+/* ── Print Media: 58mm/80mm Thermal Slip ── */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  .printable-thermal-receipt,
+  .printable-thermal-receipt * {
+    visibility: visible !important;
+  }
+  
+  .printable-thermal-receipt {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 4mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .receipt-tear-bottom,
+  .receipt-notch-left,
+  .receipt-notch-right,
+  .no-print {
+    display: none !important;
+  }
 }
 
 /* ── Login: Waves ── */

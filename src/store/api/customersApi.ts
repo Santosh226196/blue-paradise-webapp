@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Customer, Visit, Membership, Coaching, Transaction, BusinessSettings } from "@/types";
+import type { Customer, Visit, Membership, Coaching, Transaction } from "@/types";
 
 const BASE_URL = "/api";
 
