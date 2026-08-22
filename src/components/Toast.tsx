@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
-import { IoCheckmarkCircle, IoCloseCircle, IoWarning } from "react-icons/io5";
+import { IoCheckmarkCircle, IoCloseCircle, IoWarning, IoInformationCircle } from "react-icons/io5";
 
-type ToastType = "success" | "error" | "warning";
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
   id: string;
@@ -54,12 +54,14 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     success: <IoCheckmarkCircle size={18} />,
     error: <IoCloseCircle size={18} />,
     warning: <IoWarning size={18} />,
+    info: <IoInformationCircle size={18} />,
   };
 
   const colors: Record<ToastType, { bg: string; border: string; text: string; icon: string }> = {
     success: { bg: "var(--glow-aqua)", border: "var(--accent-aqua)", text: "var(--text-primary)", icon: "var(--accent-aqua)" },
     error: { bg: "rgba(255,122,89,0.12)", border: "var(--accent-coral)", text: "var(--text-primary)", icon: "var(--accent-coral)" },
     warning: { bg: "rgba(255,200,50,0.12)", border: "#FFC832", text: "var(--text-primary)", icon: "#FFC832" },
+    info: { bg: "var(--glow-pool)", border: "var(--accent-pool)", text: "var(--text-primary)", icon: "var(--accent-pool)" },
   };
 
   const c = colors[toast.type];

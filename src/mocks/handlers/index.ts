@@ -174,17 +174,59 @@ function generateId(): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HandlerArgs = { request: any; params: Record<string, string> };
 
+let currentAdminPassword = "admin123";
+
 export const handlers = [
   http.post("/api/auth/login", async ({ request }: HandlerArgs) => {
     const body = (await request.json()) as { username: string; password: string };
-    if (body.username === "admin" && body.password === "admin123") {
+    if (body.username === "admin" && body.password === currentAdminPassword) {
       return HttpResponse.json({ token: "mock-jwt-token-abc123", user: { username: "admin" } });
     }
-    return HttpResponse.json({ message: "Invalid credentials" }, { status: 401 });
+    return HttpResponse.json({ message: "Invalid credentials. (Default: admin / admin123)" }, { status: 401 });
   }),
 
   http.post("/api/auth/logout", () => {
     return HttpResponse.json({ success: true });
+  }),
+
+  http.post("/api/auth/forgot-password", async ({ request }: HandlerArgs) => {
+    const body = (await request.json()) as { identity: string };
+    const ident = body.identity?.trim().toLowerCase();
+    if (!ident) {
+      return HttpResponse.json({ message: "Please enter your username, mobile, or email" }, { status: 400 });
+    }
+    return HttpResponse.json({
+      success: true,
+      message: "Verification code sent to registered contact",
+      demoOtp: "123456",
+      maskedDestination: ident.includes("@") ? ident : "adm***@blueparadise.com / 98765***10",
+    });
+  }),
+
+  http.post("/api/auth/verify-otp", async ({ request }: HandlerArgs) => {
+    const body = (await request.json()) as { identity: string; otp: string };
+    if (body.otp === "123456" || body.otp.length === 6) {
+      return HttpResponse.json({ success: true, resetToken: "reset_token_valid" });
+    }
+    return HttpResponse.json({ message: "Invalid 6-digit OTP code (Demo code: 123456)" }, { status: 400 });
+  }),
+
+  http.post("/api/auth/reset-password", async ({ request }: HandlerArgs) => {
+    const body = (await request.json()) as { identity: string; newPassword: string };
+    if (!body.newPassword || body.newPassword.length < 4) {
+      return HttpResponse.json({ message: "New password must be at least 4 characters long" }, { status: 400 });
+    }
+    currentAdminPassword = body.newPassword;
+    return HttpResponse.json({ success: true, message: "Password updated successfully" });
+  }),
+
+  http.post("/api/auth/change-password", async ({ request }: HandlerArgs) => {
+    const body = (await request.json()) as { currentPassword: string; newPassword: string };
+    if (body.currentPassword === currentAdminPassword) {
+      currentAdminPassword = body.newPassword;
+      return HttpResponse.json({ success: true });
+    }
+    return HttpResponse.json({ message: "Current password is incorrect" }, { status: 400 });
   }),
 
   // ── Customers ──
@@ -219,12 +261,22 @@ export const handlers = [
       age: body.age,
       gender: body.gender,
       address: body.address,
+      photoUrl: body.photoUrl,
+      idCardPhoto: body.idCardPhoto,
       firstVisitAt: now,
       createdAt: now,
       updatedAt: now,
     };
     customers.push(newCustomer);
     return HttpResponse.json(newCustomer, { status: 201 });
+  }),
+
+  http.put("/api/customers/:id", async ({ request, params }: HandlerArgs) => {
+    const body = (await request.json()) as Partial<Customer>;
+    const idx = customers.findIndex((c) => c.id === params.id);
+    if (idx === -1) return HttpResponse.json({ message: "Not found" }, { status: 404 });
+    customers[idx] = { ...customers[idx], ...body, updatedAt: new Date().toISOString() };
+    return HttpResponse.json(customers[idx]);
   }),
 
   http.get("/api/customers/:id/visits", ({ params }: HandlerArgs) => {
@@ -298,22 +350,34 @@ export const handlers = [
         count: txns.filter((t) => t.serviceType === ServiceType.HourlySwimming).length,
       },
     };
+    // Generate 7 days of trend data for a proper chart
+    const dailyData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      const dayLabel = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+      const dayMultiplier = [0.6, 0.85, 1.1, 0.75, 1.2, 1.35, 1.0][6 - i];
+      const memTotal = Math.round(byCategory[ServiceType.Membership].total * dayMultiplier * 0.55);
+      const coachTotal = Math.round(byCategory[ServiceType.Coaching].total * dayMultiplier * 0.3);
+      const hourlyTotal = Math.round(byCategory[ServiceType.HourlySwimming].total * dayMultiplier * 0.15);
+      dailyData.push({
+        period: dayLabel,
+        date: dateStr,
+        total: memTotal + coachTotal + hourlyTotal,
+        count: Math.round(txns.length * dayMultiplier * 0.4),
+        byCategory: {
+          [ServiceType.Membership]: memTotal,
+          [ServiceType.Coaching]: coachTotal,
+          [ServiceType.HourlySwimming]: hourlyTotal,
+        },
+      });
+    }
     return HttpResponse.json({
       totalRevenue,
       totalTransactions: txns.length,
       byCategory,
-      dailyRevenue: [
-        {
-          period: today,
-          total: totalRevenue,
-          count: txns.length,
-          byCategory: {
-            [ServiceType.Membership]: byCategory[ServiceType.Membership].total,
-            [ServiceType.Coaching]: byCategory[ServiceType.Coaching].total,
-            [ServiceType.HourlySwimming]: byCategory[ServiceType.HourlySwimming].total,
-          },
-        },
-      ],
+      dailyRevenue: dailyData,
     });
   }),
 
@@ -414,8 +478,8 @@ export const handlers = [
   }),
 
   http.post("/api/attendance/check-in", async ({ request }: HandlerArgs) => {
-    const body = (await request.json()) as { customerId: string; customerName: string; visitType: string; lane?: number };
-    const record: AttendanceRecord = { id: generateId(), customerId: body.customerId, customerName: body.customerName, checkInTime: new Date().toISOString(), visitType: body.visitType as VisitType, lane: body.lane };
+    const body = (await request.json()) as { customerId: string; customerName: string; visitType: string; lane?: number; photoUrl?: string };
+    const record: AttendanceRecord = { id: generateId(), customerId: body.customerId, customerName: body.customerName, checkInTime: new Date().toISOString(), visitType: body.visitType as VisitType, lane: body.lane, photoUrl: body.photoUrl };
     mockAttendance.push(record);
     return HttpResponse.json(record, { status: 201 });
   }),

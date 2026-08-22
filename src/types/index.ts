@@ -49,6 +49,8 @@ export interface Customer {
   age?: number;
   gender?: Gender;
   address?: string;
+  photoUrl?: string;
+  idCardPhoto?: string;
   firstVisitAt: string;
   createdAt: string;
   updatedAt: string;
@@ -156,6 +158,7 @@ export interface Staff {
   role: StaffRole;
   specialization?: string;
   isAvailable: boolean;
+  photoUrl?: string;
   joinedAt: string;
 }
 
@@ -167,6 +170,7 @@ export interface AttendanceRecord {
   checkOutTime?: string;
   visitType: VisitType;
   lane?: number;
+  photoUrl?: string;
 }
 
 export interface DuePayment {

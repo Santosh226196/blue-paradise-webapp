@@ -7,7 +7,7 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { formatCurrency } from "@/lib/utils";
 import {
   IoCheckmarkCircle, IoEye, IoHome, IoReceipt, IoPrint,
-  IoShareOutline, IoPerson, IoCall,
+  IoPerson,
 } from "react-icons/io5";
 
 export function BillPreviewPage() {

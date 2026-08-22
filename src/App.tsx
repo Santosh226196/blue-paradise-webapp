@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Provider } from "react-redux";
 import { store } from "./store";
@@ -9,21 +10,30 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AppLayout } from "./components/layout";
 import { OfflinePage } from "./pages/OfflinePage";
 import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { CustomerListPage } from "./pages/CustomerListPage";
-import { AddCustomerPage } from "./pages/AddCustomerPage";
-import { CustomerProfilePage } from "./pages/CustomerProfilePage";
-import { BillingPage } from "./pages/BillingPage";
-import { BillPreviewPage } from "./pages/BillPreviewPage";
-import { ReportsPage } from "./pages/ReportsPage";
-import { TransactionDetailsPage } from "./pages/TransactionDetailsPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { MembershipPlansPage } from "./pages/MembershipPlansPage";
-import { StaffPage } from "./pages/StaffPage";
-import { AttendancePage } from "./pages/AttendancePage";
-import { DuePaymentsPage } from "./pages/DuePaymentsPage";
-import { SchedulePage } from "./pages/SchedulePage";
-import { AnnouncementsPage } from "./pages/AnnouncementsPage";
+
+const DashboardPage = lazy(() => import("./pages/DashboardPage").then(m => ({ default: m.DashboardPage })));
+const CustomerListPage = lazy(() => import("./pages/CustomerListPage").then(m => ({ default: m.CustomerListPage })));
+const AddCustomerPage = lazy(() => import("./pages/AddCustomerPage").then(m => ({ default: m.AddCustomerPage })));
+const CustomerProfilePage = lazy(() => import("./pages/CustomerProfilePage").then(m => ({ default: m.CustomerProfilePage })));
+const BillingPage = lazy(() => import("./pages/BillingPage").then(m => ({ default: m.BillingPage })));
+const BillPreviewPage = lazy(() => import("./pages/BillPreviewPage").then(m => ({ default: m.BillPreviewPage })));
+const ReportsPage = lazy(() => import("./pages/ReportsPage").then(m => ({ default: m.ReportsPage })));
+const TransactionDetailsPage = lazy(() => import("./pages/TransactionDetailsPage").then(m => ({ default: m.TransactionDetailsPage })));
+const SettingsPage = lazy(() => import("./pages/SettingsPage").then(m => ({ default: m.SettingsPage })));
+const MembershipPlansPage = lazy(() => import("./pages/MembershipPlansPage").then(m => ({ default: m.MembershipPlansPage })));
+const StaffPage = lazy(() => import("./pages/StaffPage").then(m => ({ default: m.StaffPage })));
+const AttendancePage = lazy(() => import("./pages/AttendancePage").then(m => ({ default: m.AttendancePage })));
+const DuePaymentsPage = lazy(() => import("./pages/DuePaymentsPage").then(m => ({ default: m.DuePaymentsPage })));
+const SchedulePage = lazy(() => import("./pages/SchedulePage").then(m => ({ default: m.SchedulePage })));
+const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage").then(m => ({ default: m.AnnouncementsPage })));
+
+function RouteSpinner() {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[50vh]">
+      <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function AppContent() {
   const isOnline = useOnlineStatus();
@@ -41,25 +51,25 @@ function AppContent() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<DashboardPage />} />
-          <Route path="customers" element={<CustomerListPage />} />
-          <Route path="customers/new" element={<AddCustomerPage />} />
-          <Route path="customers/:id" element={<CustomerProfilePage />} />
-          <Route path="billing" element={<BillingPage />} />
-          <Route path="billing/:customerId" element={<BillingPage />} />
-          <Route path="bill/:transactionId" element={<BillPreviewPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="transactions/:id" element={<TransactionDetailsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="membership-plans" element={<MembershipPlansPage />} />
-          <Route path="staff" element={<StaffPage />} />
-          <Route path="attendance" element={<AttendancePage />} />
-          <Route path="due-payments" element={<DuePaymentsPage />} />
-          <Route path="schedule" element={<SchedulePage />} />
-          <Route path="announcements" element={<AnnouncementsPage />} />
+          <Route index element={<Suspense fallback={<RouteSpinner />}><DashboardPage /></Suspense>} />
+          <Route path="customers" element={<Suspense fallback={<RouteSpinner />}><CustomerListPage /></Suspense>} />
+          <Route path="customers/new" element={<Suspense fallback={<RouteSpinner />}><AddCustomerPage /></Suspense>} />
+          <Route path="customers/:id" element={<Suspense fallback={<RouteSpinner />}><CustomerProfilePage /></Suspense>} />
+          <Route path="billing" element={<Suspense fallback={<RouteSpinner />}><BillingPage /></Suspense>} />
+          <Route path="billing/:customerId" element={<Suspense fallback={<RouteSpinner />}><BillingPage /></Suspense>} />
+          <Route path="bill/:transactionId" element={<Suspense fallback={<RouteSpinner />}><BillPreviewPage /></Suspense>} />
+          <Route path="reports" element={<Suspense fallback={<RouteSpinner />}><ReportsPage /></Suspense>} />
+          <Route path="transactions/:id" element={<Suspense fallback={<RouteSpinner />}><TransactionDetailsPage /></Suspense>} />
+          <Route path="settings" element={<Suspense fallback={<RouteSpinner />}><SettingsPage /></Suspense>} />
+          <Route path="membership-plans" element={<Suspense fallback={<RouteSpinner />}><MembershipPlansPage /></Suspense>} />
+          <Route path="staff" element={<Suspense fallback={<RouteSpinner />}><StaffPage /></Suspense>} />
+          <Route path="attendance" element={<Suspense fallback={<RouteSpinner />}><AttendancePage /></Suspense>} />
+          <Route path="due-payments" element={<Suspense fallback={<RouteSpinner />}><DuePaymentsPage /></Suspense>} />
+          <Route path="schedule" element={<Suspense fallback={<RouteSpinner />}><SchedulePage /></Suspense>} />
+          <Route path="announcements" element={<Suspense fallback={<RouteSpinner />}><AnnouncementsPage /></Suspense>} />
         </Route>
         <Route path="*" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route index element={<DashboardPage />} />
+          <Route index element={<Suspense fallback={<RouteSpinner />}><DashboardPage /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>

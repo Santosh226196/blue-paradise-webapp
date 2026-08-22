@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/// <reference types="vite/client" />
+
 declare module "msw" {
   export const http: any;
   export const HttpResponse: any;

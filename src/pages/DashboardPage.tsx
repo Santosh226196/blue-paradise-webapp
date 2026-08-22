@@ -92,7 +92,7 @@ export function DashboardPage() {
           <SkeletonGlass lines={3} />
         ) : todayTxns && todayTxns.length > 0 ? (
           <div className="space-y-2">
-            {todayTxns.map((txn, i) => (
+            {todayTxns.map((txn) => (
               <Link
                 key={txn.id}
                 to={`/transactions/${txn.id}`}

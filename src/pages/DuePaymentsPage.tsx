@@ -7,8 +7,9 @@ import {
   useGetDuePaymentsSummaryQuery,
 } from "@/store/api/duePaymentsApi";
 import { useGetCustomersQuery } from "@/store/api/customersApi";
-import { GlassCard, PrimaryButton, GhostButton, EmptyState, SkeletonGlass } from "@/components/ui";
+import { GlassCard, PrimaryButton, GhostButton, EmptyState, SkeletonGlass, Modal } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/components/Toast";
 import {
   IoAlertCircle, IoAdd, IoCheckmarkCircle, IoTrash, IoClose, IoSearch, IoCash,
 } from "react-icons/io5";
@@ -20,6 +21,7 @@ export function DuePaymentsPage() {
   const [createDuePayment] = useCreateDuePaymentMutation();
   const [markAsPaid] = useMarkAsPaidMutation();
   const [deletePayment] = useDeleteDuePaymentMutation();
+  const { showToast } = useToast();
 
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
@@ -29,6 +31,10 @@ export function DuePaymentsPage() {
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  // Confirmation modal state
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: "", name: "" });
+  const [payModal, setPayModal] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: "", name: "" });
+
   function resetForm() {
     setSearch(""); setSelectedCustomer(null); setDescription(""); setAmount(""); setDueDate("");
     setShowForm(false);
@@ -36,24 +42,39 @@ export function DuePaymentsPage() {
 
   async function handleCreate() {
     if (!selectedCustomer || !amount || !dueDate) return;
-    await createDuePayment({
-      customerId: selectedCustomer.id,
-      customerName: selectedCustomer.name,
-      customerMobile: "",
-      description,
-      amount: Number(amount),
-      dueDate,
-      status: "PENDING",
-    });
-    resetForm();
+    try {
+      await createDuePayment({
+        customerId: selectedCustomer.id,
+        customerName: selectedCustomer.name,
+        customerMobile: "",
+        description,
+        amount: Number(amount),
+        dueDate,
+        status: "PENDING",
+      }).unwrap();
+      showToast("success", `Due payment of ${formatCurrency(Number(amount))} created for ${selectedCustomer.name}`);
+      resetForm();
+    } catch {
+      showToast("error", "Failed to create due payment. Please try again.");
+    }
   }
 
   async function handleMarkPaid(id: string) {
-    await markAsPaid(id);
+    try {
+      await markAsPaid(id).unwrap();
+      showToast("success", "Payment marked as paid successfully!");
+    } catch {
+      showToast("error", "Failed to update payment status.");
+    }
   }
 
   async function handleDelete(id: string) {
-    await deletePayment(id);
+    try {
+      await deletePayment(id).unwrap();
+      showToast("success", "Due payment deleted successfully.");
+    } catch {
+      showToast("error", "Failed to delete due payment.");
+    }
   }
 
   const inputStyle = {
@@ -203,7 +224,7 @@ export function DuePaymentsPage() {
                   <p className="text-sm font-bold font-mono" style={{ color: "var(--accent-coral)" }}>{formatCurrency(p.amount)}</p>
                   <div className="flex items-center gap-1">
                     {p.status !== "PAID" && (
-                      <GhostButton size="sm" onClick={() => handleMarkPaid(p.id)}>
+                      <GhostButton size="sm" onClick={() => setPayModal({ open: true, id: p.id, name: p.customerName })}>
                         <IoCheckmarkCircle size={14} /> Pay
                       </GhostButton>
                     )}
@@ -211,7 +232,7 @@ export function DuePaymentsPage() {
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
                         style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)" }}>Paid</span>
                     )}
-                    <GhostButton size="sm" onClick={() => handleDelete(p.id)} style={{ color: "var(--accent-coral)" }}>
+                    <GhostButton size="sm" onClick={() => setDeleteModal({ open: true, id: p.id, name: p.customerName })} style={{ color: "var(--accent-coral)" }}>
                       <IoTrash size={14} />
                     </GhostButton>
                   </div>
@@ -232,6 +253,30 @@ export function DuePaymentsPage() {
           }
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, id: "", name: "" })}
+        onConfirm={() => { handleDelete(deleteModal.id); setDeleteModal({ open: false, id: "", name: "" }); }}
+        variant="confirm"
+        title="Delete Due Payment"
+        message={`Are you sure you want to delete the due payment for ${deleteModal.name}? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+      />
+
+      {/* Mark as Paid Confirmation Modal */}
+      <Modal
+        isOpen={payModal.open}
+        onClose={() => setPayModal({ open: false, id: "", name: "" })}
+        onConfirm={() => { handleMarkPaid(payModal.id); setPayModal({ open: false, id: "", name: "" }); }}
+        variant="confirm"
+        title="Mark as Paid"
+        message={`Mark the due payment for ${payModal.name} as paid?`}
+        confirmLabel="Mark Paid"
+        cancelLabel="Cancel"
+      />
     </div>
   );
 }

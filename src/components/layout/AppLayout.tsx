@@ -3,31 +3,20 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { AmbientBackground } from "./AmbientBackground";
+import { BrandThemeDropdown } from "./BrandThemeDropdown";
 import { SearchModal } from "@/components/SearchModal";
+import { Logo } from "@/components/Logo";
 import { useAppSelector } from "@/hooks/store";
-import { IoMenu, IoClose, IoNotificationsOutline, IoSearch } from "react-icons/io5";
-
-const routeTitles: Record<string, string> = {
-  "/": "Dashboard",
-  "/customers": "Customers",
-  "/billing": "Billing",
-  "/reports": "Reports",
-  "/settings": "Settings",
-  "/staff": "Staff",
-  "/schedule": "Schedule",
-  "/attendance": "Attendance",
-  "/announcements": "Announcements",
-};
-
-function getPageTitle(pathname: string): string {
-  if (routeTitles[pathname]) return routeTitles[pathname];
-  if (pathname.startsWith("/customers/new")) return "Add Customer";
-  if (pathname.startsWith("/customers/")) return "Customer Profile";
-  if (pathname.startsWith("/membership-plans")) return "Plans";
-  if (pathname.startsWith("/due-payments")) return "Due Payments";
-  if (pathname.startsWith("/billing/new")) return "New Bill";
-  return "Blue Paradise";
-}
+import { useTheme } from "@/hooks/useTheme";
+import {
+  IoMenu,
+  IoClose,
+  IoNotificationsOutline,
+  IoSearch,
+  IoSunnyOutline,
+  IoMoonOutline,
+  IoAdd,
+} from "react-icons/io5";
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,6 +24,7 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -52,103 +42,127 @@ export function AppLayout() {
     return () => window.removeEventListener("keydown", handleSearchKey);
   }, [handleSearchKey]);
 
-  const pageTitle = getPageTitle(location.pathname);
   const userInitial = user?.username?.charAt(0).toUpperCase() ?? "A";
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative font-sans">
       <AmbientBackground />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Top navbar */}
-      <div
-        className="fixed top-0 left-0 right-0 z-30 flex items-center gap-3 px-4 sm:px-5 h-14 lg:ml-[260px]"
+      <header
+        className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 h-16 lg:ml-[260px] border-b transition-all"
         style={{
           background: "var(--sidebar-bg)",
-          backdropFilter: "blur(32px)",
-          WebkitBackdropFilter: "blur(32px)",
-          borderBottom: "1px solid var(--glass-border)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          borderColor: "var(--glass-border)",
         }}
       >
-        {/* Hamburger — mobile only */}
-        <button
-          onClick={() => setSidebarOpen((prev) => !prev)}
-          className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 shrink-0"
-          style={{ background: "var(--glass-bg)", color: "var(--text-primary)" }}
-        >
-          {sidebarOpen ? <IoClose size={20} /> : <IoMenu size={20} />}
-        </button>
+        {/* Left: Mobile controls or Desktop Search */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 shrink-0 border border-white/10"
+            style={{ background: "var(--glass-bg)", color: "var(--text-primary)" }}
+            aria-label="Toggle navigation menu"
+          >
+            {sidebarOpen ? <IoClose size={20} /> : <IoMenu size={20} />}
+          </button>
 
-        {/* Logo — mobile only */}
-        <div className="lg:hidden flex items-center gap-2.5">
-          <div className="relative">
+          {/* Logo — mobile only */}
+          <div className="lg:hidden flex items-center gap-2 shrink-0">
+            <Logo size={36} />
+            <span className="font-display text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>
+              Blue Paradise
+            </span>
+          </div>
+
+          {/* Global Search Button — left side */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 px-2.5 lg:px-3 py-1.5 rounded-xl transition-all duration-200 border border-white/10 hover:border-cyan-400/30 text-xs font-medium min-w-0"
+            style={{ color: "var(--text-secondary)", background: "var(--glass-bg)" }}
+            title="Search (⌘K)"
+          >
+            <IoSearch size={16} className="text-cyan-400 shrink-0" />
+            <span className="hidden lg:inline">Search club...</span>
+            <kbd className="hidden lg:inline-block px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-mono text-slate-400 border border-white/10">
+              ⌘K
+            </kbd>
+          </button>
+        </div>
+
+        {/* Right Action Tools */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Brand Theme Selector */}
+          <BrandThemeDropdown />
+
+          {/* Quick Action: New Bill (Desktop) */}
+          <button
+            onClick={() => navigate("/billing")}
+            className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-teal-400 shadow-md shadow-cyan-500/20 hover:brightness-110 active:scale-95 transition-all"
+          >
+            <IoAdd size={16} />
+            <span>New Bill</span>
+          </button>
+
+          {/* Theme Switcher - Color */}
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 border border-white/10 hover:border-white/20 active:scale-95"
+            style={{ color: "var(--text-primary)", background: "var(--glass-bg)" }}
+            title={`${theme === "dark" ? "Light" : "Dark"} theme`}
+          >
+            {theme === "dark" ? (
+              <IoSunnyOutline size={18} className="text-amber-300" />
+            ) : (
+              <IoMoonOutline size={18} className="text-cyan-600" />
+            )}
+          </button>
+
+          {/* Notifications */}
+          <button
+            onClick={() => navigate("/announcements")}
+            className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 border border-white/10 hover:border-white/20 active:scale-95"
+            style={{ color: "var(--text-secondary)", background: "var(--glass-bg)" }}
+            title="Announcements & Alerts"
+          >
+            <IoNotificationsOutline size={18} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-sm shadow-rose-500" />
+          </button>
+
+          {/* User Profile Pill (Desktop) */}
+          <div
+            onClick={() => navigate("/settings")}
+            className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-1 rounded-xl cursor-pointer transition-all duration-200 border border-white/10 hover:border-white/20 hover:bg-white/5"
+            style={{ background: "var(--glass-bg)" }}
+          >
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 relative z-10"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-slate-950 shadow-sm"
               style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
             >
-              <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-                <path d="M4 20c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M4 12c3-5 6-5 9 0s6 5 9 0 6-5 9 0" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-              </svg>
+              {userInitial}
+            </div>
+            <div className="text-left leading-tight hidden md:block">
+              <p className="text-xs font-bold truncate max-w-[80px]" style={{ color: "var(--text-primary)" }}>
+                {user?.username ?? "Admin"}
+              </p>
+              <p className="text-[10px] text-cyan-400 font-semibold">Manager</p>
             </div>
           </div>
-          <span className="font-display text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-            Blue Paradise
-          </span>
         </div>
+      </header>
 
-        {/* Desktop page title */}
-        <div className="hidden lg:flex items-center gap-2">
-          <h2 className="font-display text-base font-semibold" style={{ color: "var(--text-primary)" }}>
-            {pageTitle}
-          </h2>
-        </div>
-
-        <div className="flex-1" />
-
-        {/* Right actions */}
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95"
-          style={{ color: "var(--text-secondary)", background: "var(--glass-bg)" }}
-        >
-          <IoSearch size={18} />
-        </button>
-        <button
-          onClick={() => navigate("/announcements")}
-          className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95"
-          style={{ color: "var(--text-secondary)", background: "var(--glass-bg)" }}
-        >
-          <IoNotificationsOutline size={18} />
-          {/* Notification dot */}
-          <span
-            className="absolute top-2 right-2 w-2 h-2 rounded-full"
-            style={{
-              background: "var(--accent-coral)",
-              boxShadow: "0 0 6px var(--accent-coral)",
-            }}
-          />
-        </button>
-
-        {/* User avatar — desktop only */}
-        <div
-          className="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center shrink-0 text-[12px] font-bold cursor-pointer transition-all duration-200 hover:scale-105"
-          style={{
-            background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))",
-            color: "white",
-          }}
-          onClick={() => navigate("/settings")}
-        >
-          {userInitial}
-        </div>
-      </div>
-
-      <main className="lg:ml-[260px] min-h-screen pb-28 lg:pb-8 pt-14">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Content Area */}
+      <main className="lg:ml-[260px] min-h-screen pb-28 lg:pb-12 pt-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <Outlet />
         </div>
       </main>
+
       <BottomNav />
     </div>
   );
