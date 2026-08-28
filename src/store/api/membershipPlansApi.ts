@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { MembershipPlan } from "@/types";
-
-const BASE_URL = "/api";
+import { baseQueryFor } from "./base";
 
 export const membershipPlansApi = createApi({
   reducerPath: "membershipPlansApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/membership-plans` }),
+  baseQuery: baseQueryFor("/membership-plans"),
   tagTypes: ["MembershipPlan"],
   endpoints: (builder) => ({
     getMembershipPlans: builder.query<MembershipPlan[], void>({

@@ -25,7 +25,7 @@ export function DuePaymentsPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
-  const { data: customers } = useGetCustomersQuery({ search });
+  const { data: customers } = useGetCustomersQuery({ search }, { skip: !showForm && search.length < 2 });
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null);
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");

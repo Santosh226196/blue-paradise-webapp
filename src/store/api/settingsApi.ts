@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { BusinessSettings } from "@/types";
-
-const BASE_URL = "/api";
+import { baseQueryFor } from "./base";
 
 export const settingsApi = createApi({
   reducerPath: "settingsApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/settings` }),
+  baseQuery: baseQueryFor("/settings"),
   tagTypes: ["Settings"],
   endpoints: (builder) => ({
     getSettings: builder.query<BusinessSettings, void>({

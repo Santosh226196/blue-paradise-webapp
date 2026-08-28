@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Staff } from "@/types";
-
-const BASE_URL = "/api";
+import { baseQueryFor } from "./base";
 
 export const staffApi = createApi({
   reducerPath: "staffApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/staff` }),
+  baseQuery: baseQueryFor("/staff"),
   tagTypes: ["Staff"],
   endpoints: (builder) => ({
     getStaff: builder.query<Staff[], { search?: string; role?: string }>({

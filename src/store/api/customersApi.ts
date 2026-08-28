@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Customer, Visit, Membership, Coaching, Transaction } from "@/types";
-
-const BASE_URL = "/api";
+import { baseQueryFor } from "./base";
 
 export const customersApi = createApi({
   reducerPath: "customersApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/customers` }),
+  baseQuery: baseQueryFor("/customers"),
   tagTypes: ["Customer", "Visit", "Membership", "Coaching"],
   endpoints: (builder) => ({
     getCustomers: builder.query<Customer[], { search?: string; type?: string }>({

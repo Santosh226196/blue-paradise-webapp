@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import { useGetDashboardStatsQuery, useGetTodayTransactionsQuery } from "@/store/api/billingApi";
-import { useGetSettingsQuery } from "@/store/api/settingsApi";
 import { GlassCard, StatCard, PrimaryButton, GhostButton, SkeletonGlass, EmptyState } from "@/components/ui";
 import { formatCurrency, formatTime } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/store";
@@ -8,11 +7,13 @@ import {
   IoPeople, IoFootsteps, IoCash, IoPersonAdd, IoReceipt, IoArrowForward, IoTime,
 } from "react-icons/io5";
 
+const OPEN_TIME = (import.meta.env.VITE_DEFAULT_OPEN_TIME as string) || "05:00";
+const CLOSE_TIME = (import.meta.env.VITE_DEFAULT_CLOSE_TIME as string) || "22:00";
+
 export function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
   const { data: stats, isLoading: statsLoading } = useGetDashboardStatsQuery();
   const { data: todayTxns, isLoading: txnsLoading } = useGetTodayTransactionsQuery();
-  const { data: settings } = useGetSettingsQuery();
 
   const greeting = getGreeting();
 
@@ -28,28 +29,26 @@ export function DashboardPage() {
       </div>
 
       {/* Club Timing */}
-      {settings?.clubTiming && (
-        <GlassCard padding={false} className="p-4 animate-fade-up stagger-1">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)" }}
-            >
-              <IoTime size={18} />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Club Timing</p>
-              <p className="text-sm font-bold font-mono" style={{ color: "var(--text-primary)" }}>
-                {settings.clubTiming.openTime} — {settings.clubTiming.closeTime}
-              </p>
-            </div>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
-              style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)" }}
-            >
-              Open Now
-            </span>
+      <GlassCard padding={false} className="p-4 animate-fade-up stagger-1">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)" }}
+          >
+            <IoTime size={18} />
           </div>
-        </GlassCard>
-      )}
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Club Timing</p>
+            <p className="text-sm font-bold font-mono" style={{ color: "var(--text-primary)" }}>
+              {OPEN_TIME} — {CLOSE_TIME}
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
+            style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)" }}
+          >
+            Open Now
+          </span>
+        </div>
+      </GlassCard>
 
       {statsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

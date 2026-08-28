@@ -22,7 +22,7 @@ export function AttendancePage() {
 
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [search, setSearch] = useState("");
-  const { data: customers } = useGetCustomersQuery({ search });
+  const { data: customers } = useGetCustomersQuery({ search }, { skip: !showCheckIn && search.length < 2 });
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string; photoUrl?: string } | null>(null);
   const [visitType, setVisitType] = useState<string>(VisitType.Membership);
   const [lane, setLane] = useState("");
