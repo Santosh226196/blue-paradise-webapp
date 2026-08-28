@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { ScheduleSlot, DayOfWeek } from "@/types";
-
-const BASE_URL = "/api";
+import { baseQueryFor } from "./base";
 
 export const scheduleApi = createApi({
   reducerPath: "scheduleApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/schedule` }),
+  baseQuery: baseQueryFor("/schedule"),
   tagTypes: ["Schedule"],
   endpoints: (builder) => ({
     getSchedule: builder.query<ScheduleSlot[], { day?: DayOfWeek }>({

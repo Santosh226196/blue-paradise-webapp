@@ -12,7 +12,6 @@ import {
 import { useAppDispatch } from "@/hooks/store";
 import { setCredentials } from "@/store/slices/authSlice";
 import { useTheme } from "@/hooks/useTheme";
-import { useGetSettingsQuery } from "@/store/api/settingsApi";
 import { PrimaryButton, GhostButton } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 import {
@@ -43,7 +42,6 @@ export function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
-  const { data: settings } = useGetSettingsQuery();
 
   // Mode state
   const [view, setView] = useState<AuthView>("login");
@@ -548,28 +546,24 @@ export function LoginPage() {
         )}
 
         {/* Club Hours Information Card */}
-        {settings?.clubTiming && (
-          <div className="mt-4 liquid-glass relative overflow-hidden p-3.5 border border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-400/15 text-cyan-300">
-                <IoTime size={16} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Club Operating Hours</p>
-                <p className="text-xs font-bold font-mono text-white">
-                  {settings.clubTiming.openTime} — {settings.clubTiming.closeTime}
-                </p>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Open Daily
-              </span>
+        <div className="mt-4 liquid-glass relative overflow-hidden p-3.5 border border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-400/15 text-cyan-300">
+              <IoTime size={16} />
             </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Club Operating Hours</p>
+              <p className="text-xs font-bold font-mono text-white">05:00 — 22:00</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Open Daily
+            </span>
           </div>
-        )}
+        </div>
 
         {/* Footer */}
         <p className="text-center text-[11px] mt-5 font-medium text-slate-400">
-          {settings?.businessName || "Blue Paradise Water Club"} &copy; {new Date().getFullYear()}
+          Blue Paradise Water Club &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

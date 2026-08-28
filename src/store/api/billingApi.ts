@@ -1,7 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Transaction, ServiceType, PaymentMethod } from "@/types";
-
-const BASE_URL = "/api";
+import { baseQueryFor } from "./base";
 
 export interface CreateTransactionPayload {
   customerId: string;
@@ -13,7 +12,7 @@ export interface CreateTransactionPayload {
 
 export const billingApi = createApi({
   reducerPath: "billingApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/billing` }),
+  baseQuery: baseQueryFor("/billing"),
   tagTypes: ["Transaction"],
   endpoints: (builder) => ({
     getTransactions: builder.query<Transaction[], { from?: string; to?: string }>({

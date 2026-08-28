@@ -24,7 +24,6 @@ export function SchedulePage() {
   const [viewMode, setViewMode] = useState<"week" | "day">("week");
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(getTodayName());
   const { data: allSlots, isLoading: weekLoading } = useGetScheduleQuery({});
-  const { data: daySlots, isLoading: dayLoading } = useGetScheduleQuery({ day: selectedDay });
   const { data: coaches } = useGetStaffQuery({ role: "COACH" });
   const [createSlot] = useCreateScheduleSlotMutation();
   const [updateSlot] = useUpdateScheduleSlotMutation();
@@ -41,8 +40,8 @@ export function SchedulePage() {
   const [maxCapacity, setMaxCapacity] = useState("8");
 
   const todayName = getTodayName();
-  const displaySlots = viewMode === "week" ? allSlots : daySlots;
-  const isLoading = viewMode === "week" ? weekLoading : dayLoading;
+  const displaySlots = viewMode === "week" ? allSlots : allSlots?.filter((s) => s.day === selectedDay) ?? [];
+  const isLoading = weekLoading;
 
   const weekStats = useMemo(() => {
     if (!allSlots) return { total: 0, lanes: 0, coaching: 0, open: 0, totalCapacity: 0 };

@@ -7,7 +7,7 @@ export function SearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { data: customers } = useGetCustomersQuery({ search: query.length >= 2 ? query : undefined });
+  const { data: customers } = useGetCustomersQuery({ search: query.length >= 2 ? query : undefined }, { skip: query.length < 2 });
 
   useEffect(() => {
     if (isOpen) {

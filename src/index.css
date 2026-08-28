@@ -103,6 +103,29 @@ body {
   --receipt-divider-strong: rgba(8,34,43,0.25);
 }
 
+/* ── Light (aqua) theme: remap hardcoded light text utilities so
+      text-white / text-slate-* / text-cyan-* render readable on the light background ── */
+[data-theme="aqua"] {
+  --color-white: #08222B;
+  --color-slate-50: #08222B;
+  --color-slate-100: #0B2E38;
+  --color-slate-200: #123E49;
+  --color-slate-300: #24505C;
+  --color-slate-400: #3D6B76;
+  --color-slate-500: #517682;
+  --color-slate-600: #6A8691;
+  --color-slate-700: #80969F;
+  --color-slate-800: #95A6AD;
+  --color-slate-900: #A8B5BC;
+  --color-cyan-200: #0E8E8A;
+  --color-cyan-300: #0C7A76;
+  --color-cyan-400: #0E6B6D;
+  --color-cyan-500: #146C8E;
+  --color-cyan-600: #0A5660;
+  --color-teal-300: #0E7E7B;
+  --color-teal-400: #0C6F6D;
+}
+
 body[data-theme="dark"],
 [data-theme="dark"] body {
   background:
@@ -117,6 +140,7 @@ body[data-theme="dark"],
 
 body[data-theme="aqua"],
 [data-theme="aqua"] body {
+  color: var(--text-primary);
   background:
     radial-gradient(ellipse 80% 60% at 20% 0%, rgba(95, 217, 214, 0.45), transparent 70%),
     radial-gradient(ellipse 70% 60% at 85% 40%, rgba(20, 108, 142, 0.18), transparent 65%),

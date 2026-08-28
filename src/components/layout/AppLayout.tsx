@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { AmbientBackground } from "./AmbientBackground";
-import { BrandThemeDropdown } from "./BrandThemeDropdown";
 import { SearchModal } from "@/components/SearchModal";
 import { Logo } from "@/components/Logo";
 import { useAppSelector } from "@/hooks/store";
@@ -97,9 +96,6 @@ export function AppLayout() {
 
         {/* Right Action Tools */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Brand Theme Selector */}
-          <BrandThemeDropdown />
-
           {/* Quick Action: New Bill (Desktop) */}
           <button
             onClick={() => navigate("/billing")}

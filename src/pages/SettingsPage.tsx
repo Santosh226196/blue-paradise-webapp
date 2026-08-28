@@ -17,7 +17,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
-  const { data: settings, isLoading } = useGetSettingsQuery();
+  const { data: settings, isLoading, isError } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
   const [changePassword, { isLoading: changingPassword }] = useChangePasswordMutation();
   const [logout] = useLogoutMutation();
@@ -31,8 +31,16 @@ export function SettingsPage() {
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
 
-  if (isLoading) return <div className="space-y-4"><SkeletonGlass lines={4} /></div>;
-  if (!settings) return null;
+  if (isLoading && !settings) return <div className="space-y-4"><SkeletonGlass lines={4} /></div>;
+  if (isError && !settings) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>Couldn't load settings.</p>
+        <PrimaryButton onClick={() => window.location.reload()} size="sm">Retry</PrimaryButton>
+      </div>
+    );
+  }
+  if (!settings) return <div className="space-y-4"><SkeletonGlass lines={4} /></div>;
 
   const nameVal = businessName || settings.businessName;
   const prefixVal = billPrefix || settings.billPrefix;
