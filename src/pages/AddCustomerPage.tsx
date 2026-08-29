@@ -4,7 +4,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useCreateCustomerMutation } from "@/store/api/customersApi";
-import { GlassCard, PrimaryButton, CameraCaptureModal, Modal } from "@/components/ui";
+import {
+  GlassCard,
+  PrimaryButton,
+  CameraCaptureModal,
+  Modal,
+  Input,
+} from "@/components/ui";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Gender } from "@/types";
 import { useToast } from "@/components/Toast";
@@ -24,7 +30,14 @@ import {
 const customerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   mobile: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
-  aadhaarNumber: z.string().regex(/^\d{4}\s?\d{4}\s?\d{4}$/, "Enter a valid 12-digit Aadhaar number (XXXX XXXX XXXX)").optional().or(z.literal("")),
+  aadhaarNumber: z
+    .string()
+    .regex(
+      /^\d{4}\s?\d{4}\s?\d{4}$/,
+      "Enter a valid 12-digit Aadhaar number (XXXX XXXX XXXX)",
+    )
+    .optional()
+    .or(z.literal("")),
   age: z.coerce.number().min(1).max(120).optional().or(z.literal("")),
   gender: z.nativeEnum(Gender).optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
@@ -39,11 +52,23 @@ export function AddCustomerPage() {
   const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
   const [idCardPhoto, setIdCardPhoto] = useState<string | null>(null);
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
-  const [cameraTarget, setCameraTarget] = useState<"avatar" | "idCard">("avatar");
+  const [cameraTarget, setCameraTarget] = useState<"avatar" | "idCard">(
+    "avatar",
+  );
   const { showToast } = useToast();
-  const [errorModal, setErrorModal] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
+  const [errorModal, setErrorModal] = useState<{
+    open: boolean;
+    message: string;
+  }>({ open: false, message: "" });
 
-  const { register, handleSubmit, formState: { errors }, setError, watch, setValue } = useForm<CustomerForm>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    watch,
+    setValue,
+  } = useForm<CustomerForm>({
     resolver: zodResolver(customerSchema),
   });
 
@@ -85,17 +110,17 @@ export function AddCustomerPage() {
       navigate(`/customers/${result.id}`);
     } catch {
       showToast("error", "A customer with this mobile already exists.");
-      setErrorModal({ open: true, message: "A customer with this mobile number already exists in the system. Please use a different mobile number." });
-      setError("mobile", { message: "A customer with this mobile already exists" });
+      setErrorModal({
+        open: true,
+        message:
+          "A customer with this mobile number already exists in the system. Please use a different mobile number.",
+      });
+      setError("mobile", {
+        message: "A customer with this mobile already exists",
+      });
     }
   }
 
-  const inputStyle = {
-    background: "var(--input-bg)",
-    border: "1.5px solid var(--input-border)",
-    color: "var(--text-primary)",
-    outlineColor: "var(--input-focus-ring)",
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 px-0 sm:px-0">
@@ -104,27 +129,35 @@ export function AddCustomerPage() {
         isOpen={cameraModalOpen}
         onClose={() => setCameraModalOpen(false)}
         onCapture={handleCapturedPhoto}
-        title={cameraTarget === "avatar" ? "Capture Customer Photo" : "Capture ID / Aadhaar Document"}
+        title={
+          cameraTarget === "avatar"
+            ? "Capture Customer Photo"
+            : "Capture ID / Aadhaar Document"
+        }
         guideMode={cameraTarget === "avatar" ? "avatar" : "document"}
         initialFacingMode={cameraTarget === "avatar" ? "user" : "environment"}
       />
 
       {/* Breadcrumb */}
-      <Breadcrumb items={[
-        { label: "Customers", href: "/customers" },
-        { label: "New Customer" }
-      ]} />
+      <Breadcrumb
+        items={[
+          { label: "Customers", href: "/customers" },
+          { label: "New Customer" },
+        ]}
+      />
 
       <div className="flex items-center gap-3 animate-fade-up">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="liquid-glass p-2.5 rounded-xl transition-all duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95 border border-white/10"
+          className="liquid-glass p-2.5 rounded-xl transition-all duration-200 min-w-11 min-h-11 flex items-center justify-center active:scale-95 border border-white/10 cursor-pointer"
         >
-          <IoArrowBack size={20} style={{ color: "var(--text-primary)" }} />
+          <IoArrowBack size={20} className="text-fg" />
         </button>
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
+          <h1
+            className="font-display text-2xl sm:text-3xl font-bold text-fg"
+          >
             Register New Member
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -161,7 +194,7 @@ export function AddCustomerPage() {
                     <button
                       type="button"
                       onClick={() => setAvatarPhoto(null)}
-                      className="absolute -top-1 -right-1 p-1.5 rounded-full bg-rose-500 text-white shadow-md hover:bg-rose-600 transition-colors"
+                      className="absolute -top-1 -right-1 p-1.5 rounded-full bg-rose-500 text-white shadow-md hover:bg-rose-600 transition-colors cursor-pointer"
                       title="Remove photo"
                     >
                       <IoTrashOutline size={14} />
@@ -176,21 +209,25 @@ export function AddCustomerPage() {
                   </div>
                 )}
 
-                <p className="text-xs font-bold text-white mb-2">Member Photo</p>
+                <p className="text-xs font-bold text-white mb-2">
+                  Member Photo
+                </p>
                 <button
                   type="button"
                   onClick={() => openCameraFor("avatar")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-teal-400 shadow-md shadow-cyan-500/20 hover:brightness-110 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-linear-to-r from-cyan-400 to-teal-400 shadow-md shadow-cyan-500/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   <IoCamera size={16} />
-                  <span>{avatarPhoto ? "Retake Face Photo" : "Click Face Photo"}</span>
+                  <span>
+                    {avatarPhoto ? "Retake Face Photo" : "Click Face Photo"}
+                  </span>
                 </button>
               </div>
 
               {/* ID Document Photo Box */}
               <div className="flex flex-col items-center justify-center p-5 sm:p-6 rounded-xl border border-dashed border-white/20 bg-black/20 text-center">
                 {idCardPhoto ? (
-                  <div className="relative mb-3 group w-full max-w-[160px] aspect-3/2">
+                  <div className="relative mb-3 group w-full max-w-40 aspect-3/2">
                     <img
                       src={idCardPhoto}
                       alt="ID Document"
@@ -199,7 +236,7 @@ export function AddCustomerPage() {
                     <button
                       type="button"
                       onClick={() => setIdCardPhoto(null)}
-                      className="absolute -top-1 -right-1 p-1.5 rounded-full bg-rose-500 text-white shadow-md hover:bg-rose-600 transition-colors"
+                      className="absolute -top-1 -right-1 p-1.5 rounded-full bg-rose-500 text-white shadow-md hover:bg-rose-600 transition-colors cursor-pointer"
                       title="Remove ID photo"
                     >
                       <IoTrashOutline size={14} />
@@ -214,14 +251,18 @@ export function AddCustomerPage() {
                   </div>
                 )}
 
-                <p className="text-xs font-bold text-white mb-2">ID / Aadhaar Document</p>
+                <p className="text-xs font-bold text-white mb-2">
+                  ID / Aadhaar Document
+                </p>
                 <button
                   type="button"
                   onClick={() => openCameraFor("idCard")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-teal-400 shadow-md shadow-cyan-500/20 hover:brightness-110 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-linear-to-r from-cyan-400 to-teal-400 shadow-md shadow-cyan-500/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   <IoCamera size={16} />
-                  <span>{idCardPhoto ? "Retake ID Photo" : "Click ID Card"}</span>
+                  <span>
+                    {idCardPhoto ? "Retake ID Photo" : "Click ID Card"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -229,83 +270,70 @@ export function AddCustomerPage() {
 
           {/* Name + Mobile — side by side on desktop */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-            <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="name">
-                <IoPerson size={13} className="text-cyan-400" /> Full Name *
-              </label>
-              <input
-                id="name"
-                {...register("name")}
-                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[48px]"
-                style={inputStyle}
-                placeholder="Enter full legal name"
-              />
-              {errors.name && <p className="text-xs font-medium text-rose-400">{errors.name.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="mobile">
-                <IoPhonePortrait size={13} className="text-cyan-400" /> Mobile Number *
-              </label>
-              <input
-                id="mobile"
-                {...register("mobile")}
-                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium font-mono transition-all duration-200 min-h-[48px]"
-                style={inputStyle}
-                placeholder="10-digit mobile number"
-                maxLength={10}
-              />
-              {errors.mobile && <p className="text-xs font-medium text-rose-400">{errors.mobile.message}</p>}
-            </div>
+            <Input
+              label="Full Name *"
+              icon={IoPerson}
+              {...register("name")}
+              className="min-h-12"
+              placeholder="Enter full legal name"
+              error={errors.name?.message}
+            />
+            <Input
+              label="Mobile Number *"
+              icon={IoPhonePortrait}
+              {...register("mobile")}
+              className="font-mono min-h-12"
+              placeholder="10-digit mobile number"
+              maxLength={10}
+              error={errors.mobile?.message}
+            />
           </div>
 
           {/* Aadhaar Number */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="aadhaarNumber">
-              <IoCard size={13} className="text-cyan-400" /> Aadhaar / Government ID Number
-            </label>
-            <input
-              id="aadhaarNumber"
-              value={aadhaarValue}
-              onChange={(e) => {
-                const formatted = formatAadhaar(e.target.value);
-                setValue("aadhaarNumber", formatted, { shouldValidate: true });
-              }}
-              className="w-full px-4 py-3.5 rounded-xl text-sm font-medium font-mono transition-all duration-200 min-h-[48px]"
-              style={inputStyle}
-              placeholder="XXXX XXXX XXXX"
-              maxLength={14}
-            />
-            {errors.aadhaarNumber && <p className="text-xs font-medium text-rose-400">{errors.aadhaarNumber.message}</p>}
-            <p className="text-[11px] text-slate-400">Optional — 12-digit UIDAI Aadhaar ID</p>
-          </div>
+          <Input
+            label="Aadhaar / Government ID Number"
+            icon={IoCard}
+            id="aadhaarNumber"
+            value={aadhaarValue}
+            onChange={(e) => {
+              const formatted = formatAadhaar(e.target.value);
+              setValue("aadhaarNumber", formatted, { shouldValidate: true });
+            }}
+            className="font-mono min-h-12"
+            placeholder="XXXX XXXX XXXX"
+            maxLength={14}
+            error={errors.aadhaarNumber?.message}
+          />
+          <p className="text-[11px] text-slate-400 -mt-2">
+            Optional — 12-digit UIDAI Aadhaar ID
+          </p>
 
           {/* Age + Gender */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="age">
-                <IoCalendar size={13} className="text-cyan-400" /> Age
-              </label>
-              <input
-                id="age"
+           
+              <Input
+                label="Age"
+                icon={IoCalendar}
                 type="number"
                 {...register("age")}
-                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[48px]"
-                style={inputStyle}
+                className="min-h-12"
                 placeholder="Years"
                 min={1}
                 max={120}
               />
             </div>
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="gender">
+              <label
+                className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300"
+                htmlFor="gender"
+              >
                 <IoClipboard size={13} className="text-cyan-400" /> Gender
               </label>
               <select
                 id="gender"
                 {...register("gender")}
-                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[48px]"
-                style={inputStyle}
+                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-12 border border-input-border bg-input text-fg outline-none focus:border-input-focus cursor-pointer"
               >
                 <option value="">Select Gender</option>
                 <option value={Gender.Male}>Male</option>
@@ -317,15 +345,18 @@ export function AddCustomerPage() {
 
           {/* Address */}
           <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="address">
-              <IoLocationSharp size={13} className="text-cyan-400" /> Residential Address
+            <label
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300"
+              htmlFor="address"
+            >
+              <IoLocationSharp size={13} className="text-cyan-400" />{" "}
+              Residential Address
             </label>
             <textarea
               id="address"
               {...register("address")}
               rows={2}
-              className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 resize-none"
-              style={inputStyle}
+              className="w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 resize-none border border-input-border bg-input text-fg outline-none focus:border-input-focus"
               placeholder="Flat / Street / Landmark / Area"
             />
           </div>

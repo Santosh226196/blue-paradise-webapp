@@ -1,51 +1,115 @@
 import { NavLink, useLocation, useNavigate } from "react-router";
 import {
-  IoHomeOutline, IoHome,
-  IoPeopleOutline, IoPeople,
-  IoReceiptOutline, IoReceipt,
-  IoStatsChartOutline, IoStatsChart,
-  IoSettingsOutline, IoSettings,
+  IoHomeOutline,
+  IoHome,
+  IoPeopleOutline,
+  IoPeople,
+  IoReceiptOutline,
+  IoReceipt,
+  IoStatsChartOutline,
+  IoStatsChart,
+  IoSettingsOutline,
+  IoSettings,
   IoLogOutOutline,
-  IoFootstepsOutline, IoFootsteps,
-  IoCalendarOutline, IoCalendar,
-  IoCardOutline, IoCard,
-  IoMegaphoneOutline, IoMegaphone,
-  IoFitnessOutline, IoFitness,
+  IoFootstepsOutline,
+  IoFootsteps,
+  IoCalendarOutline,
+  IoCalendar,
+  IoCardOutline,
+  IoCard,
+  IoMegaphoneOutline,
+  IoMegaphone,
+  IoFitnessOutline,
+  IoFitness,
 } from "react-icons/io5";
 import { useAppDispatch, useAppSelector } from "@/hooks/store";
 import { useLogoutMutation } from "@/store/api/authApi";
 import { logout as logoutAction } from "@/store/slices/authSlice";
 import { Logo } from "@/components/Logo";
-
-interface NavItemData {
-  to: string;
-  iconOutline: React.ComponentType<{ size: number; className?: string }>;
-  iconFilled: React.ComponentType<{ size: number; className?: string }>;
-  label: string;
-  badge?: number;
-}
+import type { NavItemData } from "@/types";
 
 const mainNavItems: NavItemData[] = [
-  { to: "/", iconOutline: IoHomeOutline, iconFilled: IoHome, label: "Dashboard" },
-  { to: "/customers", iconOutline: IoPeopleOutline, iconFilled: IoPeople, label: "Customers" },
-  { to: "/billing", iconOutline: IoReceiptOutline, iconFilled: IoReceipt, label: "Billing & POS" },
-  { to: "/reports", iconOutline: IoStatsChartOutline, iconFilled: IoStatsChart, label: "Reports" },
+  {
+    to: "/",
+    iconOutline: IoHomeOutline,
+    iconFilled: IoHome,
+    label: "Dashboard",
+  },
+  {
+    to: "/customers",
+    iconOutline: IoPeopleOutline,
+    iconFilled: IoPeople,
+    label: "Customers",
+  },
+  {
+    to: "/billing",
+    iconOutline: IoReceiptOutline,
+    iconFilled: IoReceipt,
+    label: "Billing & POS",
+  },
+  {
+    to: "/reports",
+    iconOutline: IoStatsChartOutline,
+    iconFilled: IoStatsChart,
+    label: "Reports",
+  },
 ];
 
 const operationsNavItems: NavItemData[] = [
-  { to: "/attendance", iconOutline: IoFootstepsOutline, iconFilled: IoFootsteps, label: "Attendance" },
-  { to: "/membership-plans", iconOutline: IoCardOutline, iconFilled: IoCard, label: "Membership Plans" },
-  { to: "/staff", iconOutline: IoFitnessOutline, iconFilled: IoFitness, label: "Staff & Coaches" },
-  { to: "/schedule", iconOutline: IoCalendarOutline, iconFilled: IoCalendar, label: "Pool Schedule" },
-  { to: "/due-payments", iconOutline: IoReceiptOutline, iconFilled: IoReceipt, label: "Due Payments" },
-  { to: "/announcements", iconOutline: IoMegaphoneOutline, iconFilled: IoMegaphone, label: "Announcements" },
+  {
+    to: "/attendance",
+    iconOutline: IoFootstepsOutline,
+    iconFilled: IoFootsteps,
+    label: "Attendance",
+  },
+  {
+    to: "/membership-plans",
+    iconOutline: IoCardOutline,
+    iconFilled: IoCard,
+    label: "Membership Plans",
+  },
+  {
+    to: "/staff",
+    iconOutline: IoFitnessOutline,
+    iconFilled: IoFitness,
+    label: "Staff & Coaches",
+  },
+  {
+    to: "/schedule",
+    iconOutline: IoCalendarOutline,
+    iconFilled: IoCalendar,
+    label: "Pool Schedule",
+  },
+  {
+    to: "/due-payments",
+    iconOutline: IoReceiptOutline,
+    iconFilled: IoReceipt,
+    label: "Due Payments",
+  },
+  {
+    to: "/announcements",
+    iconOutline: IoMegaphoneOutline,
+    iconFilled: IoMegaphone,
+    label: "Announcements",
+  },
 ];
 
 const systemNavItems: NavItemData[] = [
-  { to: "/settings", iconOutline: IoSettingsOutline, iconFilled: IoSettings, label: "Settings" },
+  {
+    to: "/settings",
+    iconOutline: IoSettingsOutline,
+    iconFilled: IoSettings,
+    label: "Settings",
+  },
 ];
 
-export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
+export function Sidebar({
+  isOpen,
+  onClose,
+}: {
+  isOpen?: boolean;
+  onClose?: () => void;
+}) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,7 +140,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
       {/* Sidebar Container */}
       <aside
         className={`
-          fixed top-0 left-0 z-50 h-screen w-[260px] flex flex-col
+          fixed top-0 left-0 z-50 h-screen w-65 flex flex-col
           transition-transform duration-300 ease-in-out border-r
           lg:translate-x-0 lg:z-40
           ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}
@@ -89,14 +153,16 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
         }}
       >
         {/* Brand Header */}
-        <div className="px-5 pt-5 pb-4">
+        <div className="px-5 pt-3.5 pb-2">
           <div className="flex items-center gap-3">
-            <Logo size={44} />
+            <Logo size={40} />
             <div className="min-w-0">
-              <h1 className="font-display text-[15px] font-bold tracking-tight truncate" style={{ color: "var(--text-primary)" }}>
+              <h1
+                className="font-display text-[12px] font-bold tracking-tight truncate text-fg"
+              >
                 Blue Paradise
               </h1>
-              <p className="text-[11px] font-semibold tracking-wider uppercase text-cyan-400 truncate">
+              <p className="text-[10px] font-semibold tracking-wider uppercase text-cyan-400 truncate">
                 Water Club
               </p>
             </div>
@@ -104,7 +170,9 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
         </div>
 
         {/* Separator */}
-        <div className="mx-4 mb-2 border-t" style={{ borderColor: "var(--glass-border)" }} />
+        <div
+          className="mx-4 mb-2 border-t border-glass-border"
+        />
 
         {/* Scrollable Nav Items */}
         <nav
@@ -118,7 +186,12 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
               Main Menu
             </p>
             {mainNavItems.map((item) => (
-              <SidebarLink key={item.to} item={item} location={location} onClick={onClose} />
+              <SidebarLink
+                key={item.to}
+                item={item}
+                location={location}
+                onClick={onClose}
+              />
             ))}
           </div>
 
@@ -128,7 +201,12 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
               Operations & Facility
             </p>
             {operationsNavItems.map((item) => (
-              <SidebarLink key={item.to} item={item} location={location} onClick={onClose} />
+              <SidebarLink
+                key={item.to}
+                item={item}
+                location={location}
+                onClick={onClose}
+              />
             ))}
           </div>
 
@@ -138,21 +216,28 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
               System
             </p>
             {systemNavItems.map((item) => (
-              <SidebarLink key={item.to} item={item} location={location} onClick={onClose} />
+              <SidebarLink
+                key={item.to}
+                item={item}
+                location={location}
+                onClick={onClose}
+              />
             ))}
           </div>
         </nav>
 
         {/* User Profile & Logout Footer */}
         <div
-          className="mt-auto p-3 border-t bg-black/10"
-          style={{ borderColor: "var(--glass-border)" }}
+          className="mt-auto p-3 border-t bg-black/10 border-glass-border"
         >
           <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10 mb-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-slate-950 shrink-0"
-                style={{ background: "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))" }}
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--accent-aqua), var(--accent-pool))",
+                }}
               >
                 {userInitial}
               </div>
@@ -170,7 +255,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             <button
               onClick={handleLogout}
               title="Logout"
-              className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/15 transition-colors"
+              className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer"
             >
               <IoLogOutOutline size={18} />
             </button>
@@ -190,7 +275,10 @@ function SidebarLink({
   location: ReturnType<typeof useLocation>;
   onClick?: () => void;
 }) {
-  const isActive = item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to);
+  const isActive =
+    item.to === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(item.to);
   const Icon = isActive ? item.iconFilled : item.iconOutline;
 
   return (
@@ -199,7 +287,7 @@ function SidebarLink({
       end={item.to === "/"}
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold
+        relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer
         transition-all duration-200 group
         ${isActive ? "text-cyan-300 font-bold bg-cyan-400/10 shadow-sm" : "text-slate-300 hover:text-white hover:bg-white/5"}
       `}
@@ -224,9 +312,9 @@ function SidebarLink({
 
       <span className="flex-1 truncate">{item.label}</span>
 
-      {item.badge !== undefined && item.badge > 0 && (
+      {item.badge != null && item.badge > 0 && (
         <span
-          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center"
           style={{
             background: "var(--accent-coral)",
             color: "white",

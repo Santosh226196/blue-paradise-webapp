@@ -1,6 +1,10 @@
 export { GlassCard } from "./GlassCard";
+export { Button } from "./Button";
 export { PrimaryButton } from "./PrimaryButton";
 export { GhostButton } from "./GhostButton";
+export { Input } from "./Input";
+export { PasswordInput } from "./PasswordInput";
+export { SearchBar } from "./SearchBar";
 export { StatCard } from "./StatCard";
 export { ServiceCard } from "./ServiceCard";
 export { ReceiptCard } from "./ReceiptCard";
@@ -8,6 +12,6 @@ export { StepperHeader } from "./StepperHeader";
 export { EmptyState } from "./EmptyState";
 export { SkeletonGlass } from "./SkeletonGlass";
 export { Breadcrumb } from "./Breadcrumb";
-export type { BreadcrumbItem } from "./Breadcrumb";
+export type { BreadcrumbItem } from "@/types";
 export { CameraCaptureModal } from "./CameraCaptureModal";
 export { Modal } from "./Modal";

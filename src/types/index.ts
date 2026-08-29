@@ -136,7 +136,7 @@ export interface MembershipPlan {
   id: string;
   name: string;
   description: string;
-  duration: "MONTHLY" | "QUARTERLY" | "YEARLY";
+  duration: "HOURLY" | "DAILY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
   price: number;
   features: string[];
   isActive: boolean;
@@ -217,4 +217,250 @@ export interface Announcement {
   isActive: boolean;
   createdAt: string;
   expiresAt?: string;
+}
+
+// ── Auth API Types ──
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: { username: string };
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+  identity: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+  demoOtp?: string;
+  maskedDestination: string;
+}
+
+export interface VerifyOtpRequest {
+  identity: string;
+  otp: string;
+}
+
+export interface VerifyOtpResponse {
+  success: boolean;
+  resetToken: string;
+}
+
+export interface ResetPasswordRequest {
+  identity: string;
+  newPassword: string;
+  resetToken?: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+// ── Billing API Types ──
+
+export interface CreateTransactionPayload {
+  customerId: string;
+  serviceType: ServiceType;
+  serviceName: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+}
+
+// ── Reports API Types ──
+
+export interface RevenueByPeriod {
+  period: string;
+  total: number;
+  count: number;
+  byCategory: Record<ServiceType, number>;
+}
+
+export interface ReportSummary {
+  totalRevenue: number;
+  totalTransactions: number;
+  byCategory: Record<ServiceType, { total: number; count: number }>;
+  dailyRevenue: RevenueByPeriod[];
+}
+
+// ── Printer Types ──
+
+export interface PrinterService {
+  getStatus(): Promise<{ connected: boolean; model?: string }>;
+  testPrint(): Promise<boolean>;
+  printReceipt(data: ReceiptData): Promise<boolean>;
+}
+
+export interface ReceiptData {
+  settings: BusinessSettings;
+  transaction: Transaction;
+  customer: Customer;
+}
+
+// ── UI Types ──
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+  variant?: "primary" | "ghost" | "outline";
+  loading?: boolean;
+  fullWidth?: boolean;
+  size?: "sm" | "md" | "lg";
+}
+
+export interface GlassCardProps {
+  children: React.ReactNode;
+  className?: string;
+  padding?: boolean;
+  animate?: boolean;
+  style?: React.CSSProperties;
+}
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
+  error?: string;
+}
+
+export interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+}
+
+export interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+  className?: string;
+}
+
+export interface SkeletonGlassProps {
+  className?: string;
+  lines?: number;
+}
+
+export interface StatCardProps {
+  label: string;
+  value: string | number;
+  icon?: React.ReactNode;
+  trend?: { value: number; positive: boolean };
+  className?: string;
+}
+
+export interface StepperHeaderProps {
+  steps: string[];
+  currentStep: number;
+  className?: string;
+}
+
+export interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  onClear?: () => void;
+}
+
+export interface ServiceCardProps {
+  title: string;
+  description: string;
+  amount: string;
+  icon: React.ReactNode;
+  selected?: boolean;
+  onClick?: () => void;
+  className?: string;
+}
+
+export interface CameraCaptureModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCapture: (imageDataUrl: string) => void;
+  title?: string;
+  guideMode?: "avatar" | "document" | "general";
+  initialFacingMode?: "user" | "environment";
+}
+
+export interface ReceiptCardProps {
+  transaction: Transaction;
+  customer: Customer;
+  settings: BusinessSettings;
+  onPrintComplete?: () => void;
+  compact?: boolean;
+}
+
+export type ModalVariant = "success" | "error" | "warning" | "info" | "confirm";
+
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm?: () => void;
+  variant?: ModalVariant;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  showActions?: boolean;
+  children?: React.ReactNode;
+}
+
+export type ToastType = "success" | "error" | "warning" | "info";
+
+export interface Toast {
+  id: string;
+  type: ToastType;
+  message: string;
+}
+
+export interface ToastContextType {
+  showToast: (type: ToastType, message: string) => void;
+}
+
+// ── Auth Component Types ──
+
+export interface AuthLayoutProps {
+  brandPanel: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export interface AuthButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+  loading?: boolean;
+}
+
+export interface AuthInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  error?: string;
+}
+
+export interface AuthPasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  error?: string;
+}
+
+// ── Layout Types ──
+
+export interface NavItemData {
+  to: string;
+  iconOutline: React.ComponentType<{ size: number; className?: string }>;
+  iconFilled: React.ComponentType<{ size: number; className?: string }>;
+  label: string;
+  badge?: number;
+}
+
+export interface LogoProps {
+  size?: number;
+  className?: string;
 }

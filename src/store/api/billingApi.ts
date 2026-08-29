@@ -1,14 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { Transaction, ServiceType, PaymentMethod } from "@/types";
+import type { Transaction, CreateTransactionPayload } from "@/types";
 import { baseQueryFor } from "./base";
-
-export interface CreateTransactionPayload {
-  customerId: string;
-  serviceType: ServiceType;
-  serviceName: string;
-  amount: number;
-  paymentMethod: PaymentMethod;
-}
 
 export const billingApi = createApi({
   reducerPath: "billingApi",

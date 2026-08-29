@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { Transaction, Customer, BusinessSettings } from "@/types";
+import type { Transaction, Customer, BusinessSettings, ReceiptCardProps } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import { printerService, type ReceiptData } from "@/services/printer";
+import { printerService } from "@/services/printer";
+import type { ReceiptData } from "@/types";
 import { PrimaryButton } from "./PrimaryButton";
 import {
   IoPrint,
@@ -10,14 +11,6 @@ import {
   IoCheckmark,
   IoWaterOutline,
 } from "react-icons/io5";
-
-interface ReceiptCardProps {
-  transaction: Transaction;
-  customer: Customer;
-  settings: BusinessSettings;
-  onPrintComplete?: () => void;
-  compact?: boolean;
-}
 
 export function ReceiptCard({
   transaction,
@@ -142,7 +135,7 @@ export function ReceiptCard({
           <div className="font-mono text-xs space-y-1 text-slate-700">
             <div className="flex justify-between items-start">
               <span className="text-slate-500 font-medium">CUSTOMER:</span>
-              <span className="font-bold text-slate-950 text-right max-w-[200px] truncate">
+              <span className="font-bold text-slate-950 text-right max-w-50 truncate">
                 {customer.name}
               </span>
             </div>
@@ -215,7 +208,7 @@ export function ReceiptCard({
           {/* Barcode & Verification */}
           <div className="mt-5 pt-3 border-t border-dashed border-slate-300 text-center">
             {/* SVG Simulated Barcode */}
-            <div className="flex justify-center items-center gap-[2px] h-10 px-4 py-1 bg-slate-50 rounded">
+            <div className="flex justify-center items-center gap-0.5 h-10 px-4 py-1 bg-slate-50 rounded">
               <svg width="220" height="32" viewBox="0 0 220 32" className="max-w-full">
                 <rect x="0" y="0" width="3" height="32" fill="#111827" />
                 <rect x="5" y="0" width="2" height="32" fill="#111827" />
@@ -293,7 +286,7 @@ export function ReceiptCard({
           <button
             type="button"
             onClick={handleCopyText}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all duration-200 border border-white/15 bg-white/5 hover:bg-white/10 text-white w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all duration-200 border border-white/15 bg-white/5 hover:bg-white/10 text-white w-full sm:w-auto cursor-pointer"
           >
             {isCopied ? (
               <>

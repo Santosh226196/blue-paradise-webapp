@@ -1,16 +1,4 @@
-import type { Transaction, Customer, BusinessSettings } from "@/types";
-
-export interface PrinterService {
-  getStatus(): Promise<{ connected: boolean; model?: string }>;
-  testPrint(): Promise<boolean>;
-  printReceipt(data: ReceiptData): Promise<boolean>;
-}
-
-export interface ReceiptData {
-  settings: BusinessSettings;
-  transaction: Transaction;
-  customer: Customer;
-}
+import type { PrinterService, ReceiptData } from "@/types";
 
 class ThermalPrinterService implements PrinterService {
   async getStatus(): Promise<{ connected: boolean; model?: string }> {

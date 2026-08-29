@@ -1,11 +1,6 @@
 import { cn } from "@/lib/utils";
 import { IoCheckmark } from "react-icons/io5";
-
-interface StepperHeaderProps {
-  steps: string[];
-  currentStep: number;
-  className?: string;
-}
+import type { StepperHeaderProps } from "@/types";
 
 export function StepperHeader({ steps, currentStep, className }: StepperHeaderProps) {
   return (

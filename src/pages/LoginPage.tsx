@@ -12,49 +12,59 @@ import {
 import { useAppDispatch } from "@/hooks/store";
 import { setCredentials } from "@/store/slices/authSlice";
 import { useTheme } from "@/hooks/useTheme";
-import { PrimaryButton, GhostButton } from "@/components/ui";
+import { AuthLayout, BrandPanel } from "@/components/auth";
+import { Button, Input, PasswordInput } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 import {
-  IoEye,
-  IoEyeOff,
-  IoTime,
-  IoPersonOutline,
-  IoLockClosedOutline,
-  IoShieldCheckmarkOutline,
-  IoKeyOutline,
-  IoArrowBack,
-  IoCheckmarkCircle,
-  IoSunnyOutline,
-  IoMoonOutline,
-  IoSparkles,
-} from "react-icons/io5";
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  KeyRound,
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+  Moon,
+  Sun,
+} from "lucide-react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  username: z
+    .string()
+    .min(1, "Email / username is required")
+    .refine(
+      (v) => v.includes("@") || /^[a-zA-Z0-9._-]+$/.test(v),
+      "Enter a valid email or username",
+    ),
   password: z.string().min(1, "Password is required"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-type AuthView = "login" | "forgot-identify" | "forgot-otp" | "forgot-reset" | "forgot-success";
+type AuthView =
+  | "login"
+  | "forgot-identify"
+  | "forgot-otp"
+  | "forgot-reset"
+  | "forgot-success";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
 
-  // Mode state
   const [view, setView] = useState<AuthView>("login");
 
-  // Login Form
+  // Login
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
   const [loginError, setLoginError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // Forgot Password State
-  const [forgotPassword, { isLoading: isForgotLoading }] = useForgotPasswordMutation();
+  // Forgot Password
+  const [forgotPassword, { isLoading: isForgotLoading }] =
+    useForgotPasswordMutation();
   const [verifyOtp, { isLoading: isOtpLoading }] = useVerifyOtpMutation();
-  const [resetPassword, { isLoading: isResetLoading }] = useResetPasswordMutation();
+  const [resetPassword, { isLoading: isResetLoading }] =
+    useResetPasswordMutation();
 
   const [resetIdentity, setResetIdentity] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -62,7 +72,6 @@ export function LoginPage() {
   const [maskedDestination, setMaskedDestination] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
   const [forgotError, setForgotError] = useState("");
 
   const {
@@ -72,36 +81,35 @@ export function LoginPage() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
+    defaultValues: { username: "", password: "" },
   });
 
-  // 1-Click Demo Fill
-  function handleQuickFill() {
-    setValue("username", "admin");
-    setValue("password", "admin123");
-    setLoginError("");
-  }
-
-  // Handle Login Submit
   async function onLoginSubmit(data: LoginForm) {
     setLoginError("");
     try {
-      const result = await login(data).unwrap();
+      const payload = { ...data, username: data.username.trim() };
+      if (rememberMe) {
+        try {
+          localStorage.setItem("bp_remember", payload.username);
+        } catch {
+          /* ignore */
+        }
+      }
+      const result = await login(payload).unwrap();
       dispatch(setCredentials(result));
       navigate("/");
     } catch (err: unknown) {
       const msg =
-        err && typeof err === "object" && "data" in err && (err as { data?: { message?: string } }).data?.message
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        (err as { data?: { message?: string } }).data?.message
           ? (err as { data: { message: string } }).data.message
           : "Invalid credentials. (Default: admin / admin123)";
       setLoginError(msg);
     }
   }
 
-  // Forgot Password Step 1: Send OTP
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
     setForgotError("");
@@ -109,22 +117,25 @@ export function LoginPage() {
       setForgotError("Please enter your registered username or mobile number");
       return;
     }
-
     try {
-      const res = await forgotPassword({ identity: resetIdentity.trim() }).unwrap();
+      const res = await forgotPassword({
+        identity: resetIdentity.trim(),
+      }).unwrap();
       setDemoOtp(res.demoOtp || "123456");
       setMaskedDestination(res.maskedDestination || resetIdentity);
       setView("forgot-otp");
     } catch (err: unknown) {
       const msg =
-        err && typeof err === "object" && "data" in err && (err as { data?: { message?: string } }).data?.message
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        (err as { data?: { message?: string } }).data?.message
           ? (err as { data: { message: string } }).data.message
           : "Could not find account. Please verify your details.";
       setForgotError(msg);
     }
   }
 
-  // Forgot Password Step 2: Verify OTP
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
     setForgotError("");
@@ -132,24 +143,27 @@ export function LoginPage() {
       setForgotError("Please enter the 6-digit verification code");
       return;
     }
-
     try {
-      await verifyOtp({ identity: resetIdentity, otp: otpCode.trim() }).unwrap();
+      await verifyOtp({
+        identity: resetIdentity,
+        otp: otpCode.trim(),
+      }).unwrap();
       setView("forgot-reset");
     } catch (err: unknown) {
       const msg =
-        err && typeof err === "object" && "data" in err && (err as { data?: { message?: string } }).data?.message
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        (err as { data?: { message?: string } }).data?.message
           ? (err as { data: { message: string } }).data.message
           : "Invalid verification code. Use demo code: 123456";
       setForgotError(msg);
     }
   }
 
-  // Forgot Password Step 3: Save New Password
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault();
     setForgotError("");
-
     if (!newPassword || newPassword.length < 4) {
       setForgotError("Password must be at least 4 characters long");
       return;
@@ -158,15 +172,20 @@ export function LoginPage() {
       setForgotError("Passwords do not match. Please re-enter.");
       return;
     }
-
     try {
       await resetPassword({ identity: resetIdentity, newPassword }).unwrap();
-      setValue("username", resetIdentity.toLowerCase() === "9876543210" ? "admin" : resetIdentity);
+      setValue(
+        "username",
+        resetIdentity.toLowerCase() === "9876543210" ? "admin" : resetIdentity,
+      );
       setValue("password", newPassword);
       setView("forgot-success");
     } catch (err: unknown) {
       const msg =
-        err && typeof err === "object" && "data" in err && (err as { data?: { message?: string } }).data?.message
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        (err as { data?: { message?: string } }).data?.message
           ? (err as { data: { message: string } }).data.message
           : "Failed to reset password. Please try again.";
       setForgotError(msg);
@@ -183,248 +202,292 @@ export function LoginPage() {
     setView("login");
   }
 
+  const cardStyle = {
+    background: "var(--glass-bg)",
+    border: "1px solid var(--glass-border)",
+    borderRadius: "20px",
+    boxShadow:
+      "0 8px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.06)",
+    backdropFilter: "blur(var(--glass-blur))",
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden font-sans">
-      {/* ─── Top Theme Switcher Bar ─── */}
-      <div className="absolute top-5 right-5 z-20 flex items-center gap-2">
+    <AuthLayout brandPanel={<BrandPanel />}>
+      {/* Theme toggle */}
+      <div className="absolute top-5 right-5 z-30">
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl transition-all duration-200 border border-white/10 bg-white/5 hover:bg-white/10 text-cyan-400 backdrop-blur-md shadow-lg"
+          className="p-2.5 rounded-xl transition-all duration-200 border hover:brightness-110 cursor-pointer"
+          style={{
+            borderColor: "var(--glass-border)",
+            background: "var(--glass-bg)",
+            color: "var(--text-muted)",
+          }}
           title={`Switch to ${theme === "dark" ? "Aqua" : "Dark"} Mode`}
         >
-          {theme === "dark" ? <IoSunnyOutline size={18} /> : <IoMoonOutline size={18} />}
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
       </div>
 
-      {/* ─── Light rays through water ─── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute top-0 left-1/4 w-px h-[60vh] origin-top opacity-[0.08]"
-          style={{
-            background: "linear-gradient(180deg, var(--accent-aqua), transparent)",
-            transform: "rotate(-12deg)",
-          }}
-        />
-        <div
-          className="absolute top-0 right-1/3 w-px h-[55vh] origin-top opacity-[0.08]"
-          style={{
-            background: "linear-gradient(180deg, var(--accent-aqua), transparent)",
-            transform: "rotate(8deg)",
-          }}
-        />
-      </div>
+      <div className="relative p-8 sm:p-10" style={cardStyle}>
+        {/* Mobile logo */}
+        <div className="flex justify-center mb-6 lg:hidden">
+          <Logo size={48} />
+        </div>
 
-      {/* ─── Ambient Glow Mesh ─── */}
-      <div
-        className="ambient-blob blob-1"
-        style={{ top: "5%", left: "-5%", opacity: 0.55, width: "500px", height: "500px" }}
-      />
-      <div
-        className="ambient-blob blob-2"
-        style={{ top: "45%", right: "-5%", opacity: 0.45, width: "450px", height: "450px" }}
-      />
-      <div
-        className="ambient-blob blob-3"
-        style={{ bottom: "5%", left: "20%", opacity: 0.35, width: "400px", height: "400px" }}
-      />
-
-      {/* ─── Main Content Box ─── */}
-      <div className="w-full max-w-[430px] relative z-10 animate-scale-in">
-        {/* Brand Crest */}
-        <div className="text-center mb-6">
-          <div className="mb-3.5 flex justify-center">
-            <Logo size={96} />
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Blue Paradise
+        {/* Heading */}
+        <div className="text-center mb-8">
+          <h1
+            className="text-2xl font-extrabold tracking-tight mb-1.5"
+            style={{
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-display)",
+            }}
+          >
+            Welcome back, Admin
           </h1>
-          <p className="text-xs font-semibold tracking-wider uppercase text-cyan-300 mt-1">
-            Water Club Portal
+          <p className="text-sm text-fg-dim">
+            Sign in to continue to your dashboard
           </p>
         </div>
 
         {/* ─── LOGIN VIEW ─── */}
         {view === "login" && (
-          <div className="liquid-glass relative overflow-hidden p-6 sm:p-8 border border-white/15 shadow-2xl backdrop-blur-xl animate-fade-up">
-            {/* Subtle Top Accent line */}
-            <div
-              className="absolute top-0 left-0 right-0 h-[2px]"
-              style={{ background: "linear-gradient(90deg, transparent, var(--accent-aqua), transparent)" }}
-            />
-
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-lg font-bold text-white">Staff Sign In</h2>
-                <p className="text-xs text-slate-400">Enter your management credentials</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleQuickFill}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-400/15 border border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/25 transition-all"
-                title="Auto-fill admin/admin123 credentials"
-              >
-                <IoSparkles size={12} />
-                <span>Demo Fill</span>
-              </button>
-            </div>
-
+          <>
             {loginError && (
-              <div className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border border-rose-500/30 bg-rose-500/15 text-rose-300 animate-scale-in">
+              <div
+                className="mb-5 rounded-xl p-3 text-xs font-semibold text-center border animate-scale-in"
+                style={{
+                  borderColor: "var(--accent-coral)",
+                  background: "var(--glow-coral)",
+                  color: "var(--accent-coral)",
+                }}
+              >
                 {loginError}
               </div>
             )}
 
             <form onSubmit={handleSubmit(onLoginSubmit)} className="space-y-4">
-              {/* Username Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block" htmlFor="username">
-                  Username
+              <Input
+                label="Email address"
+                icon={Mail}
+                placeholder="Enter your email"
+                autoComplete="username"
+                error={errors.username?.message}
+                {...register("username")}
+              />
+
+              <PasswordInput
+                label="Password"
+                placeholder="Enter your password"
+                error={errors.password?.message}
+                {...register("password")}
+              />
+
+              {/* Remember me + Forgot */}
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "var(--accent-aqua)" }}
+                  />
+                  <span
+                    className="text-sm text-fg-dim"
+                  >
+                    Remember me
+                  </span>
                 </label>
-                <div className="relative">
-                  <IoPersonOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
-                  <input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    {...register("username")}
-                    placeholder="e.g. admin"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-medium transition-all min-h-[48px] bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
-                  />
-                </div>
-                {errors.username && <p className="text-xs text-rose-400">{errors.username.message}</p>}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotError("");
+                    setView("forgot-identify");
+                  }}
+                  className="text-sm font-semibold transition-colors text-accent cursor-pointer"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
+                >
+                  Forgot password?
+                </button>
               </div>
 
-              {/* Password Input */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block" htmlFor="password">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForgotError("");
-                      setView("forgot-identify");
-                    }}
-                    className="text-xs font-bold text-cyan-300 hover:text-cyan-200 hover:underline transition-colors"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <IoLockClosedOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    {...register("password")}
-                    placeholder="Enter password"
-                    className="w-full pl-10 pr-12 py-3.5 rounded-xl text-sm font-medium transition-all min-h-[48px] bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-white"
-                  >
-                    {showPassword ? <IoEyeOff size={18} /> : <IoEye size={18} />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-rose-400">{errors.password.message}</p>}
+              {/* Sign In */}
+              <div className="pt-2">
+                <Button type="submit" loading={isLoginLoading} fullWidth>
+                  Sign In <ArrowRight size={16} />
+                </Button>
               </div>
-
-              <PrimaryButton type="submit" fullWidth size="lg" loading={isLoginLoading} className="mt-2">
-                Sign In to Dashboard
-              </PrimaryButton>
             </form>
-          </div>
+
+            {/* Help text */}
+            <p
+              className="text-center text-xs mt-6 text-fg-muted"
+            >
+              Need help?{" "}
+              <a
+                href="mailto:support@blueparadise.com"
+                className="font-semibold text-accent"
+              >
+                Contact support
+              </a>
+            </p>
+          </>
         )}
 
-        {/* ─── FORGOT PASSWORD: STEP 1 (IDENTIFY) ─── */}
+        {/* ─── FORGOT PASSWORD: STEP 1 ─── */}
         {view === "forgot-identify" && (
-          <div className="liquid-glass relative overflow-hidden p-6 sm:p-8 border border-white/15 shadow-2xl backdrop-blur-xl animate-scale-in">
+          <div className="animate-scale-in">
             <button
               onClick={resetForgotFlow}
-              className="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-white mb-4"
+              className="inline-flex items-center gap-1 text-xs font-bold mb-6 transition-colors text-fg-muted cursor-pointer"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-muted)";
+              }}
             >
-              <IoArrowBack size={16} /> Back to Sign In
+              <ArrowLeft size={16} /> Back to Sign In
             </button>
 
-            <div className="mb-5">
-              <div className="w-10 h-10 rounded-xl bg-cyan-400/15 text-cyan-300 flex items-center justify-center mb-3">
-                <IoKeyOutline size={22} />
+            <div className="mb-6">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 bg-glow-a"
+              >
+                <KeyRound size={22} className="text-accent" />
               </div>
-              <h2 className="text-lg font-bold text-white">Reset Password</h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Enter your staff username or registered mobile to receive a 6-digit security code.
+              <h2
+                className="text-lg font-bold text-fg"
+              >
+                Reset Password
+              </h2>
+              <p
+                className="text-xs mt-1 text-fg-dim"
+              >
+                Enter your staff username or registered mobile to receive a
+                6-digit security code.
               </p>
             </div>
 
             {forgotError && (
-              <div className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border border-rose-500/30 bg-rose-500/15 text-rose-300">
+              <div
+                className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border"
+                style={{
+                  borderColor: "var(--accent-coral)",
+                  background: "var(--glow-coral)",
+                  color: "var(--accent-coral)",
+                }}
+              >
                 {forgotError}
               </div>
             )}
 
             <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
-                  Username or Mobile Number
-                </label>
-                <div className="relative">
-                  <IoPersonOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
-                  <input
-                    type="text"
-                    value={resetIdentity}
-                    onChange={(e) => setResetIdentity(e.target.value)}
-                    placeholder="e.g. admin or 9876543210"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-medium min-h-[48px] bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
-                    autoFocus
-                  />
-                </div>
-              </div>
-
+              <Input
+                label="Username or mobile"
+                icon={Mail}
+                placeholder="e.g. admin or 9876543210"
+                value={resetIdentity}
+                onChange={(e) => setResetIdentity(e.target.value)}
+                autoFocus
+              />
               <div className="flex gap-2 pt-2">
-                <GhostButton type="button" onClick={resetForgotFlow} className="w-1/3">
+                <Button
+                  variant="outline"
+                  onClick={resetForgotFlow}
+                  className="w-1/3"
+                >
                   Cancel
-                </GhostButton>
-                <PrimaryButton type="submit" fullWidth loading={isForgotLoading} className="flex-1">
+                </Button>
+                <Button
+                  type="submit"
+                  loading={isForgotLoading}
+                  className="flex-1"
+                >
                   Send Code
-                </PrimaryButton>
+                </Button>
               </div>
             </form>
           </div>
         )}
 
-        {/* ─── FORGOT PASSWORD: STEP 2 (VERIFY OTP) ─── */}
+        {/* ─── FORGOT PASSWORD: STEP 2 (OTP) ─── */}
         {view === "forgot-otp" && (
-          <div className="liquid-glass relative overflow-hidden p-6 sm:p-8 border border-white/15 shadow-2xl backdrop-blur-xl animate-scale-in">
+          <div className="animate-scale-in">
             <button
               onClick={() => setView("forgot-identify")}
-              className="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-white mb-4"
+              className="inline-flex items-center gap-1 text-xs font-bold mb-6 transition-colors text-fg-muted cursor-pointer"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-muted)";
+              }}
             >
-              <IoArrowBack size={16} /> Back
+              <ArrowLeft size={16} /> Back
             </button>
 
-            <div className="mb-5">
-              <div className="w-10 h-10 rounded-xl bg-cyan-400/15 text-cyan-300 flex items-center justify-center mb-3">
-                <IoShieldCheckmarkOutline size={22} />
+            <div className="mb-6">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 bg-glow-a"
+              >
+                <ShieldCheck
+                  size={22}
+                  className="text-accent"
+                />
               </div>
-              <h2 className="text-lg font-bold text-white">Enter Verification Code</h2>
-              <p className="text-xs text-slate-400 mt-1">
-                We sent a 6-digit OTP code to <span className="text-cyan-300 font-mono">{maskedDestination}</span>
+              <h2
+                className="text-lg font-bold text-fg"
+              >
+                Enter Verification Code
+              </h2>
+              <p
+                className="text-xs mt-1 text-fg-dim"
+              >
+                We sent a 6-digit OTP code to{" "}
+                <span
+                  className="font-mono font-semibold text-accent"
+                >
+                  {maskedDestination}
+                </span>
               </p>
             </div>
 
             {demoOtp && (
-              <div className="mb-4 p-3 rounded-xl bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-between">
+              <div
+                className="mb-4 p-3 rounded-xl flex items-center justify-between border"
+                style={{
+                  background: "var(--glow-aqua)",
+                  borderColor: "var(--glass-border)",
+                }}
+              >
                 <div>
-                  <p className="text-[11px] font-bold text-cyan-300">DEMO VERIFICATION OTP</p>
-                  <p className="text-sm font-bold font-mono tracking-widest text-white">{demoOtp}</p>
+                  <p
+                    className="text-xs font-bold text-accent"
+                  >
+                    DEMO VERIFICATION OTP
+                  </p>
+                  <p
+                    className="text-sm font-bold font-mono tracking-widest text-fg"
+                  >
+                    {demoOtp}
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOtpCode(demoOtp)}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                  style={{
+                    background: "var(--text-primary)",
+                    color: "var(--bg-deep)",
+                  }}
                 >
                   Auto-Fill
                 </button>
@@ -432,140 +495,146 @@ export function LoginPage() {
             )}
 
             {forgotError && (
-              <div className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border border-rose-500/30 bg-rose-500/15 text-rose-300">
+              <div
+                className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border"
+                style={{
+                  borderColor: "var(--accent-coral)",
+                  background: "var(--glow-coral)",
+                  color: "var(--accent-coral)",
+                }}
+              >
                 {forgotError}
               </div>
             )}
 
             <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
-                  6-Digit OTP Code
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="123456"
-                  className="w-full px-4 py-3.5 rounded-xl text-center text-xl font-bold font-mono tracking-[0.4em] min-h-[48px] bg-white/5 border border-white/10 text-white placeholder-slate-600 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
-                  autoFocus
-                />
-              </div>
-
-              <PrimaryButton type="submit" fullWidth size="lg" loading={isOtpLoading}>
+              <Input
+                type="text"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="123456"
+                autoFocus
+                className="text-center text-xl font-bold font-mono tracking-[0.4em] min-h-11"
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--input-border)";
+                }}
+              />
+              <Button type="submit" loading={isOtpLoading} fullWidth>
                 Verify & Continue
-              </PrimaryButton>
+              </Button>
             </form>
           </div>
         )}
 
         {/* ─── FORGOT PASSWORD: STEP 3 (NEW PASSWORD) ─── */}
         {view === "forgot-reset" && (
-          <div className="liquid-glass relative overflow-hidden p-6 sm:p-8 border border-white/15 shadow-2xl backdrop-blur-xl animate-scale-in">
-            <div className="mb-5">
-              <div className="w-10 h-10 rounded-xl bg-teal-400/15 text-teal-300 flex items-center justify-center mb-3">
-                <IoLockClosedOutline size={22} />
+          <div className="animate-scale-in">
+            <div className="mb-6">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 bg-glow-a"
+              >
+                <Lock size={22} className="text-accent" />
               </div>
-              <h2 className="text-lg font-bold text-white">Create New Password</h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Enter a secure new password for <span className="text-cyan-300 font-mono">{resetIdentity}</span>
+              <h2
+                className="text-lg font-bold text-fg"
+              >
+                Create New Password
+              </h2>
+              <p
+                className="text-xs mt-1 text-fg-dim"
+              >
+                Enter a secure new password for{" "}
+                <span
+                  className="font-mono font-semibold text-accent"
+                >
+                  {resetIdentity}
+                </span>
               </p>
             </div>
 
             {forgotError && (
-              <div className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border border-rose-500/30 bg-rose-500/15 text-rose-300">
+              <div
+                className="mb-4 rounded-xl p-3 text-xs font-semibold text-center border"
+                style={{
+                  borderColor: "var(--accent-coral)",
+                  background: "var(--glow-coral)",
+                  color: "var(--accent-coral)",
+                }}
+              >
                 {forgotError}
               </div>
             )}
 
             <form onSubmit={handleResetPassword} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
-                  New Password
-                </label>
-                <div className="relative">
-                  <IoLockClosedOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="At least 4 characters"
-                    className="w-full pl-10 pr-12 py-3.5 rounded-xl text-sm font-medium min-h-[48px] bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-white"
-                  >
-                    {showNewPassword ? <IoEyeOff size={18} /> : <IoEye size={18} />}
-                  </button>
-                </div>
+              <PasswordInput
+                label="New password"
+                placeholder="At least 4 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoFocus
+              />
+              <PasswordInput
+                label="Confirm password"
+                placeholder="Repeat new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <div className="pt-2">
+                <Button type="submit" loading={isResetLoading} fullWidth>
+                  Update Password & Sign In
+                </Button>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <IoLockClosedOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-medium min-h-[48px] bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <PrimaryButton type="submit" fullWidth size="lg" loading={isResetLoading}>
-                Update Password & Sign In
-              </PrimaryButton>
             </form>
           </div>
         )}
 
         {/* ─── FORGOT PASSWORD: STEP 4 (SUCCESS) ─── */}
         {view === "forgot-success" && (
-          <div className="liquid-glass relative overflow-hidden p-6 sm:p-8 border border-white/15 shadow-2xl backdrop-blur-xl text-center animate-scale-in">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-              <IoCheckmarkCircle size={36} />
+          <div className="text-center animate-scale-in py-4">
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border"
+              style={{
+                background: "var(--glow-aqua)",
+                borderColor: "var(--glass-border)",
+              }}
+            >
+              <CheckCircle2 size={36} className="text-accent" />
             </div>
-
-            <h2 className="text-xl font-bold text-white">Password Changed!</h2>
-            <p className="text-xs text-slate-300 mt-2 mb-6">
-              Your password has been successfully updated. You can now sign in with your new credentials.
+            <h2
+              className="text-xl font-bold text-fg"
+            >
+              Password Changed!
+            </h2>
+            <p
+              className="text-xs mt-2 mb-6 text-fg-dim"
+            >
+              Your password has been successfully updated. You can now sign in
+              with your new credentials.
             </p>
-
-            <PrimaryButton fullWidth size="lg" onClick={() => setView("login")}>
+            <Button fullWidth onClick={() => setView("login")}>
               Proceed to Sign In
-            </PrimaryButton>
+            </Button>
           </div>
         )}
 
-        {/* Club Hours Information Card */}
-        <div className="mt-4 liquid-glass relative overflow-hidden p-3.5 border border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-400/15 text-cyan-300">
-              <IoTime size={16} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Club Operating Hours</p>
-              <p className="text-xs font-bold font-mono text-white">05:00 — 22:00</p>
-            </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Open Daily
-            </span>
-          </div>
-        </div>
-
         {/* Footer */}
-        <p className="text-center text-[11px] mt-5 font-medium text-slate-400">
-          Blue Paradise Water Club &copy; {new Date().getFullYear()}
+        <p
+          className="text-center text-xs mt-8 pt-6 font-medium"
+          style={{
+            color: "var(--text-muted)",
+            borderTop: "1px solid var(--glass-border)",
+          }}
+        >
+          Restricted access — Admins only
         </p>
       </div>
-    </div>
+
+      <p
+        className="text-center text-xs mt-5 font-medium text-fg-muted"
+      >
+        Blue Paradise Water Club &copy; {new Date().getFullYear()}
+      </p>
+    </AuthLayout>
   );
 }

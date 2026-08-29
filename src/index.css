@@ -8,6 +8,30 @@
   --color-foam: #F3FBFC;
   --color-ink: #08222B;
 
+  /* Semantic colors that follow theme vars */
+  --color-fg: var(--text-primary);
+  --color-fg-dim: var(--text-secondary);
+  --color-fg-muted: var(--text-muted);
+  --color-accent: var(--accent-aqua);
+  --color-danger: var(--accent-coral);
+  --color-info: var(--accent-pool);
+  --color-glass: var(--glass-bg);
+  --color-glass-hover: var(--glass-bg-hover);
+  --color-glass-border: var(--glass-border);
+  --color-glass-border-strong: var(--glass-border-strong);
+  --color-danger-bg: var(--accent-coral);
+  --color-info-bg: var(--accent-pool);
+  --color-glow-a: var(--glow-aqua);
+  --color-glow-c: var(--glow-coral);
+  --color-glow-p: var(--glow-pool);
+  --color-input: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-input-focus: var(--input-focus-ring);
+  --color-sidebar: var(--sidebar-bg);
+  --color-deep: var(--bg-deep);
+  --color-mid: var(--bg-mid);
+  --color-surface: var(--bg-surface);
+
   --font-display: "Montserrat", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Lato, sans-serif;
   --font-mono: "Roboto Mono", "IBM Plex Mono", monospace;
@@ -15,6 +39,37 @@
 
 /* ── Base Reset ── */
 *, *::before, *::after { box-sizing: border-box; }
+
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+select,
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"]:disabled,
+[type="button"]:disabled,
+[type="submit"]:disabled,
+[type="reset"]:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"] {
+  cursor: pointer;
+}
+
+label[for],
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]) {
+  cursor: pointer;
+}
 
 html {
   font-family: var(--font-body);
