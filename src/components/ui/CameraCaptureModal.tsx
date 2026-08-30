@@ -8,15 +8,7 @@ import {
   IoWarningOutline,
   IoSyncOutline,
 } from "react-icons/io5";
-
-interface CameraCaptureModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onCapture: (imageDataUrl: string) => void;
-  title?: string;
-  guideMode?: "avatar" | "document" | "general";
-  initialFacingMode?: "user" | "environment";
-}
+import type { CameraCaptureModalProps } from "@/types";
 
 export function CameraCaptureModal({
   isOpen,
@@ -32,7 +24,9 @@ export function CameraCaptureModal({
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">(initialFacingMode);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">(
+    initialFacingMode,
+  );
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isLoadingCamera, setIsLoadingCamera] = useState(false);
@@ -60,14 +54,14 @@ export function CameraCaptureModal({
     setCameraError(null);
 
     // Stop existing stream first
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera API is not supported in this browser. Please upload a file instead.");
+        throw new Error(
+          "Camera API is not supported in this browser. Please upload a file instead.",
+        );
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -92,9 +86,10 @@ export function CameraCaptureModal({
           ? err.message
           : "Unable to access camera. Please check permissions or upload a file.";
       setCameraError(
-        errorMsg.includes("Permission denied") || errorMsg.includes("NotAllowedError")
+        errorMsg.includes("Permission denied") ||
+          errorMsg.includes("NotAllowedError")
           ? "Camera permission was denied. Please allow camera access in browser settings or choose a photo from your device."
-          : errorMsg
+          : errorMsg,
       );
     } finally {
       setIsLoadingCamera(false);
@@ -107,10 +102,8 @@ export function CameraCaptureModal({
       startCamera();
     }
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     };
   }, [isOpen, capturedImage, startCamera]);
 
@@ -208,7 +201,8 @@ export function CameraCaptureModal({
       <div
         className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-white/15 bg-[#061017]/95 shadow-2xl backdrop-blur-2xl animate-scale-in"
         style={{
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(95, 217, 214, 0.15)",
+          boxShadow:
+            "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(95, 217, 214, 0.15)",
         }}
       >
         {/* Header */}
@@ -217,11 +211,13 @@ export function CameraCaptureModal({
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-300">
               <IoCamera size={18} />
             </div>
-            <h3 className="font-display text-base font-bold text-white">{title}</h3>
+            <h3 className="font-display text-base font-bold text-white">
+              {title}
+            </h3>
           </div>
           <button
             onClick={handleClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
           >
             <IoClose size={20} />
           </button>
@@ -251,20 +247,24 @@ export function CameraCaptureModal({
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-400">
                 <IoWarningOutline size={30} />
               </div>
-              <h4 className="text-sm font-bold text-white">Camera Unavailable</h4>
-              <p className="mt-1.5 text-xs text-slate-400 max-w-xs">{cameraError}</p>
+              <h4 className="text-sm font-bold text-white">
+                Camera Unavailable
+              </h4>
+              <p className="mt-1.5 text-xs text-slate-400 max-w-xs">
+                {cameraError}
+              </p>
               <div className="mt-5 flex gap-2">
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-xs font-bold text-cyan-300 transition-all hover:bg-cyan-400/20"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-xs font-bold text-cyan-300 transition-all hover:bg-cyan-400/20 cursor-pointer"
                 >
                   <IoRefresh size={14} /> Retry Camera
                 </button>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-white/10"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-white/10 cursor-pointer"
                 >
                   <IoImageOutline size={14} /> Upload Image
                 </button>
@@ -309,7 +309,7 @@ export function CameraCaptureModal({
                     type="button"
                     onClick={handleToggleCamera}
                     title="Flip camera"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80 active:scale-95"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80 active:scale-95 cursor-pointer"
                   >
                     <IoSyncOutline size={18} />
                   </button>
@@ -347,14 +347,14 @@ export function CameraCaptureModal({
               <button
                 type="button"
                 onClick={handleRetake}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-xs font-bold text-slate-200 transition-all hover:bg-white/10 active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-xs font-bold text-slate-200 transition-all hover:bg-white/10 active:scale-95 cursor-pointer"
               >
                 <IoRefresh size={16} /> Retake
               </button>
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-500 px-6 py-3 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-500/25 transition-all hover:brightness-110 active:scale-95"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-400 to-teal-500 px-6 py-3 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-500/25 transition-all hover:brightness-110 active:scale-95 cursor-pointer"
               >
                 <IoCheckmark size={18} /> Use This Photo
               </button>
@@ -365,7 +365,7 @@ export function CameraCaptureModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+                className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-slate-300 transition-all hover:bg-white/10 hover:text-white cursor-pointer"
               >
                 <IoImageOutline size={16} />
                 <span className="hidden sm:inline">From Files</span>
@@ -376,7 +376,7 @@ export function CameraCaptureModal({
                 type="button"
                 disabled={isLoadingCamera || !!cameraError}
                 onClick={handleTakePhoto}
-                className="group relative flex h-16 w-16 items-center justify-center rounded-full p-1 transition-all active:scale-95 disabled:opacity-40"
+                className="group relative flex h-16 w-16 items-center justify-center rounded-full p-1 transition-all active:scale-95 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
               >
                 <span className="absolute inset-0 rounded-full border-2 border-cyan-400 transition-all group-hover:scale-105 group-hover:border-cyan-300" />
                 <span className="h-12 w-12 rounded-full bg-cyan-400 shadow-md shadow-cyan-400/50 transition-all group-hover:scale-95 group-hover:bg-cyan-300" />
@@ -385,7 +385,7 @@ export function CameraCaptureModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-400 transition-all hover:text-white"
+                className="rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-400 transition-all hover:text-white cursor-pointer"
               >
                 Cancel
               </button>

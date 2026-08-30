@@ -1,15 +1,5 @@
-import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-
-interface ServiceCardProps {
-  title: string;
-  description: string;
-  amount: string;
-  icon: ReactNode;
-  selected?: boolean;
-  onClick?: () => void;
-  className?: string;
-}
+import type { ServiceCardProps } from "@/types";
 
 export function ServiceCard({ title, description, amount, icon, selected, onClick, className }: ServiceCardProps) {
   return (
@@ -17,9 +7,9 @@ export function ServiceCard({ title, description, amount, icon, selected, onClic
       type="button"
       onClick={onClick}
       className={cn(
-        "liquid-glass relative overflow-hidden p-5 text-left w-full transition-all duration-200",
+        "liquid-glass relative overflow-hidden p-5 text-left w-full transition-all duration-200 cursor-pointer",
         "active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2",
-        "min-h-[44px]",
+        "min-h-11",
         selected && "animate-pulse-glow",
         className
       )}
@@ -41,10 +31,10 @@ export function ServiceCard({ title, description, amount, icon, selected, onClic
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-[15px]" style={{ color: "var(--text-primary)" }}>{title}</h3>
-          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>{description}</p>
+          <h3 className="font-bold text-[15px] text-fg">{title}</h3>
+          <p className="text-xs mt-1 text-fg-dim">{description}</p>
         </div>
-        <p className="text-lg font-bold font-mono whitespace-nowrap" style={{ color: "var(--accent-coral)" }}>{amount}</p>
+        <p className="text-lg font-bold font-mono whitespace-nowrap text-danger">{amount}</p>
       </div>
     </button>
   );

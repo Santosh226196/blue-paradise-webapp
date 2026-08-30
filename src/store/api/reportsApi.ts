@@ -1,20 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { Transaction, ServiceType } from "@/types";
+import type { Transaction, ReportSummary } from "@/types";
 import { baseQueryFor } from "./base";
-
-export interface RevenueByPeriod {
-  period: string;
-  total: number;
-  count: number;
-  byCategory: Record<ServiceType, number>;
-}
-
-export interface ReportSummary {
-  totalRevenue: number;
-  totalTransactions: number;
-  byCategory: Record<ServiceType, { total: number; count: number }>;
-  dailyRevenue: RevenueByPeriod[];
-}
 
 export const reportsApi = createApi({
   reducerPath: "reportsApi",

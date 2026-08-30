@@ -1,9 +1,5 @@
 import { cn } from "@/lib/utils";
-
-interface SkeletonGlassProps {
-  className?: string;
-  lines?: number;
-}
+import type { SkeletonGlassProps } from "@/types";
 
 export function SkeletonGlass({ className, lines = 1 }: SkeletonGlassProps) {
   return (

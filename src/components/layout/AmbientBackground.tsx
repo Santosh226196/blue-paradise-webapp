@@ -1,6 +1,9 @@
 export function AmbientBackground() {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+    <div
+      className="fixed inset-0 overflow-hidden pointer-events-none z-0"
+      aria-hidden="true"
+    >
       {/* Top Left Aqua Glow */}
       <div
         className="ambient-blob blob-1"

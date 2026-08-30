@@ -32,7 +32,10 @@ export function isDateToday(dateStr: string): boolean {
 }
 
 export function generateId(): string {
-  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return (
+    crypto.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  );
 }
 
 export function generateBillNumber(prefix: string, sequence: number): string {

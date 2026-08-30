@@ -4,6 +4,7 @@ export { reportsApi } from "./reportsApi";
 export { settingsApi } from "./settingsApi";
 export { authApi } from "./authApi";
 export { membershipPlansApi } from "./membershipPlansApi";
+export { membershipBatchesApi } from "./membershipBatchesApi";
 export { staffApi } from "./staffApi";
 export { attendanceApi } from "./attendanceApi";
 export { duePaymentsApi } from "./duePaymentsApi";

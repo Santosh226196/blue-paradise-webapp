@@ -1,52 +1,16 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryFor } from "./base";
-
-interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-interface LoginResponse {
-  token: string;
-  user: { username: string };
-}
-
-interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-interface ForgotPasswordRequest {
-  identity: string;
-}
-
-interface ForgotPasswordResponse {
-  success: boolean;
-  message: string;
-  demoOtp?: string;
-  maskedDestination: string;
-}
-
-interface VerifyOtpRequest {
-  identity: string;
-  otp: string;
-}
-
-interface VerifyOtpResponse {
-  success: boolean;
-  resetToken: string;
-}
-
-interface ResetPasswordRequest {
-  identity: string;
-  newPassword: string;
-  resetToken?: string;
-}
-
-interface ResetPasswordResponse {
-  success: boolean;
-  message: string;
-}
+import type {
+  LoginRequest,
+  LoginResponse,
+  ChangePasswordRequest,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from "@/types";
 
 export const authApi = createApi({
   reducerPath: "authApi",

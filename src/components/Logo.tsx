@@ -1,9 +1,5 @@
 import logoUrl from "../assets/images/logo.webp";
-
-interface LogoProps {
-  size?: number;
-  className?: string;
-}
+import type { LogoProps } from "@/types";
 
 export function Logo({ size = 40, className = "" }: LogoProps) {
   return (

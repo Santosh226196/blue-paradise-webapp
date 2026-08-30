@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "@/store";
 
-const API_BASE_URL = ((import.meta.env.VITE_API_BASE_URL as string) || "/api").replace(/\/+$/, "");
+const API_BASE_URL = ((import.meta.env.VITE_API_BASE_URL as string) || "").replace(/\/+$/, "");
 
 export function baseQueryFor(resource: string) {
   return fetchBaseQuery({
