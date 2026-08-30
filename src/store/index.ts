@@ -5,6 +5,7 @@ import { reportsApi } from "./api/reportsApi";
 import { settingsApi } from "./api/settingsApi";
 import { authApi } from "./api/authApi";
 import { membershipPlansApi } from "./api/membershipPlansApi";
+import { membershipBatchesApi } from "./api/membershipBatchesApi";
 import { staffApi } from "./api/staffApi";
 import { attendanceApi } from "./api/attendanceApi";
 import { duePaymentsApi } from "./api/duePaymentsApi";
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   [settingsApi.reducerPath]: settingsApi.reducer,
   [authApi.reducerPath]: authApi.reducer,
   [membershipPlansApi.reducerPath]: membershipPlansApi.reducer,
+  [membershipBatchesApi.reducerPath]: membershipBatchesApi.reducer,
   [staffApi.reducerPath]: staffApi.reducer,
   [attendanceApi.reducerPath]: attendanceApi.reducer,
   [duePaymentsApi.reducerPath]: duePaymentsApi.reducer,
@@ -38,6 +40,7 @@ export function makeStore(preloadedState?: Partial<ReturnType<typeof rootReducer
         settingsApi.middleware,
         authApi.middleware,
         membershipPlansApi.middleware,
+        membershipBatchesApi.middleware,
         staffApi.middleware,
         attendanceApi.middleware,
         duePaymentsApi.middleware,

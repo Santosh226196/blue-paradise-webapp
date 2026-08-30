@@ -1,11 +1,11 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { Transaction, CreateTransactionPayload } from "@/types";
+import type { Transaction, CreateTransactionPayload, ExpiringMembership } from "@/types";
 import { baseQueryFor } from "./base";
 
 export const billingApi = createApi({
   reducerPath: "billingApi",
   baseQuery: baseQueryFor("/billing"),
-  tagTypes: ["Transaction"],
+  tagTypes: ["Transaction", "Membership", "MembershipBatch"],
   endpoints: (builder) => ({
     getTransactions: builder.query<Transaction[], { from?: string; to?: string }>({
       query: (params) => ({ url: "/transactions", params }),
@@ -17,7 +17,7 @@ export const billingApi = createApi({
     }),
     createTransaction: builder.mutation<Transaction, CreateTransactionPayload>({
       query: (body) => ({ url: "/transactions", method: "POST", body }),
-      invalidatesTags: ["Transaction"],
+      invalidatesTags: ["Transaction", "Membership", "MembershipBatch"],
     }),
     getTodayTransactions: builder.query<Transaction[], void>({
       query: () => "/transactions/today",
@@ -30,6 +30,10 @@ export const billingApi = createApi({
     }, void>({
       query: () => "/dashboard-stats",
     }),
+    getExpiringMemberships: builder.query<ExpiringMembership[], void>({
+      query: () => "/memberships/expiring",
+      providesTags: ["Transaction"],
+    }),
   }),
 });
 
@@ -39,4 +43,5 @@ export const {
   useCreateTransactionMutation,
   useGetTodayTransactionsQuery,
   useGetDashboardStatsQuery,
+  useGetExpiringMembershipsQuery,
 } = billingApi;

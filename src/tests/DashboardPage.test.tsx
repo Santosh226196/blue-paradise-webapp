@@ -53,11 +53,45 @@ describe("DashboardPage", () => {
         billNumber: "BP000001",
       },
     ]);
+    mockApi("/memberships/expiring", []);
 
     renderWithProviders(<DashboardPage />, { preloadedState: authenticatedState() });
 
     expect(await screen.findByText("Hourly Swimming")).toBeInTheDocument();
     expect(screen.getByText(/BP000001/)).toBeInTheDocument();
     expect(screen.getByText("₹200")).toBeInTheDocument();
+  });
+
+  it("renders expiring membership members", async () => {
+    mockApi("/dashboard-stats", { totalCustomers: 0, todayVisits: 0, todayRevenue: 0 });
+    mockApi("/transactions/today", []);
+    mockApi("/memberships/expiring", [
+      {
+        customerId: "c1",
+        customerName: "Rahul Sharma",
+        customerMobile: "9876543210",
+        membershipType: "MONTHLY",
+        endDate: "2026-08-31T00:00:00.000Z",
+        status: "EXPIRING_SOON",
+        daysLeft: 1,
+      },
+      {
+        customerId: "c2",
+        customerName: "Priya Patel",
+        customerMobile: "9123456780",
+        membershipType: "YEARLY",
+        endDate: "2026-07-15T00:00:00.000Z",
+        status: "EXPIRED",
+        daysLeft: -46,
+      },
+    ]);
+
+    renderWithProviders(<DashboardPage />, { preloadedState: authenticatedState() });
+
+    expect(await screen.findByText("Expiring Memberships")).toBeInTheDocument();
+    expect(await screen.findByText("Rahul Sharma")).toBeInTheDocument();
+    expect(screen.getByText("1 day left")).toBeInTheDocument();
+    expect(screen.getByText("Priya Patel")).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import {
   useGetCustomerQuery,
 } from "@/store/api/customersApi";
 import { useCreateTransactionMutation } from "@/store/api/billingApi";
+import { useGetMembershipPlansQuery } from "@/store/api/membershipPlansApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -20,6 +21,7 @@ import {
   SERVICE_NAMES,
   SERVICE_AMOUNTS,
   type PaymentMethod,
+  type MembershipPlan,
 } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/Toast";
@@ -54,6 +56,11 @@ export function BillingPage() {
   const [selectedService, setSelectedService] = useState<ServiceType | null>(
     null,
   );
+  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(
+    null,
+  );
+  const { data: plans, isLoading: plansLoading } =
+    useGetMembershipPlansQuery();
   const [step, setStep] = useState(customerId ? 1 : 0);
   const [createTransaction, { isLoading: paymentLoading }] =
     useCreateTransactionMutation();
@@ -78,12 +85,20 @@ export function BillingPage() {
   function handlePay() {
     if (!selectedCustomer || !selectedService) return;
     setConfirmModal(false);
+    const isMembership = selectedService === ServiceType.Membership;
+    const payloadServiceName = isMembership && selectedPlan
+      ? selectedPlan.name
+      : SERVICE_NAMES[selectedService];
+    const payloadAmount = isMembership && selectedPlan
+      ? selectedPlan.price
+      : SERVICE_AMOUNTS[selectedService];
     createTransaction({
       customerId: selectedCustomer.id,
       serviceType: selectedService,
-      serviceName: SERVICE_NAMES[selectedService],
-      amount: SERVICE_AMOUNTS[selectedService],
+      serviceName: payloadServiceName,
+      amount: payloadAmount,
       paymentMethod,
+      planId: isMembership ? selectedPlan?.id : undefined,
     })
       .unwrap()
       .then((txn) => {
@@ -254,7 +269,10 @@ export function BillingPage() {
                   )}
                   icon={<IoWater size={24} />}
                   selected={selectedService === ServiceType.Membership}
-                  onClick={() => setSelectedService(ServiceType.Membership)}
+                  onClick={() => {
+                    setSelectedService(ServiceType.Membership);
+                    setSelectedPlan(null);
+                  }}
                 />
                 <ServiceCard
                   title="Swimming Coaching"
@@ -262,7 +280,10 @@ export function BillingPage() {
                   amount={formatCurrency(SERVICE_AMOUNTS[ServiceType.Coaching])}
                   icon={<IoFitness size={24} />}
                   selected={selectedService === ServiceType.Coaching}
-                  onClick={() => setSelectedService(ServiceType.Coaching)}
+                  onClick={() => {
+                    setSelectedService(ServiceType.Coaching);
+                    setSelectedPlan(null);
+                  }}
                 />
                 <ServiceCard
                   title="Hourly Swimming Pass"
@@ -272,14 +293,70 @@ export function BillingPage() {
                   )}
                   icon={<IoTimer size={24} />}
                   selected={selectedService === ServiceType.HourlySwimming}
-                  onClick={() => setSelectedService(ServiceType.HourlySwimming)}
+                  onClick={() => {
+                    setSelectedService(ServiceType.HourlySwimming);
+                    setSelectedPlan(null);
+                  }}
                 />
               </div>
 
+              {selectedService === ServiceType.Membership && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                    Choose Membership Plan
+                  </p>
+                  {plansLoading ? (
+                    <SkeletonGlass lines={2} />
+                  ) : plans && plans.length > 0 ? (
+                    <div className="space-y-2">
+                      {plans?.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setSelectedPlan(p)}
+                          className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
+                            selectedPlan?.id === p.id
+                              ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
+                              : "bg-white/5 border-white/10 hover:border-cyan-400/40"
+                          }`}
+                        >
+                          <div>
+                            <p className="text-sm font-bold text-white">
+                              {p.name}
+                            </p>
+                            <p className="text-xs font-mono text-slate-400">
+                              {p.duration}
+                            </p>
+                          </div>
+                          <span className="text-sm font-bold font-mono text-cyan-300">
+                            {formatCurrency(p.price)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">
+                      No membership plans configured yet. Add plans in
+                      Membership Plans first.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {selectedService && (
-                <PrimaryButton fullWidth size="lg" onClick={() => setStep(2)}>
+                <PrimaryButton
+                  fullWidth
+                  size="lg"
+                  disabled={
+                    selectedService === ServiceType.Membership && !selectedPlan
+                  }
+                  onClick={() => setStep(2)}
+                >
                   Continue to Payment —{" "}
-                  {formatCurrency(SERVICE_AMOUNTS[selectedService])}
+                  {formatCurrency(
+                    selectedService === ServiceType.Membership && selectedPlan
+                      ? selectedPlan.price
+                      : SERVICE_AMOUNTS[selectedService],
+                  )}
                 </PrimaryButton>
               )}
             </div>
@@ -301,7 +378,9 @@ export function BillingPage() {
                   <div className="flex justify-between items-center pb-2 border-b border-white/10">
                     <span className="text-sm text-slate-400">Service Plan</span>
                     <span className="font-bold text-cyan-300 text-sm">
-                      {SERVICE_NAMES[selectedService]}
+                      {selectedService === ServiceType.Membership && selectedPlan
+                        ? selectedPlan.name
+                        : SERVICE_NAMES[selectedService]}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2">
@@ -314,7 +393,11 @@ export function BillingPage() {
                       </span>
                     </div>
                     <span className="text-3xl font-bold font-mono text-cyan-400">
-                      {formatCurrency(SERVICE_AMOUNTS[selectedService])}
+                      {formatCurrency(
+                        selectedService === ServiceType.Membership && selectedPlan
+                          ? selectedPlan.price
+                          : SERVICE_AMOUNTS[selectedService],
+                      )}
                     </span>
                   </div>
                 </div>
@@ -374,7 +457,11 @@ export function BillingPage() {
                   className="flex-1 shadow-lg shadow-cyan-500/25"
                 >
                   Confirm & Generate Bill (
-                  {formatCurrency(SERVICE_AMOUNTS[selectedService])})
+                  {formatCurrency(
+                    selectedService === ServiceType.Membership && selectedPlan
+                      ? selectedPlan.price
+                      : SERVICE_AMOUNTS[selectedService],
+                  )})
                 </PrimaryButton>
               </div>
             </div>
@@ -453,7 +540,12 @@ export function BillingPage() {
                     className="text-lg font-bold font-mono text-accent"
                   >
                     {selectedService
-                      ? formatCurrency(SERVICE_AMOUNTS[selectedService])
+                      ? formatCurrency(
+                          selectedService === ServiceType.Membership &&
+                            selectedPlan
+                            ? selectedPlan.price
+                            : SERVICE_AMOUNTS[selectedService],
+                        )
                       : "—"}
                   </span>
                 </div>
@@ -497,7 +589,11 @@ export function BillingPage() {
         onConfirm={handlePay}
         variant="confirm"
         title="Confirm Payment"
-        message={`Process payment of ${formatCurrency(SERVICE_AMOUNTS[selectedService!])} for ${selectedCustomer?.name} via ${paymentMethod}?`}
+        message={`Process payment of ${formatCurrency(
+          selectedService === ServiceType.Membership && selectedPlan
+            ? selectedPlan.price
+            : SERVICE_AMOUNTS[selectedService!],
+        )} for ${selectedCustomer?.name} via ${paymentMethod}?`}
         confirmLabel={paymentLoading ? "Processing..." : "Pay Now"}
         cancelLabel="Cancel"
       />

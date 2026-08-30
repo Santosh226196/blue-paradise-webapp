@@ -8,7 +8,8 @@ import { ToastProvider } from "@/components/Toast";
 import { makeStore } from "@/store";
 import type { RootState } from "@/store";
 
-type ApiHandler = (request: Request) => unknown;
+export type ApiRequest = Request & { body: string | null };
+export type ApiHandler = (request: ApiRequest) => unknown;
 
 const routeHandlers = new Map<string, ApiHandler>();
 
@@ -32,11 +33,22 @@ export function setupFetchMock() {
         : input instanceof Request
           ? input.url
           : String(input);
-    const req = input instanceof Request ? input : new Request(url);
+
+    let bodyText: string | null = null;
+    if (input instanceof Request && input.body) {
+      bodyText = await input.text();
+    } else if (typeof input === "string") {
+      bodyText = null;
+    }
+
+    const reqObj = input instanceof Request ? input : new Request(url);
 
     for (const [needle, handler] of routeHandlers) {
       if (url.includes(needle)) {
-        const data = handler(req);
+        const data = handler({
+          ...reqObj,
+          body: bodyText,
+        } as ApiRequest);
         return new Response(JSON.stringify(data), {
           status: 200,
           headers: { "Content-Type": "application/json" },

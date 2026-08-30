@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { useGetCustomersQuery } from "@/store/api/customersApi";
+import {
+  useGetCustomersQuery,
+  useGetCustomersWithoutPlanQuery,
+} from "@/store/api/customersApi";
 import {
   PrimaryButton,
   SearchBar,
@@ -16,6 +19,7 @@ import {
 
 const filterChips = [
   { key: "ALL", label: "All Members" },
+  { key: "NEW", label: "New Members" },
   { key: "MEMBERSHIP", label: "Membership" },
   { key: "COACHING", label: "Coaching" },
   { key: "HOURLY_SWIMMING", label: "Hourly Pass" },
@@ -24,10 +28,21 @@ const filterChips = [
 export function CustomerListPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const { data: customers, isLoading } = useGetCustomersQuery({
-    search,
-    type: activeFilter === "ALL" ? undefined : activeFilter,
-  });
+  const isNewTab = activeFilter === "NEW";
+
+  const { data: customers, isLoading } = useGetCustomersQuery(
+    { search, type: activeFilter === "ALL" ? undefined : activeFilter === "NEW" ? undefined : activeFilter },
+    { skip: isNewTab },
+  );
+  const { data: newMembers, isLoading: newMembersLoading } =
+    useGetCustomersWithoutPlanQuery(undefined, { skip: !isNewTab });
+
+  const displayCustomers = isNewTab ? newMembers : customers;
+  const displayLoading = isNewTab ? newMembersLoading : isLoading;
+
+  const subtitle = isNewTab
+    ? "Registered members who haven't purchased any plan yet"
+    : "Manage club members, access profiles, and view verification history";
 
   return (
     <div className="space-y-6">
@@ -39,7 +54,7 @@ export function CustomerListPage() {
             Member Directory
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
-            Manage club members, access profiles, and view verification history
+            {subtitle}
           </p>
         </div>
         <Link to="/customers/new">
@@ -50,12 +65,14 @@ export function CustomerListPage() {
         </Link>
       </div>
 
-      <SearchBar
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onClear={() => setSearch("")}
-        placeholder="Search by member name, phone, or Aadhaar..."
-      />
+      {!isNewTab && (
+        <SearchBar
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch("")}
+          placeholder="Search by member name, phone, or Aadhaar..."
+        />
+      )}
 
       <div className="flex gap-2 flex-wrap">
         {filterChips.map(({ key, label }) => (
@@ -78,15 +95,15 @@ export function CustomerListPage() {
         ))}
       </div>
 
-      {isLoading ? (
+      {displayLoading ? (
         <div className="space-y-3">
           <SkeletonGlass lines={2} />
           <SkeletonGlass lines={2} />
           <SkeletonGlass lines={2} />
         </div>
-      ) : customers && customers.length > 0 ? (
+      ) : displayCustomers && displayCustomers.length > 0 ? (
         <div className="space-y-2">
-          {customers?.map((customer, i) => (
+          {displayCustomers?.map((customer, i) => (
             <Link
               key={customer.id}
               to={`/customers/${customer.id}`}
@@ -150,14 +167,16 @@ export function CustomerListPage() {
       ) : (
         <EmptyState
           icon={<IoSearch size={36} />}
-          title="No members found"
+          title={isNewTab ? "No new members" : "No members found"}
           description={
-            search
-              ? "Try a different search keyword"
-              : "Register your first member to get started"
+            isNewTab
+              ? "All registered members have a plan"
+              : search
+                ? "Try a different search keyword"
+                : "Register your first member to get started"
           }
           action={
-            !search && (
+            !search && !isNewTab && (
               <Link to="/customers/new">
                 <PrimaryButton>
                   <IoPersonAdd size={18} />

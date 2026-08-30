@@ -7,7 +7,7 @@ import {
   useGetCustomerTransactionsQuery,
   useGetCustomerMembershipsQuery,
 } from "@/store/api/customersApi";
-import { useGetSettingsQuery } from "@/store/api/settingsApi";
+import { useCachedSettings } from "@/store/api/settingsApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -15,9 +15,11 @@ import {
   StatCard,
   CameraCaptureModal,
 } from "@/components/ui";
+import { AssignMembershipModal } from "@/components/AssignMembershipModal";
+import { BatchPickerModal } from "@/components/BatchPickerModal";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
-import { VisitType } from "@/types";
+import { VisitType, type Membership } from "@/types";
 import {
   IoArrowBack,
   IoCalendar,
@@ -36,6 +38,8 @@ import {
   IoClipboard,
   IoCall,
   IoCamera,
+  IoAdd,
+  IoPeople,
 } from "react-icons/io5";
 
 type Tab = "overview" | "visits" | "membership" | "payments";
@@ -47,13 +51,15 @@ export function CustomerProfilePage() {
   const { data: visits } = useGetCustomerVisitsQuery(id!);
   const { data: transactions } = useGetCustomerTransactionsQuery(id!);
   const { data: memberships } = useGetCustomerMembershipsQuery(id!);
-  const { data: settings } = useGetSettingsQuery();
+  const settings = useCachedSettings();
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [cameraTarget, setCameraTarget] = useState<"avatar" | "idCard">(
     "avatar",
   );
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [batchTarget, setBatchTarget] = useState<Membership | null>(null);
 
   if (isLoading)
     return (
@@ -138,6 +144,27 @@ export function CustomerProfilePage() {
         initialFacingMode={cameraTarget === "avatar" ? "user" : "environment"}
       />
 
+      {/* Assign Membership Modal */}
+      <AssignMembershipModal
+        customerId={customer.id}
+        customerName={customer.name}
+        isOpen={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        onAssigned={() => setActiveTab("membership")}
+      />
+
+      {/* Batch Picker Modal */}
+      {batchTarget && (
+        <BatchPickerModal
+          membershipId={batchTarget.id}
+          membershipType={batchTarget.membershipType}
+          currentBatchId={batchTarget.batchId}
+          customerName={customer.name}
+          isOpen
+          onClose={() => setBatchTarget(null)}
+        />
+      )}
+
       {/* Breadcrumb */}
       <Breadcrumb
         items={[
@@ -164,7 +191,7 @@ export function CustomerProfilePage() {
               "linear-gradient(135deg, var(--accent-aqua) 0%, var(--accent-pool) 50%, transparent 100%)",
           }}
         />
-        <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-10 bg-accent blur-2xl" />
+        {/* <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-10 bg-accent blur-2xl" /> */}
 
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -629,70 +656,132 @@ export function CustomerProfilePage() {
       {/* ─── Membership Tab ─── */}
       {activeTab === "membership" && (
         <div className="space-y-4 animate-fade-up">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+              {memberships?.length ?? 0} membership record(s)
+            </p>
+            <PrimaryButton size="sm" onClick={() => setAssignModalOpen(true)}>
+              <IoAdd size={16} /> Assign Membership
+            </PrimaryButton>
+          </div>
+
           {memberships && memberships.length > 0 ? (
-            memberships.map((m, i) => (
-              <GlassCard
-                key={m.id}
-                className="animate-fade-up"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{
-                        background:
-                          m.status === "ACTIVE"
+            memberships.map((m, i) => {
+              const active = m.status === "ACTIVE";
+              return (
+                <GlassCard
+                  key={m.id}
+                  className="animate-fade-up"
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: active
                             ? "var(--glow-aqua)"
                             : "var(--glass-bg-hover)",
-                        color:
-                          m.status === "ACTIVE"
+                          color: active
                             ? "var(--accent-aqua)"
                             : "var(--text-muted)",
-                      }}
-                    >
-                      <IoWater size={18} />
+                        }}
+                      >
+                        <IoWater size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-fg">
+                          {m.planName ?? `${m.membershipType} Membership`}
+                        </p>
+                        <p className="text-xs font-mono text-fg-muted">
+                          {formatDate(m.startDate)} — {formatDate(m.endDate)}
+                          {m.totalSessions != null
+                            ? ` · ${m.usedSessions ?? 0}/${m.totalSessions} sessions`
+                            : ""}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-fg">
-                        {m.membershipType} Membership
-                      </p>
-                      <p className="text-xs font-mono text-fg-muted">
-                        {formatDate(m.startDate)} — {formatDate(m.endDate)}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
-                    style={{
-                      background:
-                        m.status === "ACTIVE"
+                    <span
+                      className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
+                      style={{
+                        background: active
                           ? "var(--accent-aqua)"
                           : "var(--glass-bg-hover)",
-                      color:
-                        m.status === "ACTIVE" ? "white" : "var(--text-muted)",
-                    }}
-                  >
-                    {m.status}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-3 border-t border-glass-border">
-                  <span className="text-xs text-fg-muted">Amount Paid</span>
-                  <span className="text-sm font-bold font-mono text-danger">
-                    {formatCurrency(m.amount)}
-                  </span>
-                </div>
-              </GlassCard>
-            ))
+                        color: active ? "white" : "var(--text-muted)",
+                      }}
+                    >
+                      {m.status}
+                    </span>
+                  </div>
+
+                  {active && (
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-glass">
+                        <div className="flex items-center gap-2">
+                          <IoPeople size={16} className="text-accent" />
+                          <span className="text-xs font-bold text-fg">
+                            Class Batch
+                          </span>
+                        </div>
+                        {m.batchName ? (
+                          <div className="text-right">
+                            <p className="text-xs font-bold text-accent">
+                              {m.batchName}
+                            </p>
+                            {m.batchSchedule && (
+                              <p className="text-[11px] font-mono text-fg-muted">
+                                {m.batchSchedule.days?.length > 0
+                                  ? m.batchSchedule.days
+                                      .map((d) => d.slice(0, 3))
+                                      .join(" · ")
+                                  : "Days TBD"}
+                                {m.batchSchedule.startTime
+                                  ? ` · ${m.batchSchedule.startTime}–${m.batchSchedule.endTime}`
+                                  : ""}
+                                {m.batchSchedule.coach
+                                  ? ` · ${m.batchSchedule.coach}`
+                                  : ""}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-fg-muted">
+                            Not assigned
+                          </span>
+                        )}
+                      </div>
+                      <PrimaryButton
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setBatchTarget(m)}
+                      >
+                        <IoPeople size={14} />
+                        {m.batchName ? "Change Batch" : "Assign to Batch"}
+                      </PrimaryButton>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between pt-3 border-t border-glass-border">
+                    <span className="text-xs text-fg-muted">Amount Paid</span>
+                    <span className="text-sm font-bold font-mono text-danger">
+                      {formatCurrency(m.amount)}
+                    </span>
+                  </div>
+                </GlassCard>
+              );
+            })
           ) : (
             <EmptyBlock
               icon={<IoWater size={32} />}
               title="No memberships"
               description="This customer has no membership records"
               action={
-                <Link to={`/billing/${customer.id}`}>
-                  <PrimaryButton size="sm">Buy Membership</PrimaryButton>
-                </Link>
+                <PrimaryButton
+                  size="sm"
+                  onClick={() => setAssignModalOpen(true)}
+                >
+                  <IoAdd size={16} /> Assign Membership
+                </PrimaryButton>
               }
             />
           )}

@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { Customer, Visit, Membership, Coaching, Transaction } from "@/types";
+import type { Customer, Visit, Membership, Coaching, Transaction, ActiveBatchForCustomer } from "@/types";
 import { baseQueryFor } from "./base";
 
 export const customersApi = createApi({
@@ -9,6 +9,10 @@ export const customersApi = createApi({
   endpoints: (builder) => ({
     getCustomers: builder.query<Customer[], { search?: string; type?: string }>({
       query: (params) => ({ url: "/", params }),
+      providesTags: ["Customer"],
+    }),
+    getCustomersWithoutPlan: builder.query<Customer[], void>({
+      query: () => "/no-plan",
       providesTags: ["Customer"],
     }),
     getCustomer: builder.query<Customer, string>({
@@ -35,6 +39,10 @@ export const customersApi = createApi({
       query: (customerId) => `/${customerId}/memberships`,
       providesTags: ["Membership"],
     }),
+    getCustomerBatches: builder.query<ActiveBatchForCustomer[], string>({
+      query: (customerId) => `/${customerId}/batches`,
+      providesTags: ["Membership"],
+    }),
     getCustomerCoaching: builder.query<Coaching[], string>({
       query: (customerId) => `/${customerId}/coaching`,
       providesTags: ["Coaching"],
@@ -48,12 +56,14 @@ export const customersApi = createApi({
 
 export const {
   useGetCustomersQuery,
+  useGetCustomersWithoutPlanQuery,
   useGetCustomerQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
   useGetCustomerVisitsQuery,
   useGetCustomerMembershipsQuery,
+  useGetCustomerBatchesQuery,
   useGetCustomerCoachingQuery,
   useGetCustomerTransactionsQuery,
 } = customersApi;

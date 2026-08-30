@@ -13,11 +13,23 @@ export const PaymentMethod = {
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
 export const MembershipType = {
+  Hourly: "HOURLY",
+  Daily: "DAILY",
   Monthly: "MONTHLY",
   Quarterly: "QUARTERLY",
   Yearly: "YEARLY",
 } as const;
 export type MembershipType = (typeof MembershipType)[keyof typeof MembershipType];
+
+export interface ExpiringMembership {
+  customerId: string;
+  customerName: string;
+  customerMobile: string;
+  membershipType: MembershipType;
+  endDate: string;
+  status: "EXPIRING_SOON" | "EXPIRED";
+  daysLeft: number;
+}
 
 export const CoachingType = {
   Beginner: "BEGINNER",
@@ -66,10 +78,24 @@ export interface Visit {
 export interface Membership {
   id: string;
   customerId: string;
+  planId?: string | null;
+  planName?: string | null;
+  planTotalSessions?: number | null;
+  batchId?: string | null;
+  batchName?: string | null;
+  batchSchedule?: {
+    days: string[];
+    startTime: string;
+    endTime: string;
+    coach: string;
+    level: string;
+  } | null;
   membershipType: MembershipType;
   startDate: string;
   endDate: string;
   amount: number;
+  totalSessions?: number | null;
+  usedSessions?: number;
   status: "ACTIVE" | "EXPIRED" | "CANCELLED";
 }
 
@@ -138,9 +164,79 @@ export interface MembershipPlan {
   description: string;
   duration: "HOURLY" | "DAILY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
   price: number;
+  totalSessions?: number | null;
   features: string[];
   isActive: boolean;
   createdAt: string;
+}
+
+export const BatchLevel = {
+  Beginner: "BEGINNER",
+  Intermediate: "INTERMEDIATE",
+  Advanced: "ADVANCED",
+} as const;
+export type BatchLevel = (typeof BatchLevel)[keyof typeof BatchLevel];
+
+export const AgeGroup = {
+  Kids: "KIDS",
+  Teens: "TEENS",
+  Adults: "ADULTS",
+  All: "ALL",
+} as const;
+export type AgeGroup = (typeof AgeGroup)[keyof typeof AgeGroup];
+
+export interface MembershipBatch {
+  id: string;
+  name: string;
+  description: string;
+  planId?: string | null;
+  startDate: string;
+  endDate: string;
+  days: string[];
+  startTime: string;
+  endTime: string;
+  level: BatchLevel;
+  ageGroup: AgeGroup;
+  coachId?: string | null;
+  coach: string;
+  maxMembers: number;
+  currentMembers: number;
+  status: "ACTIVE" | "UPCOMING" | "COMPLETED" | "CANCELLED";
+  createdAt: string;
+}
+
+export interface BatchMember {
+  assignmentId: string;
+  customerId: string;
+  customerName: string;
+  customerMobile: string;
+  customerPhoto?: string | null;
+  membershipId: string;
+  membershipType: MembershipType | null;
+  membershipStatus: string | null;
+  endDate: string | null;
+  assignedAt: string;
+}
+
+export interface BatchMembersResponse {
+  batch: { id: string; name: string; maxMembers: number };
+  members: BatchMember[];
+  availableSeats: number;
+}
+
+export interface ActiveBatchForCustomer {
+  membershipId: string;
+  batchId: string;
+  batchName: string;
+  days: string[];
+  startTime: string;
+  endTime: string;
+  coach: string;
+  level: string;
+  planName: string;
+  startDate: string;
+  endDate: string;
+  maxMembers: number;
 }
 
 export const StaffRole = {
@@ -276,6 +372,9 @@ export interface CreateTransactionPayload {
   serviceName: string;
   amount: number;
   paymentMethod: PaymentMethod;
+  planId?: string;
+  batchId?: string;
+  startDate?: string;
 }
 
 // ── Reports API Types ──

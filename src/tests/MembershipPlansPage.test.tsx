@@ -38,7 +38,7 @@ describe("MembershipPlansPage", () => {
     });
 
     expect(await screen.findByRole("heading", { level: 1, name: "Membership Plans" })).toBeInTheDocument();
-    expect(screen.getByText("Configure plans and pricing")).toBeInTheDocument();
+    expect(screen.getByText("Configure plans and batches")).toBeInTheDocument();
   });
 
   it("renders the list of membership plans from the API", async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { renderWithProviders, authenticatedState, mockApi, resetApiMocks } from "@/tests/harness";
 import { CustomerListPage } from "@/pages/CustomerListPage";
 
@@ -61,5 +61,26 @@ describe("CustomerListPage", () => {
 
     expect(await screen.findByText("No members found")).toBeInTheDocument();
     expect(screen.getByText("Register your first member to get started")).toBeInTheDocument();
+  });
+
+  it("shows registered members without a plan in the New Members tab", async () => {
+    mockApi("/customers/no-plan", [
+      {
+        id: "n1",
+        name: "Rohit Verma",
+        mobile: "9000011111",
+        firstVisitAt: "2026-08-29T00:00:00.000Z",
+        createdAt: "2026-08-29T00:00:00.000Z",
+        updatedAt: "2026-08-29T00:00:00.000Z",
+      },
+    ]);
+    mockApi("/customers", []);
+
+    renderWithProviders(<CustomerListPage />, { preloadedState: authenticatedState() });
+
+    fireEvent.click(screen.getByText("New Members"));
+
+    expect(await screen.findByText("Rohit Verma")).toBeInTheDocument();
+    expect(screen.getByText(/Registered members who haven't purchased/i)).toBeInTheDocument();
   });
 });

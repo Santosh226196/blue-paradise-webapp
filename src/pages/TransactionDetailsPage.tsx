@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router";
 import { useGetTransactionQuery } from "@/store/api/billingApi";
 import { useGetCustomerQuery } from "@/store/api/customersApi";
-import { useGetSettingsQuery } from "@/store/api/settingsApi";
+import { useCachedSettings } from "@/store/api/settingsApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -32,7 +32,7 @@ export function TransactionDetailsPage() {
     transaction?.customerId ?? "",
     { skip: !transaction },
   );
-  const { data: settings } = useGetSettingsQuery();
+  const settings = useCachedSettings();
 
   if (txnLoading || custLoading)
     return (
