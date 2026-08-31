@@ -49,8 +49,10 @@ export function CustomerProfilePage() {
   const { data: customer, isLoading } = useGetCustomerQuery(id!);
   const [updateCustomer] = useUpdateCustomerMutation();
   const { data: visits } = useGetCustomerVisitsQuery(id!);
-  const { data: transactions } = useGetCustomerTransactionsQuery(id!);
-  const { data: memberships } = useGetCustomerMembershipsQuery(id!);
+  const { data: transactions, refetch: refetchTransactions } =
+    useGetCustomerTransactionsQuery(id!);
+  const { data: memberships, refetch: refetchMemberships } =
+    useGetCustomerMembershipsQuery(id!);
   const settings = useCachedSettings();
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -150,7 +152,11 @@ export function CustomerProfilePage() {
         customerName={customer.name}
         isOpen={assignModalOpen}
         onClose={() => setAssignModalOpen(false)}
-        onAssigned={() => setActiveTab("membership")}
+        onAssigned={() => {
+          refetchMemberships();
+          refetchTransactions();
+          setActiveTab("membership");
+        }}
       />
 
       {/* Batch Picker Modal */}
@@ -514,7 +520,7 @@ export function CustomerProfilePage() {
                   to={`/billing/${customer.id}`}
                   className="inline-block mt-2"
                 >
-                  <PrimaryButton size="sm">Activate Now</PrimaryButton>
+                  {/* <PrimaryButton size="sm">Activate Now</PrimaryButton> */}
                 </Link>
               </div>
             )}
