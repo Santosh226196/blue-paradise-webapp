@@ -123,7 +123,7 @@ export function AssignMembershipModal({
             reset();
             onClose();
           }}
-          className="absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
+          className="!absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
         >
           <IoClose size={20} />
         </button>
