@@ -26,6 +26,7 @@ const AttendancePage = lazy(() => import("./pages/AttendancePage").then(m => ({ 
 const DuePaymentsPage = lazy(() => import("./pages/DuePaymentsPage").then(m => ({ default: m.DuePaymentsPage })));
 const SchedulePage = lazy(() => import("./pages/SchedulePage").then(m => ({ default: m.SchedulePage })));
 const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage").then(m => ({ default: m.AnnouncementsPage })));
+const ScannerDisplayPage = lazy(() => import("./pages/ScannerDisplayPage").then(m => ({ default: m.ScannerDisplayPage })));
 
 function RouteSpinner() {
   return (
@@ -68,6 +69,7 @@ function AppContent() {
           <Route path="schedule" element={<Suspense fallback={<RouteSpinner />}><SchedulePage /></Suspense>} />
           <Route path="announcements" element={<Suspense fallback={<RouteSpinner />}><AnnouncementsPage /></Suspense>} />
         </Route>
+        <Route path="scanner" element={<Suspense fallback={<RouteSpinner />}><ScannerDisplayPage /></Suspense>} />
         <Route path="*" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Suspense fallback={<RouteSpinner />}><DashboardPage /></Suspense>} />
         </Route>
