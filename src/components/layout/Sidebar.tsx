@@ -21,6 +21,8 @@ import {
   IoMegaphone,
   IoFitnessOutline,
   IoFitness,
+  IoConstructOutline,
+  IoConstruct,
 } from "react-icons/io5";
 import { useAppDispatch, useAppSelector } from "@/hooks/store";
 import { useLogoutMutation } from "@/store/api/authApi";
@@ -91,6 +93,12 @@ const operationsNavItems: NavItemData[] = [
     iconOutline: IoMegaphoneOutline,
     iconFilled: IoMegaphone,
     label: "Announcements",
+  },
+  {
+    to: "/services",
+    iconOutline: IoConstructOutline,
+    iconFilled: IoConstruct,
+    label: "Services",
   },
 ];
 

@@ -4,6 +4,7 @@ import {
   useGetTodayTransactionsQuery,
   useGetExpiringMembershipsQuery,
 } from "@/store/api/billingApi";
+import { useGetPoolServicesQuery } from "@/store/api/poolServicesApi";
 import {
   GlassCard,
   StatCard,
@@ -25,12 +26,24 @@ import {
   IoCalendar,
   IoAlertCircle,
   IoWater,
+  IoBuild,
+  IoOptions,
+  IoFlask,
+  IoSparkles,
+  IoAdd,
 } from "react-icons/io5";
 import type { ExpiringMembership } from "@/types";
 
 const OPEN_TIME = (import.meta.env.VITE_DEFAULT_OPEN_TIME as string) || "05:00";
 const CLOSE_TIME =
   (import.meta.env.VITE_DEFAULT_CLOSE_TIME as string) || "22:00";
+
+const poolCategoryIcon: Record<string, React.ReactNode> = {
+  Equipment: <IoOptions size={16} />,
+  Cleaning: <IoBuild size={16} />,
+  Chemical: <IoFlask size={16} />,
+  Water: <IoWater size={16} />,
+};
 
 export function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
@@ -39,6 +52,8 @@ export function DashboardPage() {
     useGetTodayTransactionsQuery();
   const { data: expiring, isLoading: expiringLoading } =
     useGetExpiringMembershipsQuery();
+  const { data: poolServices, isLoading: poolLoading } =
+    useGetPoolServicesQuery();
 
   const greeting = getGreeting();
 
@@ -319,6 +334,114 @@ export function DashboardPage() {
         )}
       </GlassCard>
       </div>
+
+      <GlassCard>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display text-lg font-bold text-fg">
+            Swimming Pool Maintenance Log
+          </h2>
+          <Link
+            to="/services"
+            className="flex items-center gap-1 text-xs font-bold text-accent"
+          >
+            Manage <IoArrowForward size={14} />
+          </Link>
+        </div>
+
+        {poolLoading ? (
+          <SkeletonGlass lines={3} />
+        ) : poolServices && poolServices.length > 0 ? (
+          <div className="space-y-2">
+            {poolServices.map((task, idx) => {
+              const isOverdue = task.status === "overdue";
+              const isCompleted = task.status === "completed";
+              return (
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between p-4 rounded-xl transition-all duration-200 min-h-12 animate-fade-up"
+                  style={{
+                    background: "var(--glass-bg)",
+                    border: "1px solid var(--glass-border)",
+                    animationDelay: `${idx * 0.05}s`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--glass-bg-hover)";
+                    e.currentTarget.style.borderColor = "var(--glass-border-strong)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "var(--glass-bg)";
+                    e.currentTarget.style.borderColor = "var(--glass-border)";
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        background: isOverdue
+                          ? "var(--glow-coral)"
+                          : isCompleted
+                            ? "var(--glow-pool)"
+                            : "var(--glow-aqua)",
+                        color: isOverdue
+                          ? "var(--accent-coral)"
+                          : isCompleted
+                            ? "var(--accent-pool)"
+                            : "var(--accent-aqua)",
+                      }}
+                    >
+                      {poolCategoryIcon[task.category] ?? <IoSparkles size={16} />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-fg">{task.name}</p>
+                      <p className="text-xs font-mono text-fg-muted">
+                        {task.lastDone
+                          ? `Last: ${formatDate(task.lastDone)}`
+                          : "Not done yet"}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
+                    style={{
+                      background: isOverdue
+                        ? "var(--glow-coral)"
+                        : isCompleted
+                          ? "var(--glow-pool)"
+                          : "var(--glow-aqua)",
+                      color: isOverdue
+                        ? "var(--accent-coral)"
+                        : isCompleted
+                          ? "var(--accent-pool)"
+                          : "var(--accent-aqua)",
+                    }}
+                  >
+                    {isOverdue
+                      ? "Overdue"
+                      : isCompleted
+                        ? "Done"
+                        : task.nextDue
+                          ? formatDate(task.nextDue)
+                          : "Upcoming"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon={<IoWater size={36} />}
+            title="No pool services logged"
+            description="Add maintenance services to track the pool"
+            action={
+              <Link to="/services">
+                <PrimaryButton>
+                  <IoAdd size={18} /> Add Service
+                </PrimaryButton>
+              </Link>
+            }
+          />
+        )}
+      </GlassCard>
     </div>
   );
 }

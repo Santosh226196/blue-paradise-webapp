@@ -563,3 +563,38 @@ export interface LogoProps {
   size?: number;
   className?: string;
 }
+
+// ── Pool Maintenance / Services ──
+
+export type PoolServiceStatus = "upcoming" | "overdue" | "completed";
+
+export interface PoolService {
+  id: string;
+  name: string;
+  category: string;
+  frequencyDays: number;
+  lastDone: string;
+  nextDue: string;
+  status: PoolServiceStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PoolServiceCreatePayload {
+  name: string;
+  category: string;
+  frequencyDays: number;
+  lastDone?: string;
+  nextDue?: string;
+  status?: PoolServiceStatus;
+  notes?: string;
+}
+
+export const DEFAULT_POOL_SERVICES: PoolServiceCreatePayload[] = [
+  { name: "Filter Service", category: "Equipment", frequencyDays: 7, status: "upcoming" },
+  { name: "Tank Cleaning", category: "Cleaning", frequencyDays: 14, status: "overdue" },
+  { name: "Water Cleaning", category: "Cleaning", frequencyDays: 7, status: "upcoming" },
+  { name: "Chlorine Check", category: "Chemical", frequencyDays: 3, status: "upcoming" },
+  { name: "pH Level Testing", category: "Chemical", frequencyDays: 3, status: "completed" },
+];
