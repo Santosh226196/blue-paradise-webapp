@@ -194,8 +194,8 @@ export interface MembershipBatch {
   name: string;
   description: string;
   planId?: string | null;
-  startDate: string;
-  endDate: string;
+  startDate?: string | null;
+  endDate?: string | null;
   days: string[];
   startTime: string;
   endTime: string;
