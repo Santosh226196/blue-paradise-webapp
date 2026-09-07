@@ -15,7 +15,9 @@ export function ScannerDisplayPage() {
   useEffect(() => {
     const fetchScanner = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/public/settings/scanner`);
+        const res = await fetch(`${API_BASE_URL}/api/public/settings/scanner`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
         if (!res.ok) throw new Error("No scanner available");
         const data = await res.json();
         setScanner(data);
