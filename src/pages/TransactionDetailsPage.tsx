@@ -55,7 +55,7 @@ export function TransactionDetailsPage() {
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Breadcrumb */}
+      {/* Breadcrumb & Back */}
       <Breadcrumb
         items={[
           { label: "Reports", href: "/reports" },
