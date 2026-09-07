@@ -224,7 +224,7 @@ export function AddCustomerPage() {
                 </button>
               </div>
 
-              {/* ID Document Photo Box */}
+              {/* ID Document Photo Boxs */}
               <div className="flex flex-col items-center justify-center p-5 sm:p-6 rounded-xl border border-dashed border-white/20 bg-black/20 text-center">
                 {idCardPhoto ? (
                   <div className="relative mb-3 group w-full max-w-40 aspect-3/2">

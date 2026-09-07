@@ -21,6 +21,8 @@ import {
   IoMegaphone,
   IoFitnessOutline,
   IoFitness,
+  IoConstructOutline,
+  IoConstruct,
   IoQrCodeOutline,
   IoQrCode,
 } from "react-icons/io5";
@@ -93,6 +95,12 @@ const operationsNavItems: NavItemData[] = [
     iconOutline: IoMegaphoneOutline,
     iconFilled: IoMegaphone,
     label: "Announcements",
+  },
+  {
+    to: "/services",
+    iconOutline: IoConstructOutline,
+    iconFilled: IoConstruct,
+    label: "Services",
   },
 ];
 

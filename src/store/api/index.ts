@@ -10,3 +10,4 @@ export { attendanceApi } from "./attendanceApi";
 export { duePaymentsApi } from "./duePaymentsApi";
 export { scheduleApi } from "./scheduleApi";
 export { announcementsApi } from "./announcementsApi";
+export { poolServicesApi } from "./poolServicesApi";
