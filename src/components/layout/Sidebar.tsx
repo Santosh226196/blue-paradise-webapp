@@ -23,6 +23,8 @@ import {
   IoFitness,
   IoConstructOutline,
   IoConstruct,
+  IoQrCodeOutline,
+  IoQrCode,
 } from "react-icons/io5";
 import { useAppDispatch, useAppSelector } from "@/hooks/store";
 import { useLogoutMutation } from "@/store/api/authApi";
@@ -103,6 +105,12 @@ const operationsNavItems: NavItemData[] = [
 ];
 
 const systemNavItems: NavItemData[] = [
+  {
+    to: "/scanner",
+    iconOutline: IoQrCodeOutline,
+    iconFilled: IoQrCode,
+    label: "Scanner",
+  },
   {
     to: "/settings",
     iconOutline: IoSettingsOutline,

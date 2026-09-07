@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import {
   useGetSettingsQuery,
   useUpdateSettingsMutation,
+  useUploadScannerMutation,
+  useDeleteScannerMutation,
 } from "@/store/api/settingsApi";
 import {
   useChangePasswordMutation,
@@ -31,6 +33,9 @@ import {
   IoMoon,
   IoTime,
   IoSettings,
+  IoCamera,
+  IoTrash,
+  IoQrCode,
 } from "react-icons/io5";
 
 export function SettingsPage() {
@@ -53,6 +58,10 @@ export function SettingsPage() {
   >(null);
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
+  const [uploadScanner] = useUploadScannerMutation();
+  const [deleteScanner] = useDeleteScannerMutation();
+  const [scannerUploading, setScannerUploading] = useState(false);
+  const scannerInputRef = useRef<HTMLInputElement>(null);
 
   if (isLoading && !settings)
     return (
@@ -110,6 +119,31 @@ export function SettingsPage() {
     } catch {}
     dispatch(logoutAction());
     navigate("/login");
+  }
+
+  async function handleScannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    setScannerUploading(true);
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await uploadScanner({ scannerImage: dataUrl }).unwrap();
+    } catch {
+      // silently fail
+    } finally {
+      setScannerUploading(false);
+      if (scannerInputRef.current) scannerInputRef.current.value = "";
+    }
+  }
+
+  async function handleDeleteScanner() {
+    await deleteScanner();
   }
 
   return (
@@ -280,6 +314,83 @@ export function SettingsPage() {
               Save Changes
             </PrimaryButton>
           </div>
+        </GlassCard>
+
+        {/* Scanner Upload */}
+        <GlassCard className="lg:col-span-2">
+          <div className="flex items-center gap-3 mb-5">
+            <IoQrCode size={20} className="text-accent" />
+            <h2
+              className="text-sm font-bold text-fg"
+            >
+              Payment Scanner
+            </h2>
+          </div>
+          <p className="text-xs text-fg-muted mb-4">
+            Upload a QR code or scanner image that customers can scan to make payments.
+          </p>
+          {settings.scannerImage ? (
+            <div className="space-y-4">
+              <div
+                className="relative rounded-xl overflow-hidden"
+                style={{
+                  background: "var(--glass-bg)",
+                  border: "1px solid var(--glass-border)",
+                }}
+              >
+                <img
+                  src={settings.scannerImage}
+                  alt="Payment Scanner"
+                  className="w-full max-w-sm mx-auto block object-contain p-4"
+                  style={{ maxHeight: "320px" }}
+                />
+              </div>
+              <div className="flex gap-3">
+                <GhostButton
+                  onClick={() => scannerInputRef.current?.click()}
+                  fullWidth
+                >
+                  <IoCamera size={16} />
+                  Replace Scanner
+                </GhostButton>
+                <GhostButton
+                  onClick={handleDeleteScanner}
+                  fullWidth
+                  style={{
+                    color: "var(--accent-coral)",
+                    borderColor: "rgba(255,122,89,0.25)",
+                  }}
+                >
+                  <IoTrash size={16} />
+                  Remove
+                </GhostButton>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="rounded-xl p-8 text-center cursor-pointer transition-all duration-200 hover:opacity-80"
+              style={{
+                background: "var(--glass-bg)",
+                border: "2px dashed var(--glass-border)",
+              }}
+              onClick={() => scannerInputRef.current?.click()}
+            >
+              <IoCamera size={32} className="mx-auto mb-3 text-fg-muted" />
+              <p className="text-sm font-medium text-fg-dim">
+                {scannerUploading ? "Uploading..." : "Click to upload scanner image"}
+              </p>
+              <p className="text-xs text-fg-muted mt-1">
+                Supports JPG, PNG, or SVG
+              </p>
+            </div>
+          )}
+          <input
+            ref={scannerInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleScannerUpload}
+          />
         </GlassCard>
 
         {/* Club Timing */}

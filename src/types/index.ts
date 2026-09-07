@@ -137,6 +137,7 @@ export interface BusinessSettings {
   };
   billPrefix: string;
   billFooter: string;
+  scannerImage?: string | null;
   clubTiming: ClubTiming;
 }
 
