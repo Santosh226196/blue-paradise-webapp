@@ -32,6 +32,17 @@ const STEPS = ["Plan", "Batch", "Payment"];
 
 type LevelLabel = Record<string, string>;
 
+const planDurationLabels: Record<string, string> = {
+  DAILY: "Daily / Day-wise",
+  WEEKEND: "Weekend",
+  MONTHLY: "Monthly",
+  THREE_MONTHS: "3 Months",
+  SIX_MONTHS: "6 Months",
+  YEARLY: "Yearly",
+  FAMILY: "Family",
+  STUDENT: "Student",
+};
+
 export function AssignMembershipModal({
   customerId,
   customerName,
@@ -119,11 +130,12 @@ export function AssignMembershipModal({
     >
       <GlassCard className="w-full max-w-2xl animate-scale-in relative">
         <button
+          type="button"
           onClick={() => {
             reset();
             onClose();
           }}
-          className="!absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
+          className="!absolute !top-4 !right-4 !z-20 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
         >
           <IoClose size={20} />
         </button>
@@ -142,41 +154,63 @@ export function AssignMembershipModal({
         <div className="mt-5 space-y-5">
           {/* Step 0: Plan */}
           {step === 0 && (
-            <div className="space-y-3 animate-fade-up">
-              {plansLoading ? (
-                <SkeletonGlass lines={2} />
-              ) : activePlans.length > 0 ? (
-                activePlans.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPlan(p)}
-                    className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
-                      selectedPlan?.id === p.id
-                        ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
-                        : "bg-white/5 border-white/10 hover:border-cyan-400/40"
-                    }`}
-                  >
-                    <div>
-                      <p className="text-sm font-bold text-fg">{p.name}</p>
-                      <p className="text-xs font-mono text-fg-muted">
-                        {p.duration}
-                      </p>
-                    </div>
-                    <span className="text-sm font-bold font-mono text-accent">
-                      {formatCurrency(p.price)}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <p className="text-xs text-fg-muted">
-                  No active membership plans. Add plans in Membership Plans
-                  first.
-                </p>
-              )}
+            <div className="animate-fade-up">
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+                {plansLoading ? (
+                  <div className="w-full">
+                    <SkeletonGlass lines={2} />
+                  </div>
+                ) : activePlans.length > 0 ? (
+                  activePlans.map((p) => {
+                    const selected = selectedPlan?.id === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPlan(selected ? null : p)
+                        }
+                        className={`relative shrink-0 w-40 p-4 text-left transition-all duration-200 rounded-2xl border cursor-pointer snap-start ${
+                          selected
+                            ? "bg-cyan-400/20 border-cyan-400 ring-2 ring-cyan-400/30"
+                            : "bg-white/5 border-white/10 hover:border-cyan-400/50"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-3 right-3 flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all ${
+                            selected
+                              ? "border-cyan-400"
+                              : "border-white/30"
+                          }`}
+                        >
+                          {selected && (
+                            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                          )}
+                        </span>
+                        <p className="text-sm font-bold text-fg pr-5">
+                          {p.name}
+                        </p>
+                        <p className="text-xs font-mono text-fg-muted mt-1">
+                          {planDurationLabels[p.duration] ?? p.duration}
+                        </p>
+                        <p className="text-sm font-bold font-mono text-accent mt-2">
+                          {formatCurrency(p.price)}
+                        </p>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-fg-muted w-full">
+                    No active membership plans. Add plans in Membership Plans
+                    first.
+                  </p>
+                )}
+              </div>
               <PrimaryButton
                 fullWidth
                 disabled={!selectedPlan}
                 onClick={() => setStep(1)}
+                className="mt-4"
               >
                 Continue
               </PrimaryButton>
@@ -193,52 +227,70 @@ export function AssignMembershipModal({
                   <p className="text-xs text-fg-muted">
                     Optional — assign a class batch to this membership
                   </p>
-                  {activeBatches.map((b) => {
-                    const full = isBatchFull(b);
-                    return (
-                      <button
-                        key={b.id}
-                        disabled={full}
-                        onClick={() =>
-                          setSelectedBatch(selectedBatch?.id === b.id ? null : b)
-                        }
-                        className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
-                          full
-                            ? "opacity-50 cursor-not-allowed"
-                            : selectedBatch?.id === b.id
-                              ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
-                              : "bg-white/5 border-white/10 hover:border-cyan-400/40"
-                        }`}
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-fg">{b.name}</p>
-                          <p className="text-xs font-mono text-fg-muted">
-                            {b.days?.length > 0
-                              ? b.days.map((d) => d.slice(0, 3)).join(" · ")
-                              : "Days TBD"}{" "}
-                            {b.startTime ? ` · ${b.startTime}–${b.endTime}` : ""}
-                            {" · "}
-                            {batchLabel[b.level] ?? b.level}
-                            {b.coach ? ` · ${b.coach}` : ""}
-                          </p>
-                        </div>
-                        <div className="text-right">
+                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+                    {activeBatches.map((b) => {
+                      const full = isBatchFull(b);
+                      const selected = selectedBatch?.id === b.id;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          disabled={full}
+                          onClick={() =>
+                            setSelectedBatch(selected ? null : b)
+                          }
+                          className={`relative shrink-0 w-48 p-4 text-left transition-all duration-200 rounded-2xl border cursor-pointer snap-start ${
+                            full
+                              ? "opacity-50 cursor-not-allowed"
+                              : selected
+                                ? "bg-cyan-400/20 border-cyan-400 ring-2 ring-cyan-400/30"
+                                : "bg-white/5 border-white/10 hover:border-cyan-400/50"
+                          }`}
+                        >
                           <span
-                            className={`text-xs font-bold font-mono ${
-                              full ? "text-danger" : "text-accent"
+                            className={`absolute top-3 right-3 flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all ${
+                              full
+                                ? "border-white/20"
+                                : selected
+                                  ? "border-cyan-400"
+                                  : "border-white/30"
                             }`}
                           >
-                            {b.currentMembers}/{b.maxMembers}
+                            {selected && (
+                              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                            )}
                           </span>
-                          {full && (
-                            <p className="text-[10px] font-bold text-danger mt-0.5">
-                              Full
-                            </p>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <p className="text-sm font-bold text-fg pr-5">
+                            {b.name}
+                          </p>
+                          <p className="text-xs font-mono text-fg-muted mt-1 leading-relaxed">
+                            {b.days?.length > 0
+                              ? b.days.map((d) => d.slice(0, 3)).join(" · ")
+                              : "Days TBD"}
+                            {b.startTime
+                              ? ` · ${b.startTime}–${b.endTime}`
+                              : ""}
+                            {` · ${batchLabel[b.level] ?? b.level}`}
+                            {b.coach ? ` · ${b.coach}` : ""}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span
+                              className={`text-xs font-bold font-mono ${
+                                full ? "text-danger" : "text-accent"
+                              }`}
+                            >
+                              {b.currentMembers}/{b.maxMembers}
+                            </span>
+                            {full && (
+                              <span className="text-[10px] font-bold text-danger">
+                                Full
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </>
               ) : (
                 <p className="text-xs text-fg-muted">
@@ -269,7 +321,10 @@ export function AssignMembershipModal({
                   <div className="flex justify-between items-center pb-2 border-b border-white/10">
                     <span className="text-sm text-fg-muted">Plan</span>
                     <span className="font-bold text-fg text-sm">
-                      {selectedPlan.name} ({selectedPlan.duration})
+                      {selectedPlan.name} (
+                      {planDurationLabels[selectedPlan.duration] ??
+                        selectedPlan.duration}
+                      )
                     </span>
                   </div>
                   {selectedBatch && (

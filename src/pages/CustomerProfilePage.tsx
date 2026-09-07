@@ -1,19 +1,22 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
 import {
   useGetCustomerQuery,
   useUpdateCustomerMutation,
+  useDeleteCustomerMutation,
   useGetCustomerVisitsQuery,
   useGetCustomerTransactionsQuery,
   useGetCustomerMembershipsQuery,
 } from "@/store/api/customersApi";
 import { useCachedSettings } from "@/store/api/settingsApi";
+import { useToast } from "@/components/Toast";
 import {
   GlassCard,
   PrimaryButton,
   SkeletonGlass,
   StatCard,
   CameraCaptureModal,
+  Modal,
 } from "@/components/ui";
 import { AssignMembershipModal } from "@/components/AssignMembershipModal";
 import { BatchPickerModal } from "@/components/BatchPickerModal";
@@ -40,14 +43,20 @@ import {
   IoCamera,
   IoAdd,
   IoPeople,
+  IoTrash,
+  IoTrashBin,
 } from "react-icons/io5";
 
 type Tab = "overview" | "visits" | "membership" | "payments";
 
 export function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: customer, isLoading } = useGetCustomerQuery(id!);
   const [updateCustomer] = useUpdateCustomerMutation();
+  const [deleteCustomer, { isLoading: isDeleting }] =
+    useDeleteCustomerMutation();
+  const { showToast } = useToast();
   const { data: visits } = useGetCustomerVisitsQuery(id!);
   const { data: transactions, refetch: refetchTransactions } =
     useGetCustomerTransactionsQuery(id!);
@@ -62,6 +71,7 @@ export function CustomerProfilePage() {
   );
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [batchTarget, setBatchTarget] = useState<Membership | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   if (isLoading)
     return (
@@ -105,6 +115,16 @@ export function CustomerProfilePage() {
         id: customer!.id,
         data: { idCardPhoto: photoDataUrl },
       });
+    }
+  }
+
+  async function handleDeleteCustomer() {
+    try {
+      await deleteCustomer(customer!.id).unwrap();
+      showToast("success", `${customer!.name} deleted successfully.`);
+      navigate("/customers");
+    } catch {
+      showToast("error", "Failed to delete customer. Please try again.");
     }
   }
 
@@ -177,6 +197,18 @@ export function CustomerProfilePage() {
           { label: "Customers", href: "/customers" },
           { label: customer.name },
         ]}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleDeleteCustomer}
+        variant="confirm"
+        title={`Delete ${customer.name}?`}
+        message={`This will permanently remove ${customer.name} along with all visits, memberships, coaching, transactions, and payment history. This action cannot be undone.`}
+        confirmLabel="Delete Customer"
+        cancelLabel="Cancel"
       />
 
       {/* Back */}
@@ -469,6 +501,11 @@ export function CustomerProfilePage() {
                 value={customer.age ? `${customer.age} years` : "Not provided"}
               />
               <InfoRow
+                icon={<IoTime size={14} />}
+                label="Registered On"
+                value={formatDate(customer.firstVisitAt)}
+              />
+              <InfoRow
                 icon={<IoClipboard size={14} />}
                 label="Gender"
                 value={customer.gender || "Not provided"}
@@ -578,6 +615,41 @@ export function CustomerProfilePage() {
                 No visits yet
               </p>
             )}
+          </GlassCard>
+
+          {/* Danger Zone */}
+          <GlassCard>
+            <div className="flex items-center gap-2 mb-4">
+              <IoTrashBin size={18} className="text-danger" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                Danger Zone
+              </h3>
+            </div>
+            <div
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl"
+              style={{
+                background: "rgba(255,122,89,0.06)",
+                border: "1px solid var(--accent-coral)",
+              }}
+            >
+              <div>
+                <p className="text-sm font-bold text-fg">Delete Customer</p>
+                <p className="text-xs mt-1 text-fg-dim">
+                  Permanently remove {customer.name} and all associated records.
+                  This action cannot be undone.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(true)}
+                disabled={isDeleting}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all duration-200 active:scale-[0.97] hover:brightness-110 shadow-lg shrink-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                style={{ background: "var(--accent-coral)" }}
+              >
+                <IoTrash size={15} />
+                Delete Customer
+              </button>
+            </div>
           </GlassCard>
         </div>
       )}

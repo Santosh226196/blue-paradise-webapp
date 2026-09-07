@@ -4,7 +4,7 @@ import { useAssignMembershipToBatchMutation, useChangeBatchMutation } from "@/st
 import { GlassCard, PrimaryButton, GhostButton, SkeletonGlass } from "@/components/ui";
 import type { MembershipBatch } from "@/types";
 import { useToast } from "@/components/Toast";
-import { IoClose, IoPeople } from "react-icons/io5";
+import { IoClose } from "react-icons/io5";
 
 const batchLabel: Record<string, string> = {
   BEGINNER: "Beginner",
@@ -77,8 +77,9 @@ export function BatchPickerModal({
     >
       <GlassCard className="w-full max-w-xl animate-scale-in relative">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
+          className="!absolute !top-4 !right-4 !z-20 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
         >
           <IoClose size={20} />
         </button>
@@ -96,53 +97,64 @@ export function BatchPickerModal({
           {isLoading ? (
             <SkeletonGlass lines={3} />
           ) : activeBatches.length > 0 ? (
-            activeBatches.map((b) => {
-              const full = isFull(b);
-              const selected = selectedId === b.id;
-              return (
-                <button
-                  key={b.id}
-                  disabled={full}
-                  onClick={() => setSelectedId(b.id)}
-                  className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
-                    full
-                      ? "opacity-50 cursor-not-allowed"
-                      : selected
-                        ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
-                        : "bg-white/5 border-white/10 hover:border-cyan-400/40"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <IoPeople size={16} className="text-accent shrink-0" />
-                    <div>
-                      <p className="text-sm font-bold text-fg">{b.name}</p>
-                      <p className="text-xs font-mono text-fg-muted">
-                        {b.days?.length > 0
-                          ? b.days.map((d) => d.slice(0, 3)).join(" · ")
-                          : "Days TBD"}{" "}
-                        {b.startTime ? ` · ${b.startTime}–${b.endTime}` : ""}
-                        {b.level ? ` · ${batchLabel[b.level] ?? b.level}` : ""}
-                        {b.coach ? ` · ${b.coach}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+              {activeBatches.map((b) => {
+                const full = isFull(b);
+                const selected = selectedId === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    disabled={full}
+                    onClick={() => setSelectedId(b.id)}
+                    className={`relative shrink-0 w-48 p-4 text-left transition-all duration-200 rounded-2xl border cursor-pointer snap-start ${
+                      full
+                        ? "opacity-50 cursor-not-allowed"
+                        : selected
+                          ? "bg-cyan-400/20 border-cyan-400 ring-2 ring-cyan-400/30"
+                          : "bg-white/5 border-white/10 hover:border-cyan-400/50"
+                    }`}
+                  >
                     <span
-                      className={`text-xs font-bold font-mono ${
-                        full ? "text-danger" : "text-accent"
+                      className={`absolute top-3 right-3 flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all ${
+                        full
+                          ? "border-white/20"
+                          : selected
+                            ? "border-cyan-400"
+                            : "border-white/30"
                       }`}
                     >
-                      {b.currentMembers}/{b.maxMembers}
+                      {selected && (
+                        <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                      )}
                     </span>
-                    {full && (
-                      <p className="text-[10px] font-bold text-danger mt-0.5">
-                        Full
-                      </p>
-                    )}
-                  </div>
-                </button>
-              );
-            })
+                    <p className="text-sm font-bold text-fg pr-5">{b.name}</p>
+                    <p className="text-xs font-mono text-fg-muted mt-1 leading-relaxed">
+                      {b.days?.length > 0
+                        ? b.days.map((d) => d.slice(0, 3)).join(" · ")
+                        : "Days TBD"}
+                      {b.startTime ? ` · ${b.startTime}–${b.endTime}` : ""}
+                      {b.level ? ` · ${batchLabel[b.level] ?? b.level}` : ""}
+                      {b.coach ? ` · ${b.coach}` : ""}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span
+                        className={`text-xs font-bold font-mono ${
+                          full ? "text-danger" : "text-accent"
+                        }`}
+                      >
+                        {b.currentMembers}/{b.maxMembers}
+                      </span>
+                      {full && (
+                        <span className="text-[10px] font-bold text-danger">
+                          Full
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           ) : (
             <p className="text-xs text-fg-muted">
               No other active batches available at the moment.
