@@ -8,6 +8,7 @@ import {
   useGetCustomerTransactionsQuery,
   useGetCustomerMembershipsQuery,
 } from "@/store/api/customersApi";
+import { useRemoveBatchFromMembershipMutation } from "@/store/api/membershipBatchesApi";
 import { useCachedSettings } from "@/store/api/settingsApi";
 import { useToast } from "@/components/Toast";
 import {
@@ -21,7 +22,7 @@ import {
 import { AssignMembershipModal } from "@/components/AssignMembershipModal";
 import { BatchPickerModal } from "@/components/BatchPickerModal";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDate, formatDateTime, formatTime12 } from "@/lib/utils";
 import { VisitType, type Membership } from "@/types";
 import {
   IoArrowBack,
@@ -62,7 +63,11 @@ export function CustomerProfilePage() {
     useGetCustomerTransactionsQuery(id!);
   const { data: memberships, refetch: refetchMemberships } =
     useGetCustomerMembershipsQuery(id!);
+  const [removeBatchFromMembership] = useRemoveBatchFromMembershipMutation();
   const settings = useCachedSettings();
+
+  const [removingBatchId, setRemovingBatchId] = useState<string | null>(null);
+  const [batchDeleteTarget, setBatchDeleteTarget] = useState<Membership | null>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
@@ -128,6 +133,23 @@ export function CustomerProfilePage() {
     }
   }
 
+  async function handleRemoveBatch(m: Membership) {
+    if (!m.batchId) return;
+    setRemovingBatchId(m.id);
+    try {
+      await removeBatchFromMembership({
+        batchId: m.batchId,
+        membershipId: m.id,
+      }).unwrap();
+      showToast("success", `Batch removed from ${m.planName ?? m.membershipType} membership`);
+      refetchMemberships();
+    } catch {
+      showToast("error", "Failed to remove batch. Please try again.");
+    } finally {
+      setRemovingBatchId(null);
+    }
+  }
+
   const tabs: {
     key: Tab;
     label: string;
@@ -170,6 +192,7 @@ export function CustomerProfilePage() {
       <AssignMembershipModal
         customerId={customer.id}
         customerName={customer.name}
+        existingMembership={activeMembership}
         isOpen={assignModalOpen}
         onClose={() => setAssignModalOpen(false)}
         onAssigned={() => {
@@ -177,6 +200,7 @@ export function CustomerProfilePage() {
           refetchTransactions();
           setActiveTab("membership");
         }}
+
       />
 
       {/* Batch Picker Modal */}
@@ -188,8 +212,26 @@ export function CustomerProfilePage() {
           customerName={customer.name}
           isOpen
           onClose={() => setBatchTarget(null)}
+          onAssigned={() => refetchMemberships()}
         />
       )}
+
+      {/* Batch Delete Confirmation Modal */}
+      <Modal
+        isOpen={batchDeleteTarget !== null}
+        onClose={() => setBatchDeleteTarget(null)}
+        onConfirm={() => {
+          if (batchDeleteTarget) {
+            handleRemoveBatch(batchDeleteTarget);
+            setBatchDeleteTarget(null);
+          }
+        }}
+        variant="confirm"
+        title="Remove Batch?"
+        message={`This will remove the batch "${batchDeleteTarget?.batchName}" from the ${batchDeleteTarget?.planName ?? batchDeleteTarget?.membershipType} membership. You can reassign a batch later.`}
+        confirmLabel="Remove Batch"
+        cancelLabel="Cancel"
+      />
 
       {/* Breadcrumb */}
       <Breadcrumb
@@ -738,9 +780,11 @@ export function CustomerProfilePage() {
             <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">
               {memberships?.length ?? 0} membership record(s)
             </p>
-            <PrimaryButton size="sm" onClick={() => setAssignModalOpen(true)}>
-              <IoAdd size={16} /> Assign Membership
-            </PrimaryButton>
+            {!activeMembership && (
+              <PrimaryButton size="sm" onClick={() => setAssignModalOpen(true)}>
+                <IoAdd size={16} /> Assign Membership
+              </PrimaryButton>
+            )}
           </div>
 
           {memberships && memberships.length > 0 ? (
@@ -779,17 +823,30 @@ export function CustomerProfilePage() {
                         </p>
                       </div>
                     </div>
-                    <span
-                      className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
-                      style={{
-                        background: active
-                          ? "var(--accent-aqua)"
-                          : "var(--glass-bg-hover)",
-                        color: active ? "white" : "var(--text-muted)",
-                      }}
-                    >
-                      {m.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
+                        style={{
+                          background: active
+                            ? "var(--accent-aqua)"
+                            : "var(--glass-bg-hover)",
+                          color: active ? "white" : "var(--text-muted)",
+                        }}
+                      >
+                        {m.status}
+                      </span>
+                      {active && m.batchId && (
+                        <button
+                          type="button"
+                          onClick={() => setBatchDeleteTarget(m)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all cursor-pointer"
+                          title="Remove batch"
+                        >
+                          <IoTrash size={13} />
+                          Remove Batch
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {active && (
@@ -802,25 +859,28 @@ export function CustomerProfilePage() {
                           </span>
                         </div>
                         {m.batchName ? (
-                          <div className="text-right">
-                            <p className="text-xs font-bold text-accent">
-                              {m.batchName}
-                            </p>
-                            {m.batchSchedule && (
-                              <p className="text-[11px] font-mono text-fg-muted">
-                                {m.batchSchedule.days?.length > 0
-                                  ? m.batchSchedule.days
-                                      .map((d) => d.slice(0, 3))
-                                      .join(" · ")
-                                  : "Days TBD"}
-                                {m.batchSchedule.startTime
-                                  ? ` · ${m.batchSchedule.startTime}–${m.batchSchedule.endTime}`
-                                  : ""}
-                                {m.batchSchedule.coach
-                                  ? ` · ${m.batchSchedule.coach}`
-                                  : ""}
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="text-xs font-bold text-accent">
+                                {m.batchName}
                               </p>
-                            )}
+                              {m.batchSchedule && (
+                                <p className="text-[11px] font-mono text-fg-muted">
+                                  {m.batchSchedule.days?.length > 0
+                                    ? m.batchSchedule.days
+                                        .map((d) => d.slice(0, 3))
+                                        .join(" · ")
+                                    : "Days TBD"}
+                                  {m.batchSchedule.startTime
+                                    ? ` · ${formatTime12(m.batchSchedule.startTime)}–${formatTime12(m.batchSchedule.endTime)}`
+                                    : ""}
+                                  {m.batchSchedule.coach
+                                    ? ` · ${m.batchSchedule.coach}`
+                                    : ""}
+                                </p>
+                              )}
+                            </div>
+
                           </div>
                         ) : (
                           <span className="text-[11px] text-fg-muted">
@@ -828,14 +888,24 @@ export function CustomerProfilePage() {
                           </span>
                         )}
                       </div>
-                      <PrimaryButton
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setBatchTarget(m)}
-                      >
-                        <IoPeople size={14} />
-                        {m.batchName ? "Change Batch" : "Assign to Batch"}
-                      </PrimaryButton>
+                      <div className="flex gap-2">
+                        <PrimaryButton
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setBatchTarget(m)}
+                        >
+                          <IoPeople size={14} />
+                          {m.batchName ? "Change Batch" : "Assign to Batch"}
+                        </PrimaryButton>
+                        <PrimaryButton
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setAssignModalOpen(true)}
+                        >
+                          <IoAdd size={14} />
+                          Change Membership
+                        </PrimaryButton>
+                      </div>
                     </div>
                   )}
 
@@ -854,12 +924,14 @@ export function CustomerProfilePage() {
               title="No memberships"
               description="This customer has no membership records"
               action={
-                <PrimaryButton
-                  size="sm"
-                  onClick={() => setAssignModalOpen(true)}
-                >
-                  <IoAdd size={16} /> Assign Membership
-                </PrimaryButton>
+                !activeMembership ? (
+                  <PrimaryButton
+                    size="sm"
+                    onClick={() => setAssignModalOpen(true)}
+                  >
+                    <IoAdd size={16} /> Assign Membership
+                  </PrimaryButton>
+                ) : undefined
               }
             />
           )}
