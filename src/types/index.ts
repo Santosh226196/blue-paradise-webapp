@@ -13,11 +13,14 @@ export const PaymentMethod = {
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
 export const MembershipType = {
-  Hourly: "HOURLY",
   Daily: "DAILY",
+  Weekend: "WEEKEND",
   Monthly: "MONTHLY",
-  Quarterly: "QUARTERLY",
+  ThreeMonths: "THREE_MONTHS",
+  SixMonths: "SIX_MONTHS",
   Yearly: "YEARLY",
+  Family: "FAMILY",
+  Student: "STUDENT",
 } as const;
 export type MembershipType = (typeof MembershipType)[keyof typeof MembershipType];
 
@@ -163,7 +166,7 @@ export interface MembershipPlan {
   id: string;
   name: string;
   description: string;
-  duration: "HOURLY" | "DAILY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
+  duration: "DAILY" | "WEEKEND" | "MONTHLY" | "THREE_MONTHS" | "SIX_MONTHS" | "YEARLY" | "FAMILY" | "STUDENT";
   price: number;
   totalSessions?: number | null;
   features: string[];

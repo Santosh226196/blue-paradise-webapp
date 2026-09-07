@@ -30,17 +30,30 @@ import {
   IoPencil,
   IoClose,
   IoPeople,
+  IoTime,
 } from "react-icons/io5";
 
-const DURATIONS = ["HOURLY", "DAILY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
+const DURATIONS = [
+  "DAILY",
+  "WEEKEND",
+  "MONTHLY",
+  "THREE_MONTHS",
+  "SIX_MONTHS",
+  "YEARLY",
+  "FAMILY",
+  "STUDENT",
+] as const;
 type Duration = (typeof DURATIONS)[number];
 
 const durationLabels: Record<Duration, string> = {
-  HOURLY: "Hourly",
-  DAILY: "Daily",
+  DAILY: "Daily / Day-wise",
+  WEEKEND: "Weekend",
   MONTHLY: "Monthly",
-  QUARTERLY: "Quarterly",
+  THREE_MONTHS: "3 Months",
+  SIX_MONTHS: "6 Months",
   YEARLY: "Yearly",
+  FAMILY: "Family",
+  STUDENT: "Student",
 };
 
 const BATCH_STATUSES = ["ACTIVE", "UPCOMING", "COMPLETED", "CANCELLED"] as const;
@@ -76,8 +89,6 @@ const ageGroupLabels: Record<AgeGroup, string> = {
   ADULTS: "Adults",
   ALL: "All",
 };
-
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 function TabSwitcher({
   active,
@@ -363,6 +374,15 @@ function PlanTab({
                   <IoTrash size={14} /> Delete
                 </GhostButton>
               </div>
+              <div
+                className="flex items-center gap-1.5 pt-3 mt-3"
+                style={{ borderTop: "1px solid var(--glass-border)" }}
+              >
+                <IoTime size={12} className="text-fg-muted" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">
+                  Created {formatDate(plan.createdAt)}
+                </span>
+              </div>
             </GlassCard>
           ))}
         </div>
@@ -412,12 +432,6 @@ function BatchesTab({
   const [coach, setCoach] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
   const [status, setStatus] = useState<BatchStatus>("ACTIVE");
-
-  function toggleDay(day: string) {
-    setDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
-    );
-  }
 
   function resetForm() {
     setName("");
@@ -548,77 +562,6 @@ function BatchesTab({
                   placeholder="15"
                   className="font-mono"
                 />
-              </div>
-            </div>
-
-            {plans && plans.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                  Linked Plan
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {plans.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setPlanId(p.id)}
-                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
-                      style={{
-                        background:
-                          planId === p.id ? "var(--glow-aqua)" : "var(--glass-bg)",
-                        border: `1.5px solid ${planId === p.id ? "var(--accent-aqua)" : "var(--glass-border)"}`,
-                        color:
-                          planId === p.id
-                            ? "var(--accent-aqua)"
-                            : "var(--text-secondary)",
-                      }}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Start Date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="font-mono"
-              />
-              <Input
-                label="End Date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="font-mono"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                Days (tap to toggle)
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {WEEKDAYS.map((day) => (
-                  <button
-                    key={day}
-                    onClick={() => toggleDay(day)}
-                    className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
-                    style={{
-                      background: days.includes(day)
-                        ? "var(--glow-aqua)"
-                        : "var(--glass-bg)",
-                      border: `1.5px solid ${days.includes(day) ? "var(--accent-aqua)" : "var(--glass-border)"}`,
-                      color: days.includes(day)
-                        ? "var(--accent-aqua)"
-                        : "var(--text-secondary)",
-                    }}
-                  >
-                    {day.slice(0, 3)}
-                  </button>
-                ))}
               </div>
             </div>
 
