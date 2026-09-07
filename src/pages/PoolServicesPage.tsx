@@ -167,9 +167,6 @@ export function PoolServicesPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                  Service Name
-                </label>
                 <Input
                   label="Service Name"
                   value={name}
@@ -205,9 +202,6 @@ export function PoolServicesPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                  Frequency (days)
-                </label>
                 <Input
                   label="Frequency (days)"
                   type="number"
@@ -218,9 +212,6 @@ export function PoolServicesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                  Last Done Date
-                </label>
                 <Input
                   label="Last Done"
                   type="date"
