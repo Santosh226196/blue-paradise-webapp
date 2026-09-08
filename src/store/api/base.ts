@@ -2,6 +2,7 @@ import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "@/store";
 
 export const API_BASE_URL = "https://blue-paradise-backend.onrender.com";
+// VITE_API_BASE_URL="https://blue-paradise-backend.onrender.com"
 
 
 export function baseQueryFor(resource: string) {
