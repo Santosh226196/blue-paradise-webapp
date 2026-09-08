@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { IoArrowBack } from "react-icons/io5";
+import { API_BASE_URL } from "@/store/api/base";
 
 interface ScannerData {
   scannerImage: string;
   businessName: string;
 }
-
-const API_BASE_URL = ((import.meta.env.VITE_API_BASE_URL as string) || "").replace(/\/+$/, "");
 
 export function ScannerDisplayPage() {
   const navigate = useNavigate();
