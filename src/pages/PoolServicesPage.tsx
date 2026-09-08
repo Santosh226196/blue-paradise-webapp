@@ -213,7 +213,7 @@ export function PoolServicesPage() {
               </div>
               <div className="space-y-2">
                 <Input
-                  label="Last Done"
+                  label="Last Done Date"
                   type="date"
                   value={lastDone}
                   onChange={(e) => setLastDone(e.target.value)}

@@ -253,6 +253,7 @@ export type StaffRole = (typeof StaffRole)[keyof typeof StaffRole];
 
 export interface Staff {
   id: string;
+  employeeId?: string;
   name: string;
   mobile: string;
   role: StaffRole;
@@ -566,6 +567,100 @@ export interface NavItemData {
 export interface LogoProps {
   size?: number;
   className?: string;
+}
+
+// ── Costumes ──
+
+export type CostumeType = "MENS" | "WOMENS" | "KIDS" | "UNISEX";
+
+export interface CostumeVariant {
+  size: string;
+  color?: string;
+  stock: number;
+  price?: number;
+}
+
+export interface Costume {
+  id: string;
+  name: string;
+  type: CostumeType;
+  price: number;
+  rentPrice?: number;
+  variants: CostumeVariant[];
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CostumeCreatePayload {
+  name: string;
+  type: CostumeType;
+  price: number;
+  rentPrice?: number;
+  variants: CostumeVariant[];
+  isActive?: boolean;
+  notes?: string;
+}
+
+export type CostumeTxnType = "SALE" | "RENT";
+export type CostumeTxnStatus = "COMPLETED" | "ACTIVE" | "RETURNED";
+
+export interface CostumeTransaction {
+  id: string;
+  costumeId: string;
+  costumeName: string;
+  costumeType: CostumeType;
+  variant: { size?: string; color?: string };
+  type: CostumeTxnType;
+  customerId?: string | null;
+  customerName: string;
+  customerMobile?: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  status: CostumeTxnStatus;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CostumesListResponse<T = Costume> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface CostumesStats {
+  totalCostumes: number;
+  totalStock: number;
+  totalSoldQty: number;
+  totalRevenue: number;
+  totalRentQty: number;
+  totalRentRevenue: number;
+}
+
+export interface CostumeTxnPayload {
+  type: CostumeTxnType;
+  size?: string;
+  color?: string;
+  customerId?: string | null;
+  customerName: string;
+  customerMobile?: string;
+  quantity: number;
+  unitPrice?: number;
+  notes?: string;
+}
+
+export interface CostumeSummary {
+  soldQty: number;
+  soldRevenue: number;
+  rentQty: number;
+  rentRevenue: number;
+  activeRentQty: number;
+  currentStock: number;
+  variants: (CostumeVariant & { stock: number })[];
 }
 
 // ── Pool Maintenance / Services ──
