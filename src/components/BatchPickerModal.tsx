@@ -4,6 +4,7 @@ import { useAssignMembershipToBatchMutation, useChangeBatchMutation } from "@/st
 import { GlassCard, PrimaryButton, GhostButton, SkeletonGlass } from "@/components/ui";
 import type { MembershipBatch } from "@/types";
 import { useToast } from "@/components/Toast";
+import { formatTime12 } from "@/lib/utils";
 import { IoClose } from "react-icons/io5";
 
 const batchLabel: Record<string, string> = {
@@ -19,6 +20,7 @@ export function BatchPickerModal({
   customerName,
   isOpen,
   onClose,
+  onAssigned,
 }: {
   membershipId: string;
   membershipType: string;
@@ -26,6 +28,7 @@ export function BatchPickerModal({
   customerName: string;
   isOpen: boolean;
   onClose: () => void;
+  onAssigned?: () => void;
 }) {
   const { data: batches, isLoading } = useGetMembershipBatchesQuery();
   const [assign, { isLoading: assigning }] = useAssignMembershipToBatchMutation();
@@ -62,6 +65,7 @@ export function BatchPickerModal({
       }
       setSelectedId(null);
       onClose();
+      onAssigned?.();
     } catch (err: unknown) {
       const message =
         (err as { data?: { message?: string } })?.data?.message ||
@@ -133,7 +137,7 @@ export function BatchPickerModal({
                       {b.days?.length > 0
                         ? b.days.map((d) => d.slice(0, 3)).join(" · ")
                         : "Days TBD"}
-                      {b.startTime ? ` · ${b.startTime}–${b.endTime}` : ""}
+                      {b.startTime ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}` : ""}
                       {b.level ? ` · ${batchLabel[b.level] ?? b.level}` : ""}
                       {b.coach ? ` · ${b.coach}` : ""}
                     </p>

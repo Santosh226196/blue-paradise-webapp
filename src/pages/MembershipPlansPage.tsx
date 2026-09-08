@@ -19,8 +19,10 @@ import {
   EmptyState,
   SkeletonGlass,
   Input,
+  TimePickerField,
+  Modal,
 } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatTime12 } from "@/lib/utils";
 import {
   IoCard,
   IoAdd,
@@ -432,6 +434,7 @@ function BatchesTab({
   const [coach, setCoach] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
   const [status, setStatus] = useState<BatchStatus>("ACTIVE");
+  const [batchError, setBatchError] = useState("");
 
   function resetForm() {
     setName("");
@@ -457,8 +460,8 @@ function BatchesTab({
     name: string;
     description: string;
     planId?: string | null;
-    startDate: string;
-    endDate: string;
+    startDate?: string | null;
+    endDate?: string | null;
     days?: string[];
     startTime?: string;
     endTime?: string;
@@ -473,8 +476,8 @@ function BatchesTab({
     setName(batch.name);
     setDescription(batch.description);
     setPlanId(batch.planId ?? "");
-    setStartDate(batch.startDate ? batch.startDate.slice(0, 10) : "");
-    setEndDate(batch.endDate ? batch.endDate.slice(0, 10) : "");
+    setStartDate(batch.startDate?.slice(0, 10) ?? "");
+    setEndDate(batch.endDate?.slice(0, 10) ?? "");
     setDays(batch.days ?? []);
     setStartTime(batch.startTime ?? "");
     setEndTime(batch.endTime ?? "");
@@ -488,12 +491,10 @@ function BatchesTab({
   }
 
   async function handleSave() {
-    const payload = {
+    const payload: Record<string, unknown> = {
       name,
       description,
       planId: planId || undefined,
-      startDate,
-      endDate,
       days,
       startTime,
       endTime,
@@ -504,12 +505,23 @@ function BatchesTab({
       maxMembers: Number(maxMembers),
       status,
     };
-    if (editingId) {
-      await updateBatch({ id: editingId, data: payload });
-    } else {
-      await createBatch(payload);
+    if (startDate) payload.startDate = startDate;
+    if (endDate) payload.endDate = endDate;
+    try {
+      if (editingId) {
+        await updateBatch({ id: editingId, data: payload });
+      } else {
+        await createBatch(payload);
+      }
+      resetForm();
+    } catch (err: unknown) {
+      const message =
+        (err as { data?: { message?: string } })?.data?.message ||
+        (editingId
+          ? "Failed to update batch. Please try again."
+          : "Failed to create batch. Please try again.");
+      setBatchError(message);
     }
-    resetForm();
   }
 
   async function handleDelete(id: string) {
@@ -518,6 +530,14 @@ function BatchesTab({
 
   return (
     <div className="space-y-6">
+      <Modal
+        isOpen={batchError !== ""}
+        onClose={() => setBatchError("")}
+        variant="error"
+        title={editingId ? "Batch Not Updated" : "Batch Not Created"}
+        message={batchError}
+      />
+
       <div className="flex items-center gap-3 animate-fade-up">
         <TabSwitcher active={activeTab} onChange={setActiveTab} />
         <div className="flex-1" />
@@ -566,19 +586,26 @@ function BatchesTab({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
+              <TimePickerField
                 label="Start Time"
-                type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="font-mono"
+                onChange={(v) => {
+                  setStartTime(v);
+                  if (endTime && endTime <= v) {
+                    setEndTime("");
+                  }
+                }}
               />
-              <Input
+              <TimePickerField
                 label="End Time"
-                type="time"
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="font-mono"
+                onChange={setEndTime}
+                min={startTime || undefined}
+                error={
+                  startTime && endTime && endTime <= startTime
+                    ? "End time must be after start time"
+                    : undefined
+                }
               />
             </div>
 
@@ -776,9 +803,11 @@ function BatchesTab({
                     {plan.name}
                   </p>
                 )}
-                <div className="text-xs font-mono text-fg-muted mb-2">
-                  {formatDate(batch.startDate)} — {formatDate(batch.endDate)}
-                </div>
+                {batch.startDate && batch.endDate ? (
+                  <div className="text-xs font-mono text-fg-muted mb-2">
+                    {formatDate(batch.startDate)} — {formatDate(batch.endDate)}
+                  </div>
+                ) : null}
                 {(batch.days?.length > 0 || batch.startTime || batch.coach) && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {batch.days?.length > 0 && (
@@ -788,7 +817,7 @@ function BatchesTab({
                     )}
                     {batch.startTime && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-glass text-fg-dim">
-                        {batch.startTime}–{batch.endTime}
+                        {formatTime12(batch.startTime)} – {formatTime12(batch.endTime)}
                       </span>
                     )}
                     {batch.level && (

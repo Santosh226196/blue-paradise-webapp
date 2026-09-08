@@ -42,6 +42,10 @@ export const membershipBatchesApi = createApi({
       query: ({ batchId, ...body }) => ({ url: `/${batchId}/change`, method: "POST", body }),
       invalidatesTags: ["MembershipBatch", "Membership"],
     }),
+    removeBatchFromMembership: builder.mutation<{ success: boolean }, { batchId: string; membershipId: string; reason?: string }>({
+      query: ({ batchId, ...body }) => ({ url: `/${batchId}/unassign`, method: "POST", body }),
+      invalidatesTags: ["MembershipBatch", "Membership"],
+    }),
   }),
 });
 
@@ -53,4 +57,5 @@ export const {
   useGetBatchMembersQuery,
   useAssignMembershipToBatchMutation,
   useChangeBatchMutation,
+  useRemoveBatchFromMembershipMutation,
 } = membershipBatchesApi;

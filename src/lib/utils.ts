@@ -36,6 +36,14 @@ export function formatTime(dateStr: string | null | undefined): string {
   return d ? format(d, "hh:mm a") : "—";
 }
 
+export function formatTime12(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${String(hour).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 export function formatRelative(dateStr: string | null | undefined): string {
   const d = safeParse(dateStr);
   return d ? formatDistanceToNow(d, { addSuffix: true }) : "—";

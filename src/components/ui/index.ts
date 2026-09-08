@@ -15,3 +15,4 @@ export { Breadcrumb } from "./Breadcrumb";
 export type { BreadcrumbItem } from "@/types";
 export { CameraCaptureModal } from "./CameraCaptureModal";
 export { Modal } from "./Modal";
+export { TimePickerField } from "./TimePickerField";
