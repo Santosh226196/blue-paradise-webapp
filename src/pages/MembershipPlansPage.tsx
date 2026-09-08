@@ -473,8 +473,8 @@ function BatchesTab({
     setName(batch.name);
     setDescription(batch.description);
     setPlanId(batch.planId ?? "");
-    setStartDate(batch.startDate.slice(0, 10));
-    setEndDate(batch.endDate.slice(0, 10));
+    setStartDate(batch.startDate ? batch.startDate.slice(0, 10) : "");
+    setEndDate(batch.endDate ? batch.endDate.slice(0, 10) : "");
     setDays(batch.days ?? []);
     setStartTime(batch.startTime ?? "");
     setEndTime(batch.endTime ?? "");
@@ -578,6 +578,23 @@ function BatchesTab({
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
+                className="font-mono"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Start Date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="font-mono"
+              />
+              <Input
+                label="End Date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
                 className="font-mono"
               />
             </div>
@@ -705,7 +722,7 @@ function BatchesTab({
             <PrimaryButton
               onClick={handleSave}
               fullWidth
-              disabled={!name || !maxMembers}
+              disabled={!name || !maxMembers || !startDate || !endDate}
             >
               {editingId ? "Update Batch" : "Create Batch"}
             </PrimaryButton>

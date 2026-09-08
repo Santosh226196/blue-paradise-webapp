@@ -25,6 +25,8 @@ import {
   IoConstruct,
   IoQrCodeOutline,
   IoQrCode,
+  IoShirtOutline,
+  IoShirt,
 } from "react-icons/io5";
 import { useAppDispatch, useAppSelector } from "@/hooks/store";
 import { useLogoutMutation } from "@/store/api/authApi";
@@ -101,6 +103,12 @@ const operationsNavItems: NavItemData[] = [
     iconOutline: IoConstructOutline,
     iconFilled: IoConstruct,
     label: "Services",
+  },
+  {
+    to: "/costumes",
+    iconOutline: IoShirtOutline,
+    iconFilled: IoShirt,
+    label: "Costumes",
   },
 ];
 

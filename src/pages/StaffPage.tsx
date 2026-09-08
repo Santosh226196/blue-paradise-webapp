@@ -23,8 +23,11 @@ import {
   IoCall,
   IoCheckmarkCircle,
   IoCloseCircle,
+  IoCard,
 } from "react-icons/io5";
 import { StaffRole } from "@/types";
+import type { Staff } from "@/types";
+import { IdCardDownloader } from "@/components/IdCardDownloader";
 
 export function StaffPage() {
   const [search, setSearch] = useState("");
@@ -39,6 +42,7 @@ export function StaffPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [downloadFor, setDownloadFor] = useState<Staff | null>(null);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [role, setRole] = useState<StaffRole>(StaffRole.Coach);
@@ -114,6 +118,9 @@ export function StaffPage() {
 
   return (
     <div className="space-y-6">
+      {downloadFor && (
+        <IdCardDownloader staff={downloadFor} onDone={() => setDownloadFor(null)} />
+      )}
       <div className="flex items-center justify-between animate-fade-up">
         <div>
           <h1
@@ -315,6 +322,14 @@ export function StaffPage() {
               >
                 {s.name}
               </h3>
+              {s.employeeId && (
+                <p
+                  className="text-[10px] font-mono font-bold mb-1"
+                  style={{ color: "var(--accent-pool)" }}
+                >
+                  {s.employeeId}
+                </p>
+              )}
               <p
                 className="text-xs font-mono mb-1 text-fg-muted"
               >
@@ -351,36 +366,45 @@ export function StaffPage() {
                 </span>
               </div>
               <div
-                className="flex gap-2 pt-3" border-t border-glass-border
+                className="flex flex-col gap-2 pt-3 border-t border-glass-border"
               >
-                <a href={`tel:${s.mobile}`} className="flex-1">
-                  <GhostButton size="sm" fullWidth>
-                    <IoCall size={14} /> Call
+                <GhostButton
+                  size="sm"
+                  fullWidth
+                  onClick={() => setDownloadFor(s)}
+                >
+                  <IoCard size={14} /> Download ID Card
+                </GhostButton>
+                <div className="flex gap-2">
+                  <a href={`tel:${s.mobile}`} className="flex-1">
+                    <GhostButton size="sm" fullWidth>
+                      <IoCall size={14} /> Call
+                    </GhostButton>
+                  </a>
+                  <GhostButton
+                    size="sm"
+                    onClick={() =>
+                      handleEdit({
+                        id: s.id,
+                        name: s.name,
+                        mobile: s.mobile,
+                        role: s.role,
+                        specialization: s.specialization,
+                        isAvailable: s.isAvailable,
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <IoPencil size={14} /> Edit
                   </GhostButton>
-                </a>
-                <GhostButton
-                  size="sm"
-                  onClick={() =>
-                    handleEdit({
-                      id: s.id,
-                      name: s.name,
-                      mobile: s.mobile,
-                      role: s.role,
-                      specialization: s.specialization,
-                      isAvailable: s.isAvailable,
-                    })
-                  }
-                  className="flex-1"
-                >
-                  <IoPencil size={14} /> Edit
-                </GhostButton>
-                <GhostButton
-                  size="sm"
-                  onClick={() => handleDelete(s.id)}
-                  className="text-danger"
-                >
-                  <IoTrash size={14} />
-                </GhostButton>
+                  <GhostButton
+                    size="sm"
+                    onClick={() => handleDelete(s.id)}
+                    className="text-danger"
+                  >
+                    <IoTrash size={14} />
+                  </GhostButton>
+                </div>
               </div>
             </GlassCard>
           ))}

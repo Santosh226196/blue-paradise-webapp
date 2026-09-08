@@ -12,6 +12,7 @@ import { duePaymentsApi } from "./api/duePaymentsApi";
 import { scheduleApi } from "./api/scheduleApi";
 import { announcementsApi } from "./api/announcementsApi";
 import { poolServicesApi } from "./api/poolServicesApi";
+import { costumesApi } from "./api/costumesApi";
 import authReducer from "./slices/authSlice";
 
 const rootReducer = combineReducers({
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   [scheduleApi.reducerPath]: scheduleApi.reducer,
   [announcementsApi.reducerPath]: announcementsApi.reducer,
   [poolServicesApi.reducerPath]: poolServicesApi.reducer,
+  [costumesApi.reducerPath]: costumesApi.reducer,
 });
 
 export function makeStore(preloadedState?: Partial<ReturnType<typeof rootReducer>>) {
@@ -48,7 +50,8 @@ export function makeStore(preloadedState?: Partial<ReturnType<typeof rootReducer
         duePaymentsApi.middleware,
         scheduleApi.middleware,
         announcementsApi.middleware,
-        poolServicesApi.middleware
+        poolServicesApi.middleware,
+        costumesApi.middleware
       ),
     preloadedState,
   });
