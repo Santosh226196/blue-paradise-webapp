@@ -11,3 +11,4 @@ export { duePaymentsApi } from "./duePaymentsApi";
 export { scheduleApi } from "./scheduleApi";
 export { announcementsApi } from "./announcementsApi";
 export { poolServicesApi } from "./poolServicesApi";
+export { costumesApi } from "./costumesApi";

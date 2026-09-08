@@ -1,4 +1,4 @@
-import { format, formatDistanceToNow, isToday, parseISO } from "date-fns";
+import { format, formatDistanceToNow, isToday, isValid, parseISO } from "date-fns";
 import type { ServiceType } from "@/types";
 import { SERVICE_AMOUNTS, SERVICE_NAMES } from "@/types";
 
@@ -11,24 +11,47 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatDate(dateStr: string): string {
-  return format(parseISO(dateStr), "dd MMM yyyy");
+function safeParse(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) return null;
+  try {
+    const d = parseISO(dateStr);
+    return isValid(d) ? d : null;
+  } catch {
+    return null;
+  }
 }
 
-export function formatDateTime(dateStr: string): string {
-  return format(parseISO(dateStr), "dd MMM yyyy, hh:mm a");
+export function formatDate(dateStr: string | null | undefined): string {
+  const d = safeParse(dateStr);
+  return d ? format(d, "dd MMM yyyy") : "—";
 }
 
-export function formatTime(dateStr: string): string {
-  return format(parseISO(dateStr), "hh:mm a");
+export function formatDateTime(dateStr: string | null | undefined): string {
+  const d = safeParse(dateStr);
+  return d ? format(d, "dd MMM yyyy, hh:mm a") : "—";
 }
 
-export function formatRelative(dateStr: string): string {
-  return formatDistanceToNow(parseISO(dateStr), { addSuffix: true });
+export function formatTime(dateStr: string | null | undefined): string {
+  const d = safeParse(dateStr);
+  return d ? format(d, "hh:mm a") : "—";
 }
 
-export function isDateToday(dateStr: string): boolean {
-  return isToday(parseISO(dateStr));
+export function formatTime12(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${String(hour).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+export function formatRelative(dateStr: string | null | undefined): string {
+  const d = safeParse(dateStr);
+  return d ? formatDistanceToNow(d, { addSuffix: true }) : "—";
+}
+
+export function isDateToday(dateStr: string | null | undefined): boolean {
+  const d = safeParse(dateStr);
+  return d ? isToday(d) : false;
 }
 
 export function generateId(): string {

@@ -5,6 +5,7 @@ import {
 import {
   useGetMembershipBatchesQuery,
 } from "@/store/api/membershipBatchesApi";
+import { useGetSettingsQuery } from "@/store/api/settingsApi";
 import { useCreateTransactionMutation } from "@/store/api/billingApi";
 import {
   GlassCard,
@@ -19,28 +20,39 @@ import {
   type MembershipPlan,
   type MembershipBatch,
 } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatTime12 } from "@/lib/utils";
 import { useToast } from "@/components/Toast";
 import {
   IoClose,
   IoCashOutline,
   IoQrCodeOutline,
-  IoCardOutline,
 } from "react-icons/io5";
+import type { Membership } from "@/types";
 
 const STEPS = ["Plan", "Batch", "Payment"];
 
 type LevelLabel = Record<string, string>;
 
-export function AssignMembershipModal({
+const planDurationLabels: Record<string, string> = {
+  DAILY: "Daily / Day-wise",
+  WEEKEND: "Weekend",
+  MONTHLY: "Monthly",
+  THREE_MONTHS: "3 Months",
+  SIX_MONTHS: "6 Months",
+  YEARLY: "Yearly",
+  FAMILY: "Family",
+  STUDENT: "Student",
+};export function AssignMembershipModal({
   customerId,
   customerName,
+  existingMembership,
   isOpen,
   onClose,
   onAssigned,
 }: {
   customerId: string;
   customerName: string;
+  existingMembership?: Membership | null;
   isOpen: boolean;
   onClose: () => void;
   onAssigned?: () => void;
@@ -48,8 +60,8 @@ export function AssignMembershipModal({
   const { data: plans, isLoading: plansLoading } = useGetMembershipPlansQuery();
   const { data: batches, isLoading: batchesLoading } =
     useGetMembershipBatchesQuery();
-  const [createTransaction, { isLoading: saving }] =
-    useCreateTransactionMutation();
+  const { data: settings, isLoading: settingsLoading } = useGetSettingsQuery();
+  const [createTransaction, { isLoading: saving }] = useCreateTransactionMutation();
   const { showToast } = useToast();
 
   const [step, setStep] = useState(0);
@@ -114,69 +126,102 @@ export function AssignMembershipModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-up overflow-y-auto"
+      className="fixed inset-0 z-[200] overflow-y-auto"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
     >
-      <GlassCard className="w-full max-w-2xl animate-scale-in relative">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-6">
+      <GlassCard
+        padding={false}
+        className="relative w-full max-w-2xl animate-scale-in m-auto flex flex-col max-h-[90vh] overflow-hidden"
+      >
         <button
+          type="button"
           onClick={() => {
             reset();
             onClose();
           }}
-          className="absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
+          className="!absolute !top-3 !right-3 sm:!top-4 sm:!right-4 !z-20 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
         >
           <IoClose size={20} />
         </button>
 
+        <div className="p-5 sm:p-6 pb-0 shrink-0 pr-12">
         <div className="mb-4">
-          <h3 className="text-lg font-bold text-fg">
-            Assign Membership — {customerName}
+          <h3 className="text-sm sm:text-base font-bold text-fg">
+            {existingMembership
+              ? `Change Membership — ${customerName}`
+              : `Assign Membership — ${customerName}`}
           </h3>
           <p className="text-xs text-fg-muted mt-0.5">
-            Create a membership with an optional class batch
+            {existingMembership
+              ? `Create a new membership. The current ${existingMembership.membershipType} membership will be ended and replaced.`
+              : "Create a membership with an optional class batch"}
           </p>
         </div>
 
         <StepperHeader steps={STEPS} currentStep={step} />
+        </div>
 
-        <div className="mt-5 space-y-5">
-          {/* Step 0: Plan */}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5">
+        <div className="space-y-5">{/* Step 0: Plan */}
           {step === 0 && (
-            <div className="space-y-3 animate-fade-up">
-              {plansLoading ? (
-                <SkeletonGlass lines={2} />
-              ) : activePlans.length > 0 ? (
-                activePlans.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPlan(p)}
-                    className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
-                      selectedPlan?.id === p.id
-                        ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
-                        : "bg-white/5 border-white/10 hover:border-cyan-400/40"
-                    }`}
-                  >
-                    <div>
-                      <p className="text-sm font-bold text-fg">{p.name}</p>
-                      <p className="text-xs font-mono text-fg-muted">
-                        {p.duration}
-                      </p>
-                    </div>
-                    <span className="text-sm font-bold font-mono text-accent">
-                      {formatCurrency(p.price)}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <p className="text-xs text-fg-muted">
-                  No active membership plans. Add plans in Membership Plans
-                  first.
-                </p>
-              )}
+            <div className="animate-fade-up">
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+                {plansLoading ? (
+                  <div className="w-full">
+                    <SkeletonGlass lines={2} />
+                  </div>
+                ) : activePlans.length > 0 ? (
+                  activePlans.map((p) => {
+                    const selected = selectedPlan?.id === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPlan(selected ? null : p)
+                        }
+                        className={`relative shrink-0 w-40 p-4 text-left transition-all duration-200 rounded-2xl border cursor-pointer snap-start ${
+                          selected
+                            ? "bg-cyan-400/20 border-cyan-400 ring-2 ring-cyan-400/30"
+                            : "bg-white/5 border-white/10 hover:border-cyan-400/50"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-3 right-3 flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all ${
+                            selected
+                              ? "border-cyan-400"
+                              : "border-white/30"
+                          }`}
+                        >
+                          {selected && (
+                            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                          )}
+                        </span>
+                        <p className="text-xs font-bold text-fg pr-5">
+                          {p.name}
+                        </p>
+                        <p className="text-[11px] font-mono text-fg-muted mt-1">
+                          {planDurationLabels[p.duration] ?? p.duration}
+                        </p>
+                        <p className="text-xs font-bold font-mono text-accent mt-2">
+                          {formatCurrency(p.price)}
+                        </p>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-fg-muted w-full">
+                    No active membership plans. Add plans in Membership Plans
+                    first.
+                  </p>
+                )}
+              </div>
               <PrimaryButton
                 fullWidth
                 disabled={!selectedPlan}
                 onClick={() => setStep(1)}
+                className="mt-4"
               >
                 Continue
               </PrimaryButton>
@@ -193,52 +238,70 @@ export function AssignMembershipModal({
                   <p className="text-xs text-fg-muted">
                     Optional — assign a class batch to this membership
                   </p>
-                  {activeBatches.map((b) => {
-                    const full = isBatchFull(b);
-                    return (
-                      <button
-                        key={b.id}
-                        disabled={full}
-                        onClick={() =>
-                          setSelectedBatch(selectedBatch?.id === b.id ? null : b)
-                        }
-                        className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
-                          full
-                            ? "opacity-50 cursor-not-allowed"
-                            : selectedBatch?.id === b.id
-                              ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
-                              : "bg-white/5 border-white/10 hover:border-cyan-400/40"
-                        }`}
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-fg">{b.name}</p>
-                          <p className="text-xs font-mono text-fg-muted">
-                            {b.days?.length > 0
-                              ? b.days.map((d) => d.slice(0, 3)).join(" · ")
-                              : "Days TBD"}{" "}
-                            {b.startTime ? ` · ${b.startTime}–${b.endTime}` : ""}
-                            {" · "}
-                            {batchLabel[b.level] ?? b.level}
-                            {b.coach ? ` · ${b.coach}` : ""}
-                          </p>
-                        </div>
-                        <div className="text-right">
+                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+                    {activeBatches.map((b) => {
+                      const full = isBatchFull(b);
+                      const selected = selectedBatch?.id === b.id;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          disabled={full}
+                          onClick={() =>
+                            setSelectedBatch(selected ? null : b)
+                          }
+                          className={`relative shrink-0 w-48 p-4 text-left transition-all duration-200 rounded-2xl border cursor-pointer snap-start ${
+                            full
+                              ? "opacity-50 cursor-not-allowed"
+                              : selected
+                                ? "bg-cyan-400/20 border-cyan-400 ring-2 ring-cyan-400/30"
+                                : "bg-white/5 border-white/10 hover:border-cyan-400/50"
+                          }`}
+                        >
                           <span
-                            className={`text-xs font-bold font-mono ${
-                              full ? "text-danger" : "text-accent"
+                            className={`absolute top-3 right-3 flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all ${
+                              full
+                                ? "border-white/20"
+                                : selected
+                                  ? "border-cyan-400"
+                                  : "border-white/30"
                             }`}
                           >
-                            {b.currentMembers}/{b.maxMembers}
+                            {selected && (
+                              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                            )}
                           </span>
-                          {full && (
-                            <p className="text-[10px] font-bold text-danger mt-0.5">
-                              Full
-                            </p>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <p className="text-xs font-bold text-fg pr-5">
+                            {b.name}
+                          </p>
+                          <p className="text-[11px] font-mono text-fg-muted mt-1 leading-relaxed">
+                            {b.days?.length > 0
+                              ? b.days.map((d) => d.slice(0, 3)).join(" · ")
+                              : "Days TBD"}
+                            {b.startTime
+                              ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}`
+                              : ""}
+                            {` · ${batchLabel[b.level] ?? b.level}`}
+                            {b.coach ? ` · ${b.coach}` : ""}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span
+                              className={`text-[11px] font-bold font-mono ${
+                                full ? "text-danger" : "text-accent"
+                              }`}
+                            >
+                              {b.currentMembers}/{b.maxMembers}
+                            </span>
+                            {full && (
+                              <span className="text-[10px] font-bold text-danger">
+                                Full
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </>
               ) : (
                 <p className="text-xs text-fg-muted">
@@ -247,12 +310,12 @@ export function AssignMembershipModal({
                 </p>
               )}
               <div className="flex gap-3">
-                <GhostButton size="lg" className="w-1/3" onClick={() => setStep(0)}>
+                <GhostButton size="md" className="w-1/3" onClick={() => setStep(0)}>
                   Back
                 </GhostButton>
                 <PrimaryButton
                   fullWidth
-                  size="lg"
+                  size="md"
                   onClick={() => setStep(2)}
                 >
                   {selectedBatch ? "Continue with Batch" : "Skip Batch"}
@@ -267,24 +330,27 @@ export function AssignMembershipModal({
               <GlassCard padding={false} className="p-4">
                 <div className="space-y-2.5">
                   <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                    <span className="text-sm text-fg-muted">Plan</span>
-                    <span className="font-bold text-fg text-sm">
-                      {selectedPlan.name} ({selectedPlan.duration})
+                    <span className="text-xs text-fg-muted">Plan</span>
+                    <span className="font-bold text-fg text-xs">
+                      {selectedPlan.name} (
+                      {planDurationLabels[selectedPlan.duration] ??
+                        selectedPlan.duration}
+                      )
                     </span>
                   </div>
                   {selectedBatch && (
                     <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                      <span className="text-sm text-fg-muted">Batch</span>
-                      <span className="font-bold text-accent text-sm">
+                      <span className="text-xs text-fg-muted">Batch</span>
+                      <span className="font-bold text-accent text-xs">
                         {selectedBatch.name}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">
                       Total Due
                     </span>
-                    <span className="text-3xl font-bold font-mono text-accent">
+                    <span className="text-xl font-bold font-mono text-accent">
                       {formatCurrency(selectedPlan.price)}
                     </span>
                   </div>
@@ -295,17 +361,16 @@ export function AssignMembershipModal({
                 <p className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-2.5">
                   Payment Method
                 </p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { method: "CASH" as const, label: "Cash", icon: <IoCashOutline size={20} /> },
-                    { method: "UPI" as const, label: "UPI / QR", icon: <IoQrCodeOutline size={20} /> },
-                    { method: "CARD" as const, label: "POS Card", icon: <IoCardOutline size={20} /> },
+                    { method: "CASH" as const, label: "Cash", icon: <IoCashOutline size={16} /> },
+                    { method: "UPI" as const, label: "UPI / QR", icon: <IoQrCodeOutline size={16} /> },
                   ].map(({ method, label, icon }) => (
                     <button
                       key={method}
                       type="button"
                       onClick={() => setPaymentMethod(method)}
-                      className={`flex flex-col items-center justify-center gap-1.5 py-4 px-3 rounded-2xl text-xs font-bold transition-all min-h-18 border cursor-pointer ${
+                      className={`flex flex-col items-center justify-center gap-1.5 py-3 px-3 rounded-2xl text-[11px] font-bold transition-all min-h-16 border cursor-pointer ${
                         paymentMethod === method
                           ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
                           : "bg-white/5 border-white/10 text-fg-dim hover:border-white/20"
@@ -316,6 +381,41 @@ export function AssignMembershipModal({
                     </button>
                   ))}
                 </div>
+
+                {paymentMethod === "UPI" && (
+                  <div className="mt-4">
+                    <div className="rounded-2xl overflow-hidden p-5"
+                      style={{
+                        background: "white",
+                        border: "1px solid var(--glass-border)",
+                      }}
+                    >
+                      {settingsLoading ? (
+                        <div className="w-full aspect-square flex items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : settings?.scannerImage ? (
+                        <img
+                          src={settings.scannerImage}
+                          alt="Payment Scanner QR Code"
+                          className="block object-contain mx-auto"
+                          style={{ maxWidth: "240px", maxHeight: "240px", width: "100%" }}
+                        />
+                      ) : (
+                        <p className="text-xs text-fg-muted text-center py-8">
+                          {settings?.businessName
+                            ? `${settings.businessName} — scanner not uploaded`
+                            : "No payment QR available. Please ask for payment details at the front desk."}
+                        </p>
+                      )}
+                    </div>
+                    {settings?.scannerImage && (
+                      <p className="text-[11px] text-fg-muted mt-1.5 text-center">
+                        Scan to pay via {settings.businessName ?? "UPI"} and confirm with the front desk.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {errorMessage && (
@@ -325,12 +425,12 @@ export function AssignMembershipModal({
               )}
 
               <div className="flex gap-3">
-                <GhostButton size="lg" className="w-1/3" onClick={() => setStep(1)}>
+                <GhostButton size="md" className="w-1/3" onClick={() => setStep(1)}>
                   Back
                 </GhostButton>
                 <PrimaryButton
                   fullWidth
-                  size="lg"
+                  size="md"
                   loading={saving}
                   onClick={handleConfirm}
                 >
@@ -340,7 +440,9 @@ export function AssignMembershipModal({
             </div>
           )}
         </div>
+        </div>
       </GlassCard>
+      </div>
     </div>
   );
 }

@@ -19,8 +19,10 @@ import {
   EmptyState,
   SkeletonGlass,
   Input,
+  TimePickerField,
+  Modal,
 } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatTime12 } from "@/lib/utils";
 import {
   IoCard,
   IoAdd,
@@ -30,17 +32,30 @@ import {
   IoPencil,
   IoClose,
   IoPeople,
+  IoTime,
 } from "react-icons/io5";
 
-const DURATIONS = ["HOURLY", "DAILY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
+const DURATIONS = [
+  "DAILY",
+  "WEEKEND",
+  "MONTHLY",
+  "THREE_MONTHS",
+  "SIX_MONTHS",
+  "YEARLY",
+  "FAMILY",
+  "STUDENT",
+] as const;
 type Duration = (typeof DURATIONS)[number];
 
 const durationLabels: Record<Duration, string> = {
-  HOURLY: "Hourly",
-  DAILY: "Daily",
+  DAILY: "Daily / Day-wise",
+  WEEKEND: "Weekend",
   MONTHLY: "Monthly",
-  QUARTERLY: "Quarterly",
+  THREE_MONTHS: "3 Months",
+  SIX_MONTHS: "6 Months",
   YEARLY: "Yearly",
+  FAMILY: "Family",
+  STUDENT: "Student",
 };
 
 const BATCH_STATUSES = ["ACTIVE", "UPCOMING", "COMPLETED", "CANCELLED"] as const;
@@ -76,8 +91,6 @@ const ageGroupLabels: Record<AgeGroup, string> = {
   ADULTS: "Adults",
   ALL: "All",
 };
-
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 function TabSwitcher({
   active,
@@ -363,6 +376,15 @@ function PlanTab({
                   <IoTrash size={14} /> Delete
                 </GhostButton>
               </div>
+              <div
+                className="flex items-center gap-1.5 pt-3 mt-3"
+                style={{ borderTop: "1px solid var(--glass-border)" }}
+              >
+                <IoTime size={12} className="text-fg-muted" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">
+                  Created {formatDate(plan.createdAt)}
+                </span>
+              </div>
             </GlassCard>
           ))}
         </div>
@@ -412,12 +434,7 @@ function BatchesTab({
   const [coach, setCoach] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
   const [status, setStatus] = useState<BatchStatus>("ACTIVE");
-
-  function toggleDay(day: string) {
-    setDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
-    );
-  }
+  const [batchError, setBatchError] = useState("");
 
   function resetForm() {
     setName("");
@@ -443,8 +460,8 @@ function BatchesTab({
     name: string;
     description: string;
     planId?: string | null;
-    startDate: string;
-    endDate: string;
+    startDate?: string | null;
+    endDate?: string | null;
     days?: string[];
     startTime?: string;
     endTime?: string;
@@ -459,8 +476,8 @@ function BatchesTab({
     setName(batch.name);
     setDescription(batch.description);
     setPlanId(batch.planId ?? "");
-    setStartDate(batch.startDate.slice(0, 10));
-    setEndDate(batch.endDate.slice(0, 10));
+    setStartDate(batch.startDate?.slice(0, 10) ?? "");
+    setEndDate(batch.endDate?.slice(0, 10) ?? "");
     setDays(batch.days ?? []);
     setStartTime(batch.startTime ?? "");
     setEndTime(batch.endTime ?? "");
@@ -474,12 +491,10 @@ function BatchesTab({
   }
 
   async function handleSave() {
-    const payload = {
+    const payload: Record<string, unknown> = {
       name,
       description,
       planId: planId || undefined,
-      startDate,
-      endDate,
       days,
       startTime,
       endTime,
@@ -490,12 +505,23 @@ function BatchesTab({
       maxMembers: Number(maxMembers),
       status,
     };
-    if (editingId) {
-      await updateBatch({ id: editingId, data: payload });
-    } else {
-      await createBatch(payload);
+    if (startDate) payload.startDate = startDate;
+    if (endDate) payload.endDate = endDate;
+    try {
+      if (editingId) {
+        await updateBatch({ id: editingId, data: payload });
+      } else {
+        await createBatch(payload);
+      }
+      resetForm();
+    } catch (err: unknown) {
+      const message =
+        (err as { data?: { message?: string } })?.data?.message ||
+        (editingId
+          ? "Failed to update batch. Please try again."
+          : "Failed to create batch. Please try again.");
+      setBatchError(message);
     }
-    resetForm();
   }
 
   async function handleDelete(id: string) {
@@ -504,6 +530,14 @@ function BatchesTab({
 
   return (
     <div className="space-y-6">
+      <Modal
+        isOpen={batchError !== ""}
+        onClose={() => setBatchError("")}
+        variant="error"
+        title={editingId ? "Batch Not Updated" : "Batch Not Created"}
+        message={batchError}
+      />
+
       <div className="flex items-center gap-3 animate-fade-up">
         <TabSwitcher active={activeTab} onChange={setActiveTab} />
         <div className="flex-1" />
@@ -551,33 +585,29 @@ function BatchesTab({
               </div>
             </div>
 
-            {plans && plans.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                  Linked Plan
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {plans.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setPlanId(p.id)}
-                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
-                      style={{
-                        background:
-                          planId === p.id ? "var(--glow-aqua)" : "var(--glass-bg)",
-                        border: `1.5px solid ${planId === p.id ? "var(--accent-aqua)" : "var(--glass-border)"}`,
-                        color:
-                          planId === p.id
-                            ? "var(--accent-aqua)"
-                            : "var(--text-secondary)",
-                      }}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TimePickerField
+                label="Start Time"
+                value={startTime}
+                onChange={(v) => {
+                  setStartTime(v);
+                  if (endTime && endTime <= v) {
+                    setEndTime("");
+                  }
+                }}
+              />
+              <TimePickerField
+                label="End Time"
+                value={endTime}
+                onChange={setEndTime}
+                min={startTime || undefined}
+                error={
+                  startTime && endTime && endTime <= startTime
+                    ? "End time must be after start time"
+                    : undefined
+                }
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
@@ -592,49 +622,6 @@ function BatchesTab({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="font-mono"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                Days (tap to toggle)
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {WEEKDAYS.map((day) => (
-                  <button
-                    key={day}
-                    onClick={() => toggleDay(day)}
-                    className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
-                    style={{
-                      background: days.includes(day)
-                        ? "var(--glow-aqua)"
-                        : "var(--glass-bg)",
-                      border: `1.5px solid ${days.includes(day) ? "var(--accent-aqua)" : "var(--glass-border)"}`,
-                      color: days.includes(day)
-                        ? "var(--accent-aqua)"
-                        : "var(--text-secondary)",
-                    }}
-                  >
-                    {day.slice(0, 3)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Start Time"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="font-mono"
-              />
-              <Input
-                label="End Time"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
                 className="font-mono"
               />
             </div>
@@ -762,7 +749,7 @@ function BatchesTab({
             <PrimaryButton
               onClick={handleSave}
               fullWidth
-              disabled={!name || !maxMembers}
+              disabled={!name || !maxMembers || !startDate || !endDate}
             >
               {editingId ? "Update Batch" : "Create Batch"}
             </PrimaryButton>
@@ -816,9 +803,11 @@ function BatchesTab({
                     {plan.name}
                   </p>
                 )}
-                <div className="text-xs font-mono text-fg-muted mb-2">
-                  {formatDate(batch.startDate)} — {formatDate(batch.endDate)}
-                </div>
+                {batch.startDate && batch.endDate ? (
+                  <div className="text-xs font-mono text-fg-muted mb-2">
+                    {formatDate(batch.startDate)} — {formatDate(batch.endDate)}
+                  </div>
+                ) : null}
                 {(batch.days?.length > 0 || batch.startTime || batch.coach) && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {batch.days?.length > 0 && (
@@ -828,7 +817,7 @@ function BatchesTab({
                     )}
                     {batch.startTime && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-glass text-fg-dim">
-                        {batch.startTime}–{batch.endTime}
+                        {formatTime12(batch.startTime)} – {formatTime12(batch.endTime)}
                       </span>
                     )}
                     {batch.level && (

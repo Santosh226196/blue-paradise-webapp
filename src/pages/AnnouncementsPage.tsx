@@ -22,6 +22,7 @@ import {
   IoAlertCircle,
   IoInformationCircle,
 } from "react-icons/io5";
+import { FaWhatsapp } from "react-icons/fa";
 
 export function AnnouncementsPage() {
   const { data: announcements, isLoading } = useGetAnnouncementsQuery();
@@ -82,6 +83,24 @@ export function AnnouncementsPage() {
 
   async function handleDelete(id: string) {
     await deleteAnnouncement(id);
+  }
+
+  function buildShareText(a: {
+    title: string;
+    message: string;
+    priority: "LOW" | "MEDIUM" | "HIGH";
+  }) {
+    const priorityLabel = a.priority.charAt(0) + a.priority.slice(1).toLowerCase();
+    return `📢 *${a.priority} PRIORITY* · ${priorityLabel}\n\n*${a.title}*\n\n${a.message}`;
+  }
+
+  function handleShareWhatsApp(a: {
+    title: string;
+    message: string;
+    priority: "LOW" | "MEDIUM" | "HIGH";
+  }) {
+    const encodedText = encodeURIComponent(buildShareText(a));
+    window.open(`https://api.whatsapp.com/send?text=${encodedText}`, "_blank");
   }
 
   const priorityConfig = {
@@ -152,11 +171,6 @@ export function AnnouncementsPage() {
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label
-                className="text-xs font-bold uppercase tracking-wider text-fg-muted"
-              >
-                Title
-              </label>
               <Input
                 label="Title"
                 value={title}
@@ -209,11 +223,6 @@ export function AnnouncementsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label
-                  className="text-xs font-bold uppercase tracking-wider text-fg-muted"
-                >
-                  Expires (optional)
-                </label>
                 <Input
                   label="Expires (optional)"
                   type="date"
@@ -316,6 +325,14 @@ export function AnnouncementsPage() {
                     <div className="flex items-center gap-1">
                       <GhostButton
                         size="sm"
+                        onClick={() => handleShareWhatsApp({ title: a.title, message: a.message, priority: a.priority })}
+                        className="text-green-500 hover:text-green-400"
+                        title="Share on WhatsApp"
+                      >
+                        <FaWhatsapp size={14} />
+                      </GhostButton>
+                      <GhostButton
+                        size="sm"
                         onClick={() =>
                           handleEdit({
                             id: a.id,
@@ -382,6 +399,14 @@ export function AnnouncementsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
+                      <GhostButton
+                        size="sm"
+                        onClick={() => handleShareWhatsApp({ title: a.title, message: a.message, priority: a.priority })}
+                        className="text-green-500 hover:text-green-400"
+                        title="Share on WhatsApp"
+                      >
+                        <FaWhatsapp size={14} />
+                      </GhostButton>
                       <GhostButton
                         size="sm"
                         onClick={() =>

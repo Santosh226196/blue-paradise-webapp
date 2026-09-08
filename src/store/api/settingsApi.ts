@@ -16,10 +16,18 @@ export const settingsApi = createApi({
       query: (body) => ({ url: "/", method: "PUT", body }),
       invalidatesTags: ["Settings"],
     }),
+    uploadScanner: builder.mutation<{ success: boolean; scannerImage: string }, { scannerImage: string }>({
+      query: (body) => ({ url: "/scanner", method: "POST", body }),
+      invalidatesTags: ["Settings"],
+    }),
+    deleteScanner: builder.mutation<{ success: boolean }, void>({
+      query: () => ({ url: "/scanner", method: "DELETE" }),
+      invalidatesTags: ["Settings"],
+    }),
   }),
 });
 
-export const { useGetSettingsQuery, useUpdateSettingsMutation } = settingsApi;
+export const { useGetSettingsQuery, useUpdateSettingsMutation, useUploadScannerMutation, useDeleteScannerMutation } = settingsApi;
 
 const DEFAULT_SETTINGS: BusinessSettings = {
   businessName: "Blue Paradise Water Club",
