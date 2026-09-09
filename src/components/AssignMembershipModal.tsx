@@ -75,7 +75,10 @@ const planDurationLabels: Record<string, string> = {
   if (!isOpen) return null;
 
   const activePlans = plans?.filter((p) => p.isActive) ?? [];
-  const activeBatches = batches?.filter((b) => b.status === "ACTIVE") ?? [];
+  const activeBatches =
+    batches?.filter(
+      (b) => b.status === "ACTIVE" || b.status === "UPCOMING",
+    ) ?? [];
   const batchLabel: LevelLabel = {
     BEGINNER: "Beginner",
     INTERMEDIATE: "Intermediate",
@@ -274,16 +277,29 @@ const planDurationLabels: Record<string, string> = {
                           <p className="text-xs font-bold text-fg pr-5">
                             {b.name}
                           </p>
-                          <p className="text-[11px] font-mono text-fg-muted mt-1 leading-relaxed">
-                            {b.days?.length > 0
-                              ? b.days.map((d) => d.slice(0, 3)).join(" · ")
-                              : "Days TBD"}
-                            {b.startTime
-                              ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}`
-                              : ""}
-                            {` · ${batchLabel[b.level] ?? b.level}`}
-                            {b.coach ? ` · ${b.coach}` : ""}
-                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1 text-[11px] font-mono text-fg-muted leading-relaxed">
+                            {b.status === "UPCOMING" && (
+                              <span
+                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                style={{
+                                  background: "var(--glow-pool)",
+                                  color: "var(--accent-pool)",
+                                }}
+                              >
+                                Upcoming
+                              </span>
+                            )}
+                            <span>
+                              {b.days?.length > 0
+                                ? b.days.map((d) => d.slice(0, 3)).join(" · ")
+                                : "Days TBD"}
+                              {b.startTime
+                                ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}`
+                                : ""}
+                              {` · ${batchLabel[b.level] ?? b.level}`}
+                              {b.coach ? ` · ${b.coach}` : ""}
+                            </span>
+                          </div>
                           <div className="flex items-center justify-between mt-2">
                             <span
                               className={`text-[11px] font-bold font-mono ${
@@ -305,8 +321,8 @@ const planDurationLabels: Record<string, string> = {
                 </>
               ) : (
                 <p className="text-xs text-fg-muted">
-                  No active batches available. Membership can be saved without a
-                  batch.
+                  No active or upcoming batches available. Membership can be
+                  saved without a batch.
                 </p>
               )}
               <div className="flex gap-3">

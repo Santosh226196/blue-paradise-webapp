@@ -5,6 +5,7 @@ import {
   useGetExpiringMembershipsQuery,
 } from "@/store/api/billingApi";
 import { useGetPoolServicesQuery } from "@/store/api/poolServicesApi";
+import { useGetSettingsQuery } from "@/store/api/settingsApi";
 import {
   GlassCard,
   StatCard,
@@ -34,16 +35,27 @@ import {
 } from "react-icons/io5";
 import type { ExpiringMembership } from "@/types";
 
-const OPEN_TIME = (import.meta.env.VITE_DEFAULT_OPEN_TIME as string) || "05:00";
-const CLOSE_TIME =
-  (import.meta.env.VITE_DEFAULT_CLOSE_TIME as string) || "22:00";
-
 const poolCategoryIcon: Record<string, React.ReactNode> = {
   Equipment: <IoOptions size={16} />,
   Cleaning: <IoBuild size={16} />,
   Chemical: <IoFlask size={16} />,
   Water: <IoWater size={16} />,
 };
+
+const ALL_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
 
 export function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
@@ -54,6 +66,21 @@ export function DashboardPage() {
     useGetExpiringMembershipsQuery();
   const { data: poolServices, isLoading: poolLoading } =
     useGetPoolServicesQuery();
+  const { data: settings } = useGetSettingsQuery();
+
+  const timing = settings?.clubTiming;
+  const openTime = timing?.openTime ?? "05:00";
+  const closeTime = timing?.closeTime ?? "22:00";
+  const todayName = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+  const isOpenToday = (timing?.daysOpen ?? ALL_DAYS).includes(todayName);
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const isOpenNow =
+    isOpenToday &&
+    nowMinutes >= toMinutes(openTime) &&
+    nowMinutes <= toMinutes(closeTime);
 
   const greeting = getGreeting();
 
@@ -98,17 +125,17 @@ export function DashboardPage() {
             <p
               className="text-sm font-bold font-mono text-fg"
             >
-              {OPEN_TIME} — {CLOSE_TIME}
+              {openTime} — {closeTime}
             </p>
           </div>
           <span
             className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
             style={{
-              background: "var(--glow-aqua)",
-              color: "var(--accent-aqua)",
+              background: isOpenNow ? "var(--glow-aqua)" : "var(--glow-coral)",
+              color: isOpenNow ? "var(--accent-aqua)" : "var(--accent-coral)",
             }}
           >
-            Open Now
+            {isOpenNow ? "Open Now" : "Closed"}
           </span>
         </div>
       </GlassCard>

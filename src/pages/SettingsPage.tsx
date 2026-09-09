@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
   useGetSettingsQuery,
@@ -38,12 +38,23 @@ import {
   IoQrCode,
 } from "react-icons/io5";
 
+const ALL_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 export function SettingsPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
   const { data: settings, isLoading, isError } = useGetSettingsQuery();
-  const [updateSettings] = useUpdateSettingsMutation();
+  const [updateSettings, { isLoading: savingTiming }] =
+    useUpdateSettingsMutation();
   const [changePassword, { isLoading: changingPassword }] =
     useChangePasswordMutation();
   const [logout] = useLogoutMutation();
@@ -62,6 +73,17 @@ export function SettingsPage() {
   const [deleteScanner] = useDeleteScannerMutation();
   const [scannerUploading, setScannerUploading] = useState(false);
   const scannerInputRef = useRef<HTMLInputElement>(null);
+  const [daysOpen, setDaysOpen] = useState<string[]>([]);
+  const [holidaysEnabled, setHolidaysEnabled] = useState(false);
+
+  useEffect(() => {
+    const club = settings?.clubTiming;
+    if (!club) return;
+    setOpenTime(club.openTime ?? "");
+    setCloseTime(club.closeTime ?? "");
+    setDaysOpen(club.daysOpen ?? ALL_DAYS);
+    setHolidaysEnabled(club.holidaysEnabled ?? false);
+  }, [settings]);
 
   if (isLoading && !settings)
     return (
@@ -144,6 +166,28 @@ export function SettingsPage() {
 
   async function handleDeleteScanner() {
     await deleteScanner();
+  }
+
+  function toggleDay(day: string) {
+    setDaysOpen((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+    );
+  }
+
+  function toggleHolidays() {
+    setHolidaysEnabled((v) => !v);
+  }
+
+  async function handleSaveTiming() {
+    const club = settings?.clubTiming;
+    await updateSettings({
+      clubTiming: {
+        openTime: openTime || club?.openTime || "05:00",
+        closeTime: closeTime || club?.closeTime || "22:00",
+        daysOpen: daysOpen.length ? daysOpen : club?.daysOpen ?? ALL_DAYS,
+        holidaysEnabled,
+      },
+    });
   }
 
   return (
@@ -424,30 +468,42 @@ export function SettingsPage() {
             </div>
             <div className="flex items-end">
               <div
-                className="flex items-center justify-between w-full p-2 rounded-xl"
+                className="flex items-center justify-between w-full p-2 rounded-xl cursor-pointer select-none"
                 style={{
                   background: "var(--glass-bg)",
                   border: "1px solid var(--glass-border)",
                 }}
+                onClick={toggleHolidays}
+                role="switch"
+                aria-checked={holidaysEnabled}
               >
                 <div>
                   <p
                     className="text-xs font-bold text-fg"
                   >
-                    Show on login
+                    Holiday Mode
                   </p>
                   <p
                     className="text-xs mt-0.5 text-fg-muted"
                   >
-                    Display hours to staff
+                    Observe holiday closures in club status
                   </p>
                 </div>
                 <div
-                  className="w-11 h-6 rounded-full flex items-center px-0.5 transition-all" bg-accent
+                  className="relative w-11 h-6 rounded-full flex items-center px-0.5 transition-all"
+                  style={{
+                    background: holidaysEnabled
+                      ? "var(--accent-aqua)"
+                      : "var(--input-border)",
+                  }}
                 >
                   <div
                     className="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
-                    style={{ transform: "translateX(20px)" }}
+                    style={{
+                      transform: holidaysEnabled
+                        ? "translateX(20px)"
+                        : "translateX(0px)",
+                    }}
                   />
                 </div>
               </div>
@@ -466,32 +522,36 @@ export function SettingsPage() {
               Operating Days
             </p>
             <div className="flex flex-wrap gap-2">
-              {(
-                settings.clubTiming?.daysOpen ?? [
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ]
-              ).map((day) => (
-                <span
-                  key={day}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                  style={{
-                    background: "var(--glow-aqua)",
-                    color: "var(--accent-aqua)",
-                  }}
-                >
-                  {day.slice(0, 3)}
-                </span>
-              ))}
+              {ALL_DAYS.map((day) => {
+                const selected = daysOpen.includes(day);
+                return (
+                  <button
+                    type="button"
+                    key={day}
+                    onClick={() => toggleDay(day)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                    style={{
+                      background: selected
+                        ? "var(--glow-aqua)"
+                        : "var(--glass-bg)",
+                      color: selected
+                        ? "var(--accent-aqua)"
+                        : "var(--fg-dim)",
+                      border: "1px solid var(--glass-border)",
+                    }}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="mt-5">
-            <PrimaryButton onClick={handleSaveBusiness} fullWidth>
+            <PrimaryButton
+              onClick={handleSaveTiming}
+              loading={savingTiming}
+              fullWidth
+            >
               Save Timing
             </PrimaryButton>
           </div>

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { screen } from "@testing-library/react";
-import { renderWithProviders, authenticatedState, mockApi, resetApiMocks } from "@/tests/harness";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithProviders, authenticatedState, mockApi, resetApiMocks, type ApiRequest } from "@/tests/harness";
 import { SettingsPage } from "@/pages/SettingsPage";
 
 const settings = {
@@ -42,6 +42,28 @@ describe("SettingsPage", () => {
     expect(screen.getByDisplayValue("22:00")).toBeInTheDocument();
     expect(screen.getByText("Mon")).toBeInTheDocument();
     expect(screen.getByText("Disconnected")).toBeInTheDocument();
+  });
+
+  it("saves updated club timing when Save Timing is clicked", async () => {
+    let saved: any = null;
+    mockApi("/settings", (req: ApiRequest) => {
+      if (req.body) {
+        saved = JSON.parse(String(req.body));
+      }
+      return settings;
+    });
+    renderWithProviders(<SettingsPage />, {
+      preloadedState: authenticatedState(),
+    });
+
+    const openInput = await screen.findByLabelText("Opening Time");
+    fireEvent.change(openInput, { target: { value: "06:00" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save Timing" }));
+
+    await waitFor(() => {
+      expect(saved?.clubTiming?.openTime).toBe("06:00");
+    });
+    expect(saved?.clubTiming?.closeTime).toBe("22:00");
   });
 
   it("renders the printer status as connected when the printer is connected", async () => {

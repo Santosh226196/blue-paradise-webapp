@@ -3,6 +3,19 @@ import { screen } from "@testing-library/react";
 import { renderWithProviders, authenticatedState, mockApi, resetApiMocks } from "@/tests/harness";
 import { DashboardPage } from "@/pages/DashboardPage";
 
+const settings = {
+  businessName: "Blue Paradise Water Club",
+  billPrefix: "BP",
+  billFooter: "Thank you for visiting!",
+  printerSettings: { connected: false },
+  clubTiming: {
+    openTime: "05:00",
+    closeTime: "22:00",
+    daysOpen: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    holidaysEnabled: false,
+  },
+};
+
 describe("DashboardPage", () => {
   beforeEach(() => {
     resetApiMocks();
@@ -17,6 +30,30 @@ describe("DashboardPage", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/admin/i);
     expect(screen.getByText("Club Timing")).toBeInTheDocument();
     expect(screen.getByText("05:00 — 22:00")).toBeInTheDocument();
+  });
+
+  it("renders club timing from settings", async () => {
+    mockApi("/settings", {
+      ...settings,
+      clubTiming: {
+        openTime: "06:00",
+        closeTime: "23:00",
+        daysOpen: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        holidaysEnabled: false,
+      },
+    });
+    mockApi("/dashboard-stats", {
+      totalCustomers: 0,
+      todayVisits: 0,
+      todayRevenue: 0,
+    });
+    mockApi("/transactions/today", []);
+
+    renderWithProviders(<DashboardPage />, {
+      preloadedState: authenticatedState(),
+    });
+
+    expect(await screen.findByText("06:00 — 23:00")).toBeInTheDocument();
   });
 
   it("renders stat cards from the fetched dashboard stats", async () => {
