@@ -13,6 +13,12 @@ const batchLabel: Record<string, string> = {
   ADVANCED: "Advanced",
 };
 
+const batchStatusTag: Record<string, { label: string; background: string; color: string }> = {
+  UPCOMING: { label: "Upcoming", background: "var(--glow-pool)", color: "var(--accent-pool)" },
+  COMPLETED: { label: "Completed", background: "var(--glow-coral)", color: "var(--accent-coral)" },
+  CANCELLED: { label: "Cancelled", background: "var(--glass-bg)", color: "var(--text-muted)" },
+};
+
 export function BatchPickerModal({
   membershipId,
   membershipType,
@@ -34,23 +40,34 @@ export function BatchPickerModal({
   const [assign, { isLoading: assigning }] = useAssignMembershipToBatchMutation();
   const [change, { isLoading: changing }] = useChangeBatchMutation();
   const { showToast } = useToast();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    currentBatchId ?? null,
+  );
 
   if (!isOpen) return null;
 
-  const activeBatches =
-    batches?.filter(
-      (b) => b.status === "ACTIVE" && b.id !== currentBatchId,
-    ) ?? [];
   const editing = !currentBatchId ? "Assign" : "Change";
   const busy = assigning || changing;
+
+  function isAssignable(b: MembershipBatch) {
+    return b.status === "ACTIVE" || b.status === "UPCOMING";
+  }
 
   function isFull(b: MembershipBatch) {
     return b.currentMembers >= b.maxMembers;
   }
 
+  // In "Change" mode show only active batches plus the current one (pre-selected);
+  // in "Assign" mode only batches that can be picked.
+  const visibleBatches =
+    batches?.filter((b) =>
+      currentBatchId
+        ? b.status === "ACTIVE" || b.id === currentBatchId
+        : isAssignable(b),
+    ) ?? [];
+
   async function handleSave() {
-    if (!selectedId) return;
+    if (!selectedId || selectedId === currentBatchId) return;
     try {
       if (currentBatchId) {
         await change({
@@ -93,26 +110,32 @@ export function BatchPickerModal({
             {editing} Batch — {customerName}
           </h3>
           <p className="text-xs text-fg-muted mt-0.5">
-            {membershipType} membership · only active batches are available
+            {membershipType} membership ·{" "}
+            {currentBatchId
+              ? "only active batches are shown, current one is selected"
+              : "active and upcoming batches are available"}
           </p>
         </div>
 
         <div className="space-y-3">
           {isLoading ? (
             <SkeletonGlass lines={3} />
-          ) : activeBatches.length > 0 ? (
+          ) : visibleBatches.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
-              {activeBatches.map((b) => {
+              {visibleBatches.map((b) => {
                 const full = isFull(b);
+                const isCurrent = b.id === currentBatchId;
+                const disabled =
+                  full || (!isAssignable(b) && !isCurrent);
                 const selected = selectedId === b.id;
                 return (
                   <button
                     key={b.id}
                     type="button"
-                    disabled={full}
+                    disabled={disabled}
                     onClick={() => setSelectedId(b.id)}
                     className={`relative shrink-0 w-48 p-4 text-left transition-all duration-200 rounded-2xl border cursor-pointer snap-start ${
-                      full
+                      disabled
                         ? "opacity-50 cursor-not-allowed"
                         : selected
                           ? "bg-cyan-400/20 border-cyan-400 ring-2 ring-cyan-400/30"
@@ -121,7 +144,7 @@ export function BatchPickerModal({
                   >
                     <span
                       className={`absolute top-3 right-3 flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all ${
-                        full
+                        disabled
                           ? "border-white/20"
                           : selected
                             ? "border-cyan-400"
@@ -133,14 +156,35 @@ export function BatchPickerModal({
                       )}
                     </span>
                     <p className="text-sm font-bold text-fg pr-5">{b.name}</p>
-                    <p className="text-xs font-mono text-fg-muted mt-1 leading-relaxed">
-                      {b.days?.length > 0
-                        ? b.days.map((d) => d.slice(0, 3)).join(" · ")
-                        : "Days TBD"}
-                      {b.startTime ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}` : ""}
-                      {b.level ? ` · ${batchLabel[b.level] ?? b.level}` : ""}
-                      {b.coach ? ` · ${b.coach}` : ""}
-                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1 text-xs font-mono text-fg-muted leading-relaxed">
+                      {isCurrent && (
+                        <span
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: "var(--glow-aqua)",
+                            color: "var(--accent-aqua)",
+                          }}
+                        >
+                          Current
+                        </span>
+                      )}
+                      {batchStatusTag[b.status] && (
+                        <span
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={batchStatusTag[b.status]}
+                        >
+                          {batchStatusTag[b.status].label}
+                        </span>
+                      )}
+                      <span>
+                        {b.days?.length > 0
+                          ? b.days.map((d) => d.slice(0, 3)).join(" · ")
+                          : "Days TBD"}
+                        {b.startTime ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}` : ""}
+                        {b.level ? ` · ${batchLabel[b.level] ?? b.level}` : ""}
+                        {b.coach ? ` · ${b.coach}` : ""}
+                      </span>
+                    </div>
                     <div className="flex items-center justify-between mt-2">
                       <span
                         className={`text-xs font-bold font-mono ${
@@ -161,7 +205,8 @@ export function BatchPickerModal({
             </div>
           ) : (
             <p className="text-xs text-fg-muted">
-              No other active batches available at the moment.
+              No {currentBatchId ? "active" : "active or upcoming "}batches
+              available at the moment.
             </p>
           )}
         </div>
@@ -174,10 +219,10 @@ export function BatchPickerModal({
             fullWidth
             size="lg"
             loading={busy}
-            disabled={!selectedId}
+            disabled={!selectedId || selectedId === currentBatchId}
             onClick={handleSave}
           >
-            Confirm {editing}
+            {selectedId === currentBatchId ? "Already in This Batch" : `Confirm ${editing}`}
           </PrimaryButton>
         </div>
       </GlassCard>
