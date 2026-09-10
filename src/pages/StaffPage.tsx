@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   useGetStaffQuery,
   useCreateStaffMutation,
@@ -13,6 +13,7 @@ import {
   Input,
   EmptyState,
   SkeletonGlass,
+  CameraCaptureModal,
 } from "@/components/ui";
 import {
   IoPeople,
@@ -24,10 +25,15 @@ import {
   IoCheckmarkCircle,
   IoCloseCircle,
   IoCard,
+  IoCamera,
+  IoPerson,
+  IoImageOutline,
 } from "react-icons/io5";
 import { StaffRole } from "@/types";
 import type { Staff } from "@/types";
 import { IdCardDownloader } from "@/components/IdCardDownloader";
+import { useToast } from "@/components/Toast";
+import { compressImageFile } from "@/lib/utils";
 
 export function StaffPage() {
   const [search, setSearch] = useState("");
@@ -39,6 +45,7 @@ export function StaffPage() {
   const [createStaff] = useCreateStaffMutation();
   const [updateStaff] = useUpdateStaffMutation();
   const [deleteStaff] = useDeleteStaffMutation();
+  const { showToast } = useToast();
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -48,6 +55,12 @@ export function StaffPage() {
   const [role, setRole] = useState<StaffRole>(StaffRole.Coach);
   const [specialization, setSpecialization] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+  const [updatingPhotoFor, setUpdatingPhotoFor] = useState<string | null>(null);
+  const formFileInputRef = useRef<HTMLInputElement>(null);
+  const cardFileInputRef = useRef<HTMLInputElement>(null);
+  const [cardFileStaffId, setCardFileStaffId] = useState<string | null>(null);
 
   function resetForm() {
     setName("");
@@ -55,6 +68,7 @@ export function StaffPage() {
     setRole(StaffRole.Coach);
     setSpecialization("");
     setIsAvailable(true);
+    setPhotoUrl(null);
     setEditingId(null);
     setShowForm(false);
   }
@@ -66,6 +80,7 @@ export function StaffPage() {
     role: StaffRole;
     specialization?: string;
     isAvailable: boolean;
+    photoUrl?: string;
   }) {
     setEditingId(s.id);
     setName(s.name);
@@ -73,27 +88,104 @@ export function StaffPage() {
     setRole(s.role);
     setSpecialization(s.specialization ?? "");
     setIsAvailable(s.isAvailable);
+    setPhotoUrl(s.photoUrl ?? null);
     setShowForm(true);
   }
 
   async function handleSave() {
-    const payload = {
-      name,
-      mobile,
-      role,
-      specialization: specialization || undefined,
-      isAvailable,
-    };
-    if (editingId) {
-      await updateStaff({ id: editingId, data: payload });
-    } else {
-      await createStaff(payload);
+    try {
+      const trimmedName = name.trim();
+      const trimmedMobile = mobile.trim();
+      if (!trimmedName || !trimmedMobile) return;
+
+      const payload: Partial<Staff> = {
+        name: trimmedName,
+        mobile: trimmedMobile,
+        role,
+        specialization: specialization.trim() || undefined,
+        isAvailable,
+      };
+
+      if (editingId) {
+        await updateStaff({
+          id: editingId,
+          data: { ...payload, photoUrl: photoUrl ?? "" },
+        }).unwrap();
+        showToast("success", "Staff member updated successfully");
+      } else {
+        await createStaff({
+          ...payload,
+          photoUrl: photoUrl || undefined,
+        }).unwrap();
+        showToast("success", "Staff member added successfully");
+      }
+      resetForm();
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === "object" && "data" in err && (err as { data?: { message?: string } }).data?.message
+          ? (err as { data: { message: string } }).data.message
+          : "Failed to save staff member";
+      showToast("error", msg);
     }
-    resetForm();
   }
 
   async function handleDelete(id: string) {
-    await deleteStaff(id);
+    try {
+      await deleteStaff(id).unwrap();
+      showToast("success", "Staff member deleted successfully");
+    } catch {
+      showToast("error", "Failed to delete staff member");
+    }
+  }
+
+  async function handleCapturedPhoto(capturedImage: string) {
+    if (updatingPhotoFor) {
+      try {
+        await updateStaff({
+          id: updatingPhotoFor,
+          data: { photoUrl: capturedImage },
+        }).unwrap();
+        showToast("success", "Staff profile photo updated successfully");
+      } catch {
+        showToast("error", "Failed to update profile photo");
+      } finally {
+        setUpdatingPhotoFor(null);
+      }
+    } else {
+      setPhotoUrl(capturedImage);
+    }
+  }
+
+  async function handleFormFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressImageFile(file);
+      setPhotoUrl(dataUrl);
+    } catch {
+      showToast("error", "Could not process selected image");
+    } finally {
+      e.target.value = "";
+    }
+  }
+
+  async function handleCardFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const staffId = cardFileStaffId;
+    if (!file || !staffId) return;
+    try {
+      const dataUrl = await compressImageFile(file);
+      await updateStaff({
+        id: staffId,
+        data: { photoUrl: dataUrl },
+      }).unwrap();
+      showToast("success", "Staff profile photo updated successfully");
+    } catch {
+      showToast("error", "Failed to update profile photo");
+    } finally {
+      e.target.value = "";
+      setCardFileStaffId(null);
+    }
   }
 
   const roleLabels: Record<string, string> = {
@@ -184,6 +276,70 @@ export function StaffPage() {
             </button>
           </div>
           <div className="space-y-4">
+            {/* Staff Profile Photo Section */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border border-white/10 bg-white/5">
+              <div className="relative group shrink-0">
+                {photoUrl ? (
+                  <div className="relative">
+                    <img
+                      src={photoUrl}
+                      alt="Staff Preview"
+                      className="w-20 h-20 rounded-2xl object-cover border-2 border-cyan-400 shadow-md shadow-cyan-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPhotoUrl(null)}
+                      className="absolute -top-1.5 -right-1.5 p-1 rounded-full bg-rose-500 text-white shadow hover:bg-rose-600 transition-colors cursor-pointer"
+                      title="Remove photo"
+                    >
+                      <IoClose size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-cyan-400/10 text-cyan-300 border border-cyan-400/30">
+                    <IoPerson size={32} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 text-center sm:text-left space-y-1">
+                <p className="text-xs font-bold text-fg">Staff Profile Photo</p>
+                <p className="text-[11px] text-fg-muted">
+                  Used in staff directory and generated ID cards
+                </p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUpdatingPhotoFor(null);
+                      setCameraModalOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-linear-to-r from-cyan-400 to-teal-400 shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <IoCamera size={15} />
+                    <span>{photoUrl ? "Retake Photo" : "Take Live Photo"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => formFileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-fg bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <IoImageOutline size={15} />
+                    <span>Upload Image</span>
+                  </button>
+                  {photoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setPhotoUrl(null)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all cursor-pointer"
+                    >
+                      <IoTrash size={13} />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="Full Name"
@@ -294,21 +450,44 @@ export function StaffPage() {
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <div className="flex items-start justify-between mb-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
-                  style={{
-                    background: "var(--glow-aqua)",
-                    color: "var(--accent-aqua)",
-                  }}
-                >
-                  {s.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .slice(0, 2)}
+                <div className="relative group">
+                  {s.photoUrl ? (
+                    <img
+                      src={s.photoUrl}
+                      alt={s.name}
+                      className="w-12 h-12 rounded-2xl object-cover border-2 border-cyan-400/50 shadow-sm"
+                    />
+                  ) : (
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold shadow-sm"
+                      style={{
+                        background: "var(--glow-aqua)",
+                        color: "var(--accent-aqua)",
+                        border: "1px solid var(--glass-border)",
+                      }}
+                    >
+                      {s.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUpdatingPhotoFor(s.id);
+                      setCameraModalOpen(true);
+                    }}
+                    title="Update profile photo"
+                    className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-cyan-500 text-slate-950 flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                  >
+                    <IoCamera size={11} />
+                  </button>
                 </div>
                 <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold"
                   style={{
                     background: "var(--glow-aqua)",
                     color: "var(--accent-aqua)",
@@ -383,16 +562,7 @@ export function StaffPage() {
                   </a>
                   <GhostButton
                     size="sm"
-                    onClick={() =>
-                      handleEdit({
-                        id: s.id,
-                        name: s.name,
-                        mobile: s.mobile,
-                        role: s.role,
-                        specialization: s.specialization,
-                        isAvailable: s.isAvailable,
-                      })
-                    }
+                    onClick={() => handleEdit(s)}
                     className="flex-1"
                   >
                     <IoPencil size={14} /> Edit
@@ -421,6 +591,33 @@ export function StaffPage() {
           }
         />
       )}
+
+      <input
+        ref={formFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFormFileChange}
+      />
+      <input
+        ref={cardFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleCardFileChange}
+      />
+
+      <CameraCaptureModal
+        isOpen={cameraModalOpen}
+        onClose={() => {
+          setCameraModalOpen(false);
+          setUpdatingPhotoFor(null);
+        }}
+        onCapture={handleCapturedPhoto}
+        title={updatingPhotoFor ? "Update Staff Photo" : "Staff Profile Photo"}
+        guideMode="avatar"
+        initialFacingMode="user"
+      />
     </div>
   );
 }

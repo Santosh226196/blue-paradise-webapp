@@ -177,8 +177,35 @@ export function CameraCaptureModal({
 
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setCapturedImage(dataUrl);
+      const rawDataUrl = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 900;
+        const maxHeight = 900;
+        let { width, height } = img;
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          setCapturedImage(canvas.toDataURL("image/jpeg", 0.88));
+        } else {
+          setCapturedImage(rawDataUrl);
+        }
+      };
+      img.onerror = () => setCapturedImage(rawDataUrl);
+      img.src = rawDataUrl;
+
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);

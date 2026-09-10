@@ -87,6 +87,7 @@ function AddTransactionForm({ costume, type, onCancel, onSave }: AddTxnFormProps
   const [customer, setCustomer] = useState<{ id: string; name: string; mobile?: string }>(EMPTY_WALKIN);
   const [walkinName, setWalkinName] = useState("");
   const [walkinMobile, setWalkinMobile] = useState("");
+  const [walkinMobileError, setWalkinMobileError] = useState("");
   const [variantIndex, setVariantIndex] = useState(costume.variants.length > 0 ? 0 : -1);
   const [quantity, setQuantity] = useState("1");
   const [unitPrice, setUnitPrice] = useState(
@@ -125,8 +126,13 @@ function AddTransactionForm({ costume, type, onCancel, onSave }: AddTxnFormProps
 
   async function handleSubmit() {
     setError("");
+    setWalkinMobileError("");
     if (variantIndex < 0) return setError("Select a size / color");
     if (!finalName) return setError("Enter the customer name");
+    if (isWalkIn && walkinMobile.trim() && !/^\d{10}$/.test(walkinMobile.trim())) {
+      setWalkinMobileError("Enter a valid 10-digit mobile number");
+      return;
+    }
     if (!Number.isInteger(qty) || qty < 1) return setError("Quantity must be at least 1");
     if (price < 0) return setError("Enter a valid price");
 
@@ -263,8 +269,12 @@ function AddTransactionForm({ costume, type, onCancel, onSave }: AddTxnFormProps
                   <Input
                     label="Mobile (optional)"
                     value={walkinMobile}
-                    onChange={(e) => setWalkinMobile(e.target.value)}
+                    onChange={(e) => {
+                      setWalkinMobile(e.target.value);
+                      if (walkinMobileError) setWalkinMobileError("");
+                    }}
                     placeholder="10-digit mobile"
+                    error={walkinMobileError}
                   />
                 </div>
               )}

@@ -61,4 +61,27 @@ describe("StaffPage", () => {
     expect(await screen.findByText("No staff members")).toBeInTheDocument();
     expect(screen.getByText("Add your first staff member to get started")).toBeInTheDocument();
   });
+
+  it("renders staff profile photo when photoUrl is present", async () => {
+    const staffWithPhoto = [
+      {
+        id: "s1",
+        name: "Ravi Kumar",
+        mobile: "9876500001",
+        role: "COACH",
+        specialization: "Freestyle",
+        isAvailable: true,
+        photoUrl: "https://example.com/ravi.jpg",
+        joinedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ];
+    mockApi("/staff", staffWithPhoto);
+    renderWithProviders(<StaffPage />, {
+      preloadedState: authenticatedState(),
+    });
+
+    const img = await screen.findByAltText("Ravi Kumar");
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", "https://example.com/ravi.jpg");
+  });
 });

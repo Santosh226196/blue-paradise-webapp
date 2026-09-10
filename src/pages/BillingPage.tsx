@@ -11,7 +11,6 @@ import {
   PrimaryButton,
   GhostButton,
   SearchBar,
-  ServiceCard,
   StepperHeader,
   SkeletonGlass,
   Modal,
@@ -26,10 +25,6 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/Toast";
 import {
-  IoSearch,
-  IoWater,
-  IoFitness,
-  IoTimer,
   IoPersonAdd,
   IoCashOutline,
   IoQrCodeOutline,
@@ -78,6 +73,7 @@ export function BillingPage() {
   useEffect(() => {
     if (preselectedCustomer && !selectedCustomer) {
       setSelectedCustomer(preselectedCustomer);
+      setSelectedService(ServiceType.Membership);
       if (step === 0) setStep(1);
     }
   }, [preselectedCustomer, selectedCustomer, step]);
@@ -170,6 +166,7 @@ export function BillingPage() {
                       key={c.id}
                       onClick={() => {
                         setSelectedCustomer(c);
+                        setSelectedService(ServiceType.Membership);
                         setStep(1);
                         showToast("info", `Selected ${c.name}`);
                       }}
@@ -260,103 +257,53 @@ export function BillingPage() {
                 </GlassCard>
               )}
 
-              <div className="space-y-2.5">
-                <ServiceCard
-                  title="General Membership"
-                  description="Monthly, Quarterly or Yearly full pool access"
-                  amount={formatCurrency(
-                    SERVICE_AMOUNTS[ServiceType.Membership],
-                  )}
-                  icon={<IoWater size={24} />}
-                  selected={selectedService === ServiceType.Membership}
-                  onClick={() => {
-                    setSelectedService(ServiceType.Membership);
-                    setSelectedPlan(null);
-                  }}
-                />
-                <ServiceCard
-                  title="Swimming Coaching"
-                  description="Professional swim instruction & coach sessions"
-                  amount={formatCurrency(SERVICE_AMOUNTS[ServiceType.Coaching])}
-                  icon={<IoFitness size={24} />}
-                  selected={selectedService === ServiceType.Coaching}
-                  onClick={() => {
-                    setSelectedService(ServiceType.Coaching);
-                    setSelectedPlan(null);
-                  }}
-                />
-                <ServiceCard
-                  title="Hourly Swimming Pass"
-                  description="Single 1-hour lane access session"
-                  amount={formatCurrency(
-                    SERVICE_AMOUNTS[ServiceType.HourlySwimming],
-                  )}
-                  icon={<IoTimer size={24} />}
-                  selected={selectedService === ServiceType.HourlySwimming}
-                  onClick={() => {
-                    setSelectedService(ServiceType.HourlySwimming);
-                    setSelectedPlan(null);
-                  }}
-                />
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Choose Membership Plan
+                </p>
+                {plansLoading ? (
+                  <SkeletonGlass lines={2} />
+                ) : plans && plans.length > 0 ? (
+                  <div className="space-y-2">
+                    {plans?.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setSelectedPlan(p)}
+                        className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
+                          selectedPlan?.id === p.id
+                            ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
+                            : "bg-white/5 border-white/10 hover:border-cyan-400/40"
+                        }`}
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-white">
+                            {p.name}
+                          </p>
+                          <p className="text-xs font-mono text-slate-400">
+                            {p.duration}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold font-mono text-cyan-300">
+                          {formatCurrency(p.price)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">
+                    No membership plans configured yet. Add plans in
+                    Membership Plans first.
+                  </p>
+                )}
               </div>
 
-              {selectedService === ServiceType.Membership && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Choose Membership Plan
-                  </p>
-                  {plansLoading ? (
-                    <SkeletonGlass lines={2} />
-                  ) : plans && plans.length > 0 ? (
-                    <div className="space-y-2">
-                      {plans?.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setSelectedPlan(p)}
-                          className={`w-full p-3.5 text-left transition-all duration-200 rounded-2xl border flex items-center justify-between cursor-pointer ${
-                            selectedPlan?.id === p.id
-                              ? "bg-cyan-400/20 border-cyan-400 text-cyan-300"
-                              : "bg-white/5 border-white/10 hover:border-cyan-400/40"
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-bold text-white">
-                              {p.name}
-                            </p>
-                            <p className="text-xs font-mono text-slate-400">
-                              {p.duration}
-                            </p>
-                          </div>
-                          <span className="text-sm font-bold font-mono text-cyan-300">
-                            {formatCurrency(p.price)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400">
-                      No membership plans configured yet. Add plans in
-                      Membership Plans first.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {selectedService && (
+              {selectedPlan && (
                 <PrimaryButton
                   fullWidth
                   size="lg"
-                  disabled={
-                    selectedService === ServiceType.Membership && !selectedPlan
-                  }
                   onClick={() => setStep(2)}
                 >
-                  Continue to Payment —{" "}
-                  {formatCurrency(
-                    selectedService === ServiceType.Membership && selectedPlan
-                      ? selectedPlan.price
-                      : SERVICE_AMOUNTS[selectedService],
-                  )}
+                  Continue to Payment — {formatCurrency(selectedPlan.price)}
                 </PrimaryButton>
               )}
             </div>
