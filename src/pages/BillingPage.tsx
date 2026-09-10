@@ -498,33 +498,6 @@ export function BillingPage() {
                 </div>
               </div>
             </GlassCard>
-
-            <GlassCard>
-              <h3
-                className="text-xs font-bold uppercase tracking-wider mb-3 text-fg-muted"
-              >
-                Service Pricing
-              </h3>
-              <div className="space-y-2">
-                {Object.entries(SERVICE_AMOUNTS).map(([type, amount]) => (
-                  <div
-                    key={type}
-                    className="flex items-center justify-between p-2.5 rounded-lg bg-glass"
-                  >
-                    <span
-                      className="text-xs text-fg-dim"
-                    >
-                      {SERVICE_NAMES[type as ServiceType]}
-                    </span>
-                    <span
-                      className="text-xs font-bold font-mono text-danger"
-                    >
-                      {formatCurrency(amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
           </div>
         )}
       </div>
