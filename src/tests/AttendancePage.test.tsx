@@ -23,7 +23,7 @@ const today = [
     customerName: "Bob Smith",
     checkInTime: "2026-08-29T05:30:00.000Z",
     checkOutTime: "2026-08-29T07:00:00.000Z",
-    visitType: "HOURLY",
+    visitType: "WALK_IN",
   },
 ];
 

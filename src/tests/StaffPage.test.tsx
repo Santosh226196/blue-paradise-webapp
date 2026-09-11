@@ -8,7 +8,7 @@ const staff = [
     id: "s1",
     name: "Ravi Kumar",
     mobile: "9876500001",
-    role: "COACH",
+    role: "MANAGER",
     specialization: "Freestyle",
     isAvailable: true,
     joinedAt: "2026-01-01T00:00:00.000Z",
@@ -35,7 +35,7 @@ describe("StaffPage", () => {
     });
 
     expect(await screen.findByRole("heading", { level: 1, name: "Staff" })).toBeInTheDocument();
-    expect(screen.getByText("Manage coaches and team members")).toBeInTheDocument();
+    expect(screen.getByText("Manage team members and staff")).toBeInTheDocument();
   });
 
   it("renders the list of staff from the API", async () => {
@@ -46,7 +46,7 @@ describe("StaffPage", () => {
 
     expect(await screen.findByText("Ravi Kumar")).toBeInTheDocument();
     expect(screen.getByText("Meera Nair")).toBeInTheDocument();
-    expect(screen.getAllByText("Coach").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Manager").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Lifeguard").length).toBeGreaterThan(0);
     expect(screen.getByText("Available")).toBeInTheDocument();
     expect(screen.getByText("Off Duty")).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe("StaffPage", () => {
         id: "s1",
         name: "Ravi Kumar",
         mobile: "9876500001",
-        role: "COACH",
+        role: "LIFEGUARD",
         specialization: "Freestyle",
         isAvailable: true,
         photoUrl: "https://example.com/ravi.jpg",

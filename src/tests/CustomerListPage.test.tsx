@@ -19,8 +19,6 @@ describe("CustomerListPage", () => {
     expect(screen.getAllByText("Register Member").length).toBeGreaterThan(0);
     expect(screen.getByText("All Members")).toBeInTheDocument();
     expect(screen.getByText("Membership")).toBeInTheDocument();
-    expect(screen.getByText("Coaching")).toBeInTheDocument();
-    expect(screen.getByText("Hourly Pass")).toBeInTheDocument();
   });
 
   it("renders the customer list from the mocked endpoint", async () => {

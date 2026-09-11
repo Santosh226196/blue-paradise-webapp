@@ -77,8 +77,6 @@ export function AttendancePage() {
 
   const visitTypeLabels: Record<string, string> = {
     MEMBERSHIP: "Membership",
-    COACHING: "Coaching",
-    HOURLY: "Hourly",
     WALK_IN: "Walk-in",
   };
 

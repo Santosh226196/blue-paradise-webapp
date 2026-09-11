@@ -17,8 +17,6 @@ const mkBatch = (id: string, name: string, status: string) => ({
   endTime: "08:00",
   level: "BEGINNER",
   ageGroup: "ALL",
-  coachId: null,
-  coach: "",
   maxMembers: 10,
   currentMembers: 0,
   status,

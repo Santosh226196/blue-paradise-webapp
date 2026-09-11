@@ -7,6 +7,7 @@ export function GlassCard({
   padding = true,
   animate = true,
   style,
+  onClick,
 }: GlassCardProps) {
   return (
     <div
@@ -14,9 +15,11 @@ export function GlassCard({
         "liquid-glass relative overflow-hidden",
         padding && "p-6",
         animate && "animate-fade-up",
+        onClick && "cursor-pointer",
         className,
       )}
       style={style}
+      onClick={onClick}
     >
       {children}
     </div>

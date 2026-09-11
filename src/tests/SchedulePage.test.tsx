@@ -16,17 +16,6 @@ const slots = [
     currentBookings: 3,
   },
   {
-    id: "sl2",
-    day: "Monday",
-    startTime: "07:00",
-    endTime: "08:00",
-    type: "COACHING",
-    label: "Beginner Class",
-    coachId: "s1",
-    maxCapacity: 6,
-    currentBookings: 2,
-  },
-  {
     id: "sl3",
     day: "Tuesday",
     startTime: "18:00",
@@ -62,7 +51,6 @@ describe("SchedulePage", () => {
     });
 
     expect(await screen.findByText("Morning Lap Swim")).toBeInTheDocument();
-    expect(await screen.findByText("Beginner Class")).toBeInTheDocument();
     expect(screen.getAllByText("Open Swim").length).toBeGreaterThan(0);
   });
 

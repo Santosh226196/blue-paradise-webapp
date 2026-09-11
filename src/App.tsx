@@ -18,6 +18,7 @@ const CustomerProfilePage = lazy(() => import("./pages/CustomerProfilePage").the
 const BillingPage = lazy(() => import("./pages/BillingPage").then(m => ({ default: m.BillingPage })));
 const BillPreviewPage = lazy(() => import("./pages/BillPreviewPage").then(m => ({ default: m.BillPreviewPage })));
 const ReportsPage = lazy(() => import("./pages/ReportsPage").then(m => ({ default: m.ReportsPage })));
+const AllTransactionsPage = lazy(() => import("./pages/AllTransactionsPage").then(m => ({ default: m.AllTransactionsPage })));
 const TransactionDetailsPage = lazy(() => import("./pages/TransactionDetailsPage").then(m => ({ default: m.TransactionDetailsPage })));
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const MembershipPlansPage = lazy(() => import("./pages/MembershipPlansPage").then(m => ({ default: m.MembershipPlansPage })));
@@ -63,6 +64,7 @@ function AppContent() {
           <Route path="billing/:customerId" element={<Suspense fallback={<RouteSpinner />}><BillingPage /></Suspense>} />
           <Route path="bill/:transactionId" element={<Suspense fallback={<RouteSpinner />}><BillPreviewPage /></Suspense>} />
           <Route path="reports" element={<Suspense fallback={<RouteSpinner />}><ReportsPage /></Suspense>} />
+          <Route path="transactions" element={<Suspense fallback={<RouteSpinner />}><AllTransactionsPage /></Suspense>} />
           <Route path="transactions/:id" element={<Suspense fallback={<RouteSpinner />}><TransactionDetailsPage /></Suspense>} />
           <Route path="settings" element={<Suspense fallback={<RouteSpinner />}><SettingsPage /></Suspense>} />
           <Route path="membership-plans" element={<Suspense fallback={<RouteSpinner />}><MembershipPlansPage /></Suspense>} />

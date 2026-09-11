@@ -11,7 +11,6 @@ import {
   useUpdateMembershipBatchMutation,
   useDeleteMembershipBatchMutation,
 } from "@/store/api/membershipBatchesApi";
-import { useGetStaffQuery } from "@/store/api/staffApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -413,7 +412,6 @@ function BatchesTab({
 }) {
   const { data: batches, isLoading } = useGetMembershipBatchesQuery();
   const { data: plans } = useGetMembershipPlansQuery();
-  const { data: staff } = useGetStaffQuery({ role: "COACH" });
   const [createBatch] = useCreateMembershipBatchMutation();
   const [updateBatch] = useUpdateMembershipBatchMutation();
   const [deleteBatch] = useDeleteMembershipBatchMutation();
@@ -430,8 +428,6 @@ function BatchesTab({
   const [endTime, setEndTime] = useState("");
   const [level, setLevel] = useState<BatchLevel>("BEGINNER");
   const [ageGroup, setAgeGroup] = useState<AgeGroup>("ALL");
-  const [coachId, setCoachId] = useState("");
-  const [coach, setCoach] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
   const [status, setStatus] = useState<BatchStatus>("ACTIVE");
   const [batchError, setBatchError] = useState("");
@@ -447,8 +443,6 @@ function BatchesTab({
     setEndTime("");
     setLevel("BEGINNER");
     setAgeGroup("ALL");
-    setCoachId("");
-    setCoach("");
     setMaxMembers("");
     setStatus("ACTIVE");
     setEditingId(null);
@@ -467,8 +461,6 @@ function BatchesTab({
     endTime?: string;
     level?: BatchLevel;
     ageGroup?: AgeGroup;
-    coachId?: string | null;
-    coach?: string;
     maxMembers: number;
     status: BatchStatus;
   }) {
@@ -483,8 +475,6 @@ function BatchesTab({
     setEndTime(batch.endTime ?? "");
     setLevel(batch.level ?? "BEGINNER");
     setAgeGroup(batch.ageGroup ?? "ALL");
-    setCoachId(batch.coachId ?? "");
-    setCoach(batch.coach ?? "");
     setMaxMembers(String(batch.maxMembers));
     setStatus(batch.status);
     setShowForm(true);
@@ -500,8 +490,6 @@ function BatchesTab({
       endTime,
       level,
       ageGroup,
-      coachId: coachId || null,
-      coach: coachId ? (staff?.find((s) => s.id === coachId)?.name ?? coach) : coach,
       maxMembers: Number(maxMembers),
       status,
     };
@@ -679,34 +667,6 @@ function BatchesTab({
               </div>
             </div>
 
-            {staff && staff.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
-                  Coach
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {staff.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => setCoachId(s.id)}
-                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
-                      style={{
-                        background:
-                          coachId === s.id ? "var(--glow-aqua)" : "var(--glass-bg)",
-                        border: `1.5px solid ${coachId === s.id ? "var(--accent-aqua)" : "var(--glass-border)"}`,
-                        color:
-                          coachId === s.id
-                            ? "var(--accent-aqua)"
-                            : "var(--text-secondary)",
-                      }}
-                    >
-                      {s.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
                 Status
@@ -808,7 +768,7 @@ function BatchesTab({
                     {formatDate(batch.startDate)} — {formatDate(batch.endDate)}
                   </div>
                 ) : null}
-                {(batch.days?.length > 0 || batch.startTime || batch.coach) && (
+                {(batch.days?.length > 0 || batch.startTime) && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {batch.days?.length > 0 && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-glass text-fg-dim">
@@ -828,11 +788,6 @@ function BatchesTab({
                     {batch.ageGroup && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-glass text-fg-dim">
                         {ageGroupLabels[batch.ageGroup]}
-                      </span>
-                    )}
-                    {batch.coach && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-glass text-fg-dim">
-                        {batch.coach}
                       </span>
                     )}
                   </div>
@@ -871,8 +826,6 @@ function BatchesTab({
                         endTime: batch.endTime,
                         level: batch.level,
                         ageGroup: batch.ageGroup,
-                        coachId: batch.coachId,
-                        coach: batch.coach,
                         maxMembers: batch.maxMembers,
                         status: batch.status,
                       })

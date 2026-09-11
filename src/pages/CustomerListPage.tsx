@@ -21,8 +21,6 @@ const filterChips = [
   { key: "ALL", label: "All Members" },
   { key: "NEW", label: "New Members" },
   { key: "MEMBERSHIP", label: "Membership" },
-  { key: "COACHING", label: "Coaching" },
-  { key: "HOURLY_SWIMMING", label: "Hourly Pass" },
 ];
 
 export function CustomerListPage() {

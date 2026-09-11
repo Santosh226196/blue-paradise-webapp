@@ -78,14 +78,14 @@ const operationsNavItems: NavItemData[] = [
     to: "/staff",
     iconOutline: IoFitnessOutline,
     iconFilled: IoFitness,
-    label: "Staff & Coaches",
+    label: "Staff",
   },
-  {
-    to: "/schedule",
-    iconOutline: IoCalendarOutline,
-    iconFilled: IoCalendar,
-    label: "Pool Schedule",
-  },
+  // {
+  //   to: "/schedule",
+  //   iconOutline: IoCalendarOutline,
+  //   iconFilled: IoCalendar,
+  //   label: "Pool Schedule",
+  // },
   {
     to: "/due-payments",
     iconOutline: IoReceiptOutline,

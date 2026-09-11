@@ -7,6 +7,7 @@ import {
   useGetCustomerVisitsQuery,
   useGetCustomerTransactionsQuery,
   useGetCustomerMembershipsQuery,
+  useGetCustomerCostumeTransactionsQuery,
 } from "@/store/api/customersApi";
 import { useRemoveBatchFromMembershipMutation } from "@/store/api/membershipBatchesApi";
 import { useCachedSettings } from "@/store/api/settingsApi";
@@ -23,7 +24,7 @@ import { AssignMembershipModal } from "@/components/AssignMembershipModal";
 import { BatchPickerModal } from "@/components/BatchPickerModal";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { formatCurrency, formatDate, formatDateTime, formatTime12 } from "@/lib/utils";
-import { VisitType, type Membership } from "@/types";
+import { VisitType, type Membership, type CostumeTransaction } from "@/types";
 import {
   IoArrowBack,
   IoCalendar,
@@ -34,7 +35,6 @@ import {
   IoPhonePortrait,
   IoLocationSharp,
   IoWater,
-  IoFitness,
   IoTime,
   IoChevronForward,
   IoWallet,
@@ -46,9 +46,12 @@ import {
   IoPeople,
   IoTrash,
   IoTrashBin,
+  IoShirt,
+  IoCart,
+  IoSwapHorizontal,
 } from "react-icons/io5";
 
-type Tab = "overview" | "visits" | "membership" | "payments";
+type Tab = "overview" | "visits" | "membership" | "payments" | "costumes";
 
 export function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -63,6 +66,7 @@ export function CustomerProfilePage() {
     useGetCustomerTransactionsQuery(id!);
   const { data: memberships, refetch: refetchMemberships } =
     useGetCustomerMembershipsQuery(id!);
+  const { data: costumeTxns } = useGetCustomerCostumeTransactionsQuery(id!);
   const [removeBatchFromMembership] = useRemoveBatchFromMembershipMutation();
   const settings = useCachedSettings();
 
@@ -170,6 +174,12 @@ export function CustomerProfilePage() {
       icon: <IoCard size={16} />,
       count: transactions?.length,
     },
+    {
+      key: "costumes",
+      label: "Costumes",
+      icon: <IoShirt size={16} />,
+      count: costumeTxns?.length,
+    },
   ];
 
   return (
@@ -248,7 +258,7 @@ export function CustomerProfilePage() {
         onConfirm={handleDeleteCustomer}
         variant="confirm"
         title={`Delete ${customer.name}?`}
-        message={`This will permanently remove ${customer.name} along with all visits, memberships, coaching, transactions, and payment history. This action cannot be undone.`}
+        message={`This will permanently remove ${customer.name} along with all visits, memberships, transactions, and payment history. This action cannot be undone.`}
         confirmLabel="Delete Customer"
         cancelLabel="Cancel"
       />
@@ -708,8 +718,7 @@ export function CustomerProfilePage() {
               <div className="space-y-3">
                 {visits?.map((visit, i) => {
                   const isWalkIn =
-                    visit.visitType === VisitType.WalkIn ||
-                    visit.visitType === VisitType.Hourly;
+                    visit.visitType === VisitType.WalkIn;
                   return (
                     <div
                       key={visit.id}
@@ -730,8 +739,6 @@ export function CustomerProfilePage() {
                       >
                         {isWalkIn ? (
                           <IoTime size={16} />
-                        ) : visit.visitType === "COACHING" ? (
-                          <IoFitness size={16} />
                         ) : (
                           <IoWater size={16} />
                         )}
@@ -874,9 +881,6 @@ export function CustomerProfilePage() {
                                   {m.batchSchedule.startTime
                                     ? ` · ${formatTime12(m.batchSchedule.startTime)}–${formatTime12(m.batchSchedule.endTime)}`
                                     : ""}
-                                  {m.batchSchedule.coach
-                                    ? ` · ${m.batchSchedule.coach}`
-                                    : ""}
                                 </p>
                               )}
                             </div>
@@ -1016,8 +1020,155 @@ export function CustomerProfilePage() {
           )}
         </div>
       )}
+
+      {/* ─── Costumes Tab ─── */}
+      {activeTab === "costumes" && (
+        <div className="space-y-3 animate-fade-up">
+          {costumeTxns && costumeTxns.length > 0 ? (
+            <>
+              {/* Summary */}
+              <GlassCard>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                      Purchased
+                    </p>
+                    <p className="text-2xl font-bold font-mono mt-1 text-fg">
+                      {costumeTxns.filter((t) => t.type === "SALE").length}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                      Rented
+                    </p>
+                    <p className="text-2xl font-bold font-mono mt-1 text-fg">
+                      {costumeTxns.filter((t) => t.type === "RENT").length}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                      Total Spent
+                    </p>
+                    <p className="text-2xl font-bold font-mono mt-1 text-danger">
+                      {formatCurrency(
+                        costumeTxns.reduce((s, t) => s + t.totalAmount, 0),
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </GlassCard>
+
+              {costumeTxns.map((txn) => {
+                const chip = costumeTxnStatusChip(txn);
+                return (
+                  <Link
+                    key={txn.id}
+                    to={`/costumes/${txn.costumeId}`}
+                    className="block cursor-pointer"
+                  >
+                    <GlassCard
+                      padding={false}
+                      className="p-4 transition-all duration-200 hover:brightness-110 active:scale-[0.99] group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{
+                            background:
+                              txn.type === "SALE"
+                                ? "var(--glow-aqua)"
+                                : "var(--glow-coral)",
+                            color:
+                              txn.type === "SALE"
+                                ? "var(--accent-aqua)"
+                                : "var(--accent-coral)",
+                          }}
+                        >
+                          {txn.type === "SALE" ? (
+                            <IoCart size={16} />
+                          ) : (
+                            <IoSwapHorizontal size={16} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-fg truncate">
+                              {txn.costumeName}
+                            </p>
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                              style={{ background: chip.bg, color: chip.color }}
+                            >
+                              {chip.label}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-mono text-fg-muted mt-0.5">
+                            {costumeTypeLabel(txn.costumeType)} ·{" "}
+                            {costumeVariantLabel(txn.variant)} · Qty{" "}
+                            {txn.quantity} · {formatDate(txn.createdAt)}
+                          </p>
+                        </div>
+                        <div className="text-right flex items-center gap-2">
+                          <div>
+                            <p className="text-sm font-bold font-mono text-fg">
+                              {formatCurrency(txn.totalAmount)}
+                            </p>
+                            <p className="text-[10px] font-mono text-fg-muted">
+                              @ {formatCurrency(txn.unitPrice)}
+                            </p>
+                          </div>
+                          <IoChevronForward
+                            size={14}
+                            className="transition-transform group-hover:translate-x-0.5 text-fg-muted"
+                          />
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </Link>
+                );
+              })}
+            </>
+          ) : (
+            <EmptyBlock
+              icon={<IoShirt size={32} />}
+              title="No costumes"
+              description="This customer hasn't bought or rented any costumes yet"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
+}
+
+function costumeTypeLabel(type: string): string {
+  switch (type) {
+    case "MENS":
+      return "Men's";
+    case "WOMENS":
+      return "Women's";
+    case "KIDS":
+      return "Kids";
+    default:
+      return "Unisex";
+  }
+}
+
+function costumeVariantLabel(v: { size?: string; color?: string }): string {
+  if (!v?.size) return "N/A";
+  return v.color ? `${v.size} · ${v.color}` : v.size;
+}
+
+function costumeTxnStatusChip(txn: CostumeTransaction): {
+  bg: string;
+  color: string;
+  label: string;
+} {
+  if (txn.type === "SALE")
+    return { bg: "var(--glow-aqua)", color: "var(--accent-aqua)", label: "Sold" };
+  if (txn.status === "ACTIVE")
+    return { bg: "var(--glow-coral)", color: "var(--accent-coral)", label: "Rented" };
+  return { bg: "var(--glass-bg)", color: "var(--text-muted)", label: "Returned" };
 }
 
 function InfoRow({

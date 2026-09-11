@@ -2,7 +2,6 @@ import logoUrl from "@/assets/images/logo.webp";
 import type { Staff } from "@/types";
 
 const ROLE_LABELS: Record<string, string> = {
-  COACH: "Coach",
   LIFEGUARD: "Lifeguard",
   RECEPTIONIST: "Receptionist",
   MANAGER: "Manager",

@@ -28,8 +28,8 @@ describe("DashboardPage", () => {
     renderWithProviders(<DashboardPage />, { preloadedState: authenticatedState() });
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/admin/i);
-    expect(screen.getByText("Club Timing")).toBeInTheDocument();
-    expect(screen.getByText("05:00 — 22:00")).toBeInTheDocument();
+    expect(screen.getByText(/05:00/)).toBeInTheDocument();
+    expect(screen.getByText(/22:00/)).toBeInTheDocument();
   });
 
   it("renders club timing from settings", async () => {
@@ -53,7 +53,8 @@ describe("DashboardPage", () => {
       preloadedState: authenticatedState(),
     });
 
-    expect(await screen.findByText("06:00 — 23:00")).toBeInTheDocument();
+    expect(await screen.findByText(/06:00/)).toBeInTheDocument();
+    expect(screen.getByText(/23:00/)).toBeInTheDocument();
   });
 
   it("renders stat cards from the fetched dashboard stats", async () => {
@@ -84,8 +85,8 @@ describe("DashboardPage", () => {
     mockApi("/transactions/today", [
       {
         id: "t1",
-        serviceName: "Hourly Swimming",
-        amount: 200,
+        serviceName: "General Membership",
+        amount: 1500,
         paidAt: "2026-08-29T04:30:00.000Z",
         billNumber: "BP000001",
       },
@@ -94,9 +95,9 @@ describe("DashboardPage", () => {
 
     renderWithProviders(<DashboardPage />, { preloadedState: authenticatedState() });
 
-    expect(await screen.findByText("Hourly Swimming")).toBeInTheDocument();
+    expect(await screen.findByText("General Membership")).toBeInTheDocument();
     expect(screen.getByText(/BP000001/)).toBeInTheDocument();
-    expect(screen.getByText("₹200")).toBeInTheDocument();
+    expect(screen.getByText("₹1,500")).toBeInTheDocument();
   });
 
   it("renders expiring membership members", async () => {

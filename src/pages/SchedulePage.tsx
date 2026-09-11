@@ -5,7 +5,6 @@ import {
   useUpdateScheduleSlotMutation,
   useDeleteScheduleSlotMutation,
 } from "@/store/api/scheduleApi";
-import { useGetStaffQuery } from "@/store/api/staffApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -21,7 +20,6 @@ import {
   IoPencil,
   IoClose,
   IoWater,
-  IoTime,
   IoPeople,
   IoLayers,
 } from "react-icons/io5";
@@ -45,7 +43,6 @@ export function SchedulePage() {
   const [viewMode, setViewMode] = useState<"week" | "day">("week");
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(getTodayName());
   const { data: allSlots, isLoading: weekLoading } = useGetScheduleQuery({});
-  const { data: coaches } = useGetStaffQuery({ role: "COACH" });
   const [createSlot] = useCreateScheduleSlotMutation();
   const [updateSlot] = useUpdateScheduleSlotMutation();
   const [deleteSlot] = useDeleteScheduleSlotMutation();
@@ -54,10 +51,9 @@ export function SchedulePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [startTime, setStartTime] = useState("06:00");
   const [endTime, setEndTime] = useState("07:00");
-  const [type, setType] = useState<"LANE" | "COACHING" | "OPEN_SWIM">("LANE");
+  const [type, setType] = useState<"LANE" | "OPEN_SWIM">("LANE");
   const [label, setLabel] = useState("");
   const [lane, setLane] = useState("");
-  const [coachId, setCoachId] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("8");
 
   const todayName = getTodayName();
@@ -69,11 +65,10 @@ export function SchedulePage() {
 
   const weekStats = useMemo(() => {
     if (!allSlots)
-      return { total: 0, lanes: 0, coaching: 0, open: 0, totalCapacity: 0 };
+      return { total: 0, lanes: 0, open: 0, totalCapacity: 0 };
     return {
       total: allSlots.length,
       lanes: allSlots.filter((s) => s.type === "LANE").length,
-      coaching: allSlots.filter((s) => s.type === "COACHING").length,
       open: allSlots.filter((s) => s.type === "OPEN_SWIM").length,
       totalCapacity: allSlots.reduce((sum, s) => sum + s.maxCapacity, 0),
     };
@@ -85,7 +80,6 @@ export function SchedulePage() {
     setType("LANE");
     setLabel("");
     setLane("");
-    setCoachId("");
     setMaxCapacity("8");
     setEditingId(null);
     setShowForm(false);
@@ -95,10 +89,9 @@ export function SchedulePage() {
     id: string;
     startTime: string;
     endTime: string;
-    type: "LANE" | "COACHING" | "OPEN_SWIM";
+    type: "LANE" | "OPEN_SWIM";
     label: string;
     lane?: number;
-    coachId?: string;
     maxCapacity: number;
   }) {
     setEditingId(slot.id);
@@ -107,7 +100,6 @@ export function SchedulePage() {
     setType(slot.type);
     setLabel(slot.label);
     setLane(String(slot.lane ?? ""));
-    setCoachId(slot.coachId ?? "");
     setMaxCapacity(String(slot.maxCapacity));
     setShowForm(true);
   }
@@ -120,7 +112,6 @@ export function SchedulePage() {
       type,
       label: label || `${type} Session`,
       lane: lane ? Number(lane) : undefined,
-      coachId: coachId || undefined,
       maxCapacity: Number(maxCapacity),
       currentBookings: 0,
     };
@@ -142,12 +133,6 @@ export function SchedulePage() {
       bg: "var(--glow-aqua)",
       color: "var(--accent-aqua)",
       icon: <IoWater size={14} />,
-    },
-    COACHING: {
-      label: "Coaching",
-      bg: "var(--glow-coral)",
-      color: "var(--accent-coral)",
-      icon: <IoTime size={14} />,
     },
     OPEN_SWIM: {
       label: "Open Swim",
@@ -220,12 +205,6 @@ export function SchedulePage() {
             value: weekStats.lanes,
             icon: <IoWater size={16} />,
             color: "var(--accent-aqua)",
-          },
-          {
-            label: "Coaching",
-            value: weekStats.coaching,
-            icon: <IoTime size={16} />,
-            color: "var(--accent-coral)",
           },
           {
             label: "Open Swim",
@@ -397,8 +376,8 @@ export function SchedulePage() {
               >
                 Session Type
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(["LANE", "COACHING", "OPEN_SWIM"] as const).map((t) => (
+              <div className="grid grid-cols-2 gap-2">
+                {(["LANE", "OPEN_SWIM"] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setType(t)}
@@ -476,44 +455,6 @@ export function SchedulePage() {
                 />
               </div>
             )}
-            {type === "COACHING" && (
-              <div className="space-y-2">
-                <label
-                  className="text-[11px] font-bold uppercase tracking-wider text-fg-muted"
-                >
-                  Coach
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {coaches?.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => setCoachId(c.id)}
-                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
-                      style={{
-                        background:
-                          coachId === c.id
-                            ? "var(--glow-aqua)"
-                            : "var(--glass-bg)",
-                        border: `1.5px solid ${coachId === c.id ? "var(--accent-aqua)" : "var(--glass-border)"}`,
-                        color:
-                          coachId === c.id
-                            ? "var(--accent-aqua)"
-                            : "var(--text-secondary)",
-                      }}
-                    >
-                      {c.name}
-                    </button>
-                  ))}
-                  {(!coaches || coaches.length === 0) && (
-                    <p
-                      className="text-xs text-fg-muted"
-                    >
-                      No coaches. Add staff first.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
             <PrimaryButton onClick={handleSave} fullWidth>
               {editingId ? "Update Slot" : "Create Slot"}
             </PrimaryButton>
@@ -524,7 +465,7 @@ export function SchedulePage() {
       {/* Slots list */}
       {isLoading ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <SkeletonGlass lines={2} />
             <SkeletonGlass lines={2} />
             <SkeletonGlass lines={2} />
@@ -663,7 +604,6 @@ export function SchedulePage() {
                                   type: slot.type,
                                   label: slot.label,
                                   lane: slot.lane,
-                                  coachId: slot.coachId,
                                   maxCapacity: slot.maxCapacity,
                                 })
                               }

@@ -46,13 +46,9 @@ describe("generateBillNumber", () => {
 describe("service helpers", () => {
   it("maps a service type to its display name", () => {
     expect(getServiceName(ServiceType.Membership)).toBe("General Membership");
-    expect(getServiceName(ServiceType.Coaching)).toBe("Coaching");
-    expect(getServiceName(ServiceType.HourlySwimming)).toBe("Hourly Swimming");
   });
 
   it("maps a service type to its amount", () => {
     expect(getServiceAmount(ServiceType.Membership)).toBe(1500);
-    expect(getServiceAmount(ServiceType.Coaching)).toBe(2000);
-    expect(getServiceAmount(ServiceType.HourlySwimming)).toBe(200);
   });
 });

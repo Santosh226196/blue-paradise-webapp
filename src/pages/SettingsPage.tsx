@@ -75,6 +75,9 @@ export function SettingsPage() {
   const scannerInputRef = useRef<HTMLInputElement>(null);
   const [daysOpen, setDaysOpen] = useState<string[]>([]);
   const [holidaysEnabled, setHolidaysEnabled] = useState(false);
+  const [timingSaveResult, setTimingSaveResult] = useState<
+    "success" | "error" | null
+  >(null);
 
   useEffect(() => {
     const club = settings?.clubTiming;
@@ -180,14 +183,20 @@ export function SettingsPage() {
 
   async function handleSaveTiming() {
     const club = settings?.clubTiming;
-    await updateSettings({
-      clubTiming: {
-        openTime: openTime || club?.openTime || "05:00",
-        closeTime: closeTime || club?.closeTime || "22:00",
-        daysOpen: daysOpen.length ? daysOpen : club?.daysOpen ?? ALL_DAYS,
-        holidaysEnabled,
-      },
-    });
+    try {
+      await updateSettings({
+        clubTiming: {
+          openTime: openTime || club?.openTime || "05:00",
+          closeTime: closeTime || club?.closeTime || "22:00",
+          daysOpen: daysOpen.length ? daysOpen : club?.daysOpen ?? ALL_DAYS,
+          holidaysEnabled,
+        },
+      }).unwrap();
+      setTimingSaveResult("success");
+    } catch {
+      setTimingSaveResult("error");
+    }
+    setTimeout(() => setTimingSaveResult(null), 3000);
   }
 
   return (
@@ -554,6 +563,26 @@ export function SettingsPage() {
             >
               Save Timing
             </PrimaryButton>
+            {timingSaveResult && (
+              <p
+                className="mt-3 text-sm text-center font-medium flex items-center justify-center gap-1.5 animate-scale-in"
+                style={{
+                  color:
+                    timingSaveResult === "success"
+                      ? "var(--accent-aqua)"
+                      : "var(--accent-coral)",
+                }}
+              >
+                {timingSaveResult === "success" ? (
+                  <IoCheckmarkCircle size={14} />
+                ) : (
+                  <IoCloseCircle size={14} />
+                )}
+                {timingSaveResult === "success"
+                  ? "Club timing updated successfully!"
+                  : "Failed to update club timing"}
+              </p>
+            )}
           </div>
         </GlassCard>
 
