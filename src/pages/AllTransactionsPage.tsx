@@ -22,6 +22,10 @@ import {
   IoPerson,
   IoCheckmarkCircle,
   IoFunnelOutline,
+  IoSearch,
+  IoCashOutline,
+  IoChevronBack,
+  IoChevronForward,
 } from "react-icons/io5";
 import type { Customer, Transaction } from "@/types";
 
@@ -157,13 +161,36 @@ function DetailRow({
 }
 
 export function AllTransactionsPage() {
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadingTxn, setDownloadingTxn] = useState<Transaction | null>(null);
 
-  const { data: allTxns, isLoading } = useGetTransactionsQuery({ from: fromDate || undefined, to: toDate || undefined });
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchText.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, fromDate, toDate]);
+
+  const { data, isLoading, isFetching } = useGetTransactionsQuery({
+    from: fromDate || undefined,
+    to: toDate || undefined,
+    search: debouncedSearch || undefined,
+    page,
+    limit: 10,
+  });
+
+  // Clamp page if the result set shrinks below the current page (e.g. after deletions).
+  useEffect(() => {
+    if (data && page > data.pages) setPage(data.pages);
+  }, [data, page]);
+
   const { data: customers } = useGetCustomersQuery({});
   const settings = useCachedSettings();
 
@@ -171,36 +198,31 @@ export function AllTransactionsPage() {
     return new Map((customers ?? []).map((c) => [c.id, c]));
   }, [customers]);
 
-  const customerOptions = useMemo(() => {
-    return [...(customers ?? [])].sort((a, b) => a.name.localeCompare(b.name));
-  }, [customers]);
-
-  const filteredTxns = useMemo(() => {
-    if (!allTxns) return [];
-    if (!selectedCustomerId) return allTxns;
-    return allTxns.filter((t) => t.customerId === selectedCustomerId);
-  }, [allTxns, selectedCustomerId]);
+  const txns = data?.items ?? [];
+  const pages = data?.pages ?? 1;
 
   const selectedCustomer = selectedTxn ? customerMap.get(selectedTxn.customerId) : undefined;
-  const downloadingTxn = downloadingId
-    ? allTxns?.find((t) => t.id === downloadingId)
-    : undefined;
   const {
     data: fetchedDownloadingCustomer,
   } = useGetCustomerQuery(downloadingTxn?.customerId ?? "", {
     skip: !downloadingTxn || Boolean(downloadingTxn && customerMap.get(downloadingTxn.customerId)),
   });
   const downloadingCustomer = downloadingTxn
-    ? (downloadingTxn && customerMap.get(downloadingTxn.customerId)) || fetchedDownloadingCustomer
+    ? (customerMap.get(downloadingTxn.customerId)) || fetchedDownloadingCustomer
     : undefined;
 
   function handleClearFilters() {
-    setSelectedCustomerId("");
+    setSearchText("");
     setFromDate("");
     setToDate("");
   }
 
-  const hasFilters = Boolean(selectedCustomerId || fromDate || toDate);
+  function goPage(next: number) {
+    if (next < 1 || next > pages) return;
+    setPage(next);
+  }
+
+  const hasFilters = Boolean(searchText || fromDate || toDate);
 
   return (
     <div className="space-y-6">
@@ -217,36 +239,45 @@ export function AllTransactionsPage() {
             All Transactions
           </h1>
           <p className="text-xs mt-0.5 text-fg-muted">
-            Complete transaction history — filter by customer and date
+            Complete transaction history — search by customer, mobile, or bill number
           </p>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-fg-muted">
-          <IoFunnelOutline size={15} />
-          {filteredTxns.length} of {allTxns?.length ?? 0} txns
+        <div className="hidden sm:flex items-center gap-3 text-xs font-bold text-fg-muted">
+          <div className="flex items-center gap-1.5">
+            <IoFunnelOutline size={15} />
+            {data?.total ?? 0} txns
+          </div>
+          {(data?.totalAmount ?? 0) > 0 && (
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+              style={{ background: "var(--glow-aqua)" }}
+            >
+              <IoCashOutline size={15} className="text-accent" />
+              <span className="font-mono text-accent">{formatCurrency(data?.totalAmount ?? 0)}</span>
+              {(fromDate || toDate) && (
+                <span className="text-[10px] font-semibold text-fg-muted">
+                  ({fromDate || "…"} → {toDate || "…"})
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Filters */}
       <GlassCard className="animate-fade-up">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-          <div className="space-y-1.5">
-            <label htmlFor="customer-filter" className="block text-xs font-bold uppercase tracking-wider text-fg-muted">
-              Customer
+          <div className="sm:col-span-1 space-y-1.5">
+            <label htmlFor="customer-search" className="block text-xs font-bold uppercase tracking-wider text-fg-muted">
+              Search
             </label>
-            <select
-              id="customer-filter"
-              value={selectedCustomerId}
-              onChange={(e) => setSelectedCustomerId(e.target.value)}
-              className="w-full rounded-xl text-sm font-medium min-h-11 px-4 transition-all duration-200 outline-none border border-input-border bg-input focus:border-input-focus focus:bg-glass-hover"
-              style={{ color: "var(--text-primary)" }}
-            >
-              <option value="">All Customers</option>
-              {customerOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} · {c.mobile}
-                </option>
-              ))}
-            </select>
+            <Input
+              id="customer-search"
+              placeholder="Name, mobile, or bill no."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              icon={IoSearch}
+            />
           </div>
 
           <Input
@@ -281,9 +312,10 @@ export function AllTransactionsPage() {
         </h3>
         {isLoading ? (
           <SkeletonGlass lines={4} />
-        ) : filteredTxns.length > 0 ? (
+        ) : txns.length > 0 ? (
+          <>
           <div className="space-y-2">
-            {filteredTxns.map((txn, i) => {
+            {txns.map((txn, i) => {
               const customer = customerMap.get(txn.customerId);
               return (
                 <div
@@ -324,7 +356,7 @@ export function AllTransactionsPage() {
                       title="Download invoice"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setDownloadingId(txn.id);
+                        setDownloadingTxn(txn);
                       }}
                       className="p-2 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
                     >
@@ -335,6 +367,30 @@ export function AllTransactionsPage() {
               );
             })}
           </div>
+
+          <div className="flex items-center justify-between pt-3">
+            <GhostButton
+              size="sm"
+              onClick={() => goPage(page - 1)}
+              disabled={page <= 1 || isFetching}
+            >
+              <IoChevronBack size={14} /> Prev
+            </GhostButton>
+            <p className="text-xs font-mono text-fg-muted">
+              Page {page} of {pages} · {data?.total ?? 0} items
+              {isFetching && (
+                <span className="text-accent ml-1 text-[10px]">loading…</span>
+              )}
+            </p>
+            <GhostButton
+              size="sm"
+              onClick={() => goPage(page + 1)}
+              disabled={page >= pages || isFetching}
+            >
+              Next <IoChevronForward size={14} />
+            </GhostButton>
+          </div>
+          </>
         ) : (
           <div className="text-center py-10">
             <div
@@ -361,7 +417,7 @@ export function AllTransactionsPage() {
           onClose={() => setSelectedTxn(null)}
           onDownload={() => {
             setSelectedTxn(null);
-            setDownloadingId(selectedTxn.id);
+            setDownloadingTxn(selectedTxn);
           }}
         />
       )}
@@ -372,7 +428,7 @@ export function AllTransactionsPage() {
           transaction={downloadingTxn}
           customer={downloadingCustomer}
           settings={settings}
-          onDone={() => setDownloadingId(null)}
+          onDone={() => setDownloadingTxn(null)}
         />
       )}
     </div>
