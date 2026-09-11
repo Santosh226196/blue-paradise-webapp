@@ -1,14 +1,22 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import {
   useGetRevenueReportQuery,
   useGetTransactionListQuery,
 } from "@/store/api/reportsApi";
+import { useGetCostumesStatsQuery } from "@/store/api/costumesApi";
 import { GlassCard, StatCard, SkeletonGlass, GhostButton } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ServiceType } from "@/types";
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  Cell,
+  LabelList,
+  PieChart,
+  Pie,
   XAxis,
   YAxis,
   Tooltip,
@@ -23,11 +31,11 @@ import {
   IoWallet,
   IoDownload,
   IoBarChartOutline,
+  IoShirt,
 } from "react-icons/io5";
 import type { Transaction, ReportSummary } from "@/types";
 
 const periods = [
-  { key: "hourly", label: "Hourly" },
   { key: "daily", label: "Daily" },
   { key: "monthly", label: "Monthly" },
   { key: "yearly", label: "Yearly" },
@@ -35,14 +43,10 @@ const periods = [
 
 const CATEGORY_COLORS: Record<string, string> = {
   [ServiceType.Membership]: "#5FD9D6",
-  [ServiceType.Coaching]: "#FF7A59",
-  [ServiceType.HourlySwimming]: "#146C8E",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
   [ServiceType.Membership]: "Membership",
-  [ServiceType.Coaching]: "Coaching",
-  [ServiceType.HourlySwimming]: "Hourly Swim",
 };
 
 interface TooltipPayloadItem {
@@ -100,9 +104,40 @@ function CustomTooltip({
 
 const SERVICE_ORDER = [
   ServiceType.Membership,
-  ServiceType.Coaching,
-  ServiceType.HourlySwimming,
 ] as const;
+
+const COSTUME_CHART_COLORS = ["#818CF8", "#F472B6"];
+
+interface CostumeTooltipItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+function CostumeTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: CostumeTooltipItem[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="liquid-glass p-4 min-w-36 border border-glass-border-strong">
+      <p className="text-xs font-bold mb-2 text-fg">{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center justify-between gap-4">
+          <span className="text-[11px] text-fg-dim">{entry.name}</span>
+          <span className="text-[11px] font-bold font-mono text-fg">
+            {formatCurrency(entry.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function exportReport(report: ReportSummary, txns: Transaction[] | undefined, period: string) {
   const periodLabel = periods.find((p) => p.key === period)?.label ?? period;
@@ -164,6 +199,14 @@ export function ReportsPage() {
   const { data: txns, isLoading: txnsLoading } = useGetTransactionListQuery({
     period,
   });
+  const { data: costumeStats, isLoading: costumeLoading } = useGetCostumesStatsQuery();
+
+  const costumeChartData = [
+    { name: "Sold", revenue: costumeStats?.totalRevenue ?? 0, items: costumeStats?.totalSoldQty ?? 0 },
+    { name: "Rent", revenue: costumeStats?.totalRentRevenue ?? 0, items: costumeStats?.totalRentQty ?? 0 },
+  ];
+  const costumeTotal = (costumeStats?.totalRevenue ?? 0) + (costumeStats?.totalRentRevenue ?? 0);
+  const hasCostumeRevenue = costumeTotal > 0 || (costumeStats?.totalCostumes ?? 0) > 0;
 
   return (
     <div className="space-y-6">
@@ -373,6 +416,204 @@ export function ReportsPage() {
               )}
             </GlassCard>
 
+            {/* Costumes Revenue */}
+            <GlassCard className="animate-fade-up">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <IoShirt size={16} className="text-fg-muted" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                    Costumes Revenue
+                  </h3>
+                </div>
+                {hasCostumeRevenue && (
+                  <div className="flex items-center gap-4">
+                    {costumeChartData.map((d, i) => (
+                      <div key={d.name} className="flex items-center gap-1.5">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ background: COSTUME_CHART_COLORS[i] }}
+                        />
+                        <span className="text-[10px] font-bold hidden sm:inline text-fg-muted">
+                          {d.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {costumeLoading ? (
+                <SkeletonGlass lines={3} />
+              ) : hasCostumeRevenue ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3 mb-5 sm:max-w-md">
+                    <div
+                      className="p-4 rounded-xl"
+                      style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">
+                        Costumes
+                      </p>
+                      <p className="text-lg font-bold font-mono text-fg mt-1">
+                        {costumeStats?.totalCostumes ?? 0}
+                      </p>
+                    </div>
+                    <div
+                      className="p-4 rounded-xl"
+                      style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">
+                        In Stock
+                      </p>
+                      <p className="text-lg font-bold font-mono text-fg mt-1">
+                        {costumeStats?.totalStock ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="lg:grid lg:grid-cols-2 lg:gap-8 space-y-6 lg:space-y-0">
+                    {/* Revenue Split Donut */}
+                    <div>
+                      <div className="relative h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={costumeChartData}
+                              dataKey="revenue"
+                              nameKey="name"
+                              innerRadius={62}
+                              outerRadius={88}
+                              paddingAngle={4}
+                              cornerRadius={8}
+                              stroke="none"
+                            >
+                              {costumeChartData.map((_, i) => (
+                                <Cell key={i} fill={COSTUME_CHART_COLORS[i]} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<CostumeTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">
+                            Total
+                          </span>
+                          <span className="text-lg font-bold font-mono text-fg">
+                            {formatCurrency(costumeTotal)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {costumeChartData.map((d, i) => (
+                          <div key={d.name} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ background: COSTUME_CHART_COLORS[i] }}
+                              />
+                              <span className="font-bold text-fg">{d.name}</span>
+                              <span className="text-fg-muted">
+                                {d.items} items
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-[11px] font-bold font-mono text-fg-muted">
+                                {costumeTotal > 0 ? Math.round((d.revenue / costumeTotal) * 100) : 0}%
+                              </span>
+                              <span className="text-[11px] font-bold font-mono text-fg">
+                                {formatCurrency(d.revenue)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Revenue vs Items Bars */}
+                    <div className="h-64 sm:h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={costumeChartData}
+                          margin={{ top: 24, right: 12, left: 0, bottom: 24 }}
+                        >
+                          <defs>
+                            <linearGradient id="g-sold" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={COSTUME_CHART_COLORS[0]} stopOpacity={0.95} />
+                              <stop offset="95%" stopColor={COSTUME_CHART_COLORS[0]} stopOpacity={0.3} />
+                            </linearGradient>
+                            <linearGradient id="g-rent" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={COSTUME_CHART_COLORS[1]} stopOpacity={0.95} />
+                              <stop offset="95%" stopColor={COSTUME_CHART_COLORS[1]} stopOpacity={0.3} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="var(--glass-border)"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{
+                              fill: "var(--text-muted)",
+                              fontSize: 11,
+                              fontWeight: 600,
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                            dy={8}
+                          />
+                          <YAxis
+                            tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                            dx={-4}
+                          />
+                          <Tooltip
+                            content={<CostumeTooltip />}
+                            cursor={{ fill: "var(--glass-hover)" }}
+                          />
+                          <Bar
+                            dataKey="revenue"
+                            name="Revenue"
+                            radius={[8, 8, 0, 0]}
+                            maxBarSize={72}
+                          >
+                            {costumeChartData.map((_, i) => (
+                              <Cell key={i} fill={`url(#${i === 0 ? "g-sold" : "g-rent"})`} />
+                            ))}
+                            <LabelList
+                              dataKey="revenue"
+                              position="top"
+                              formatter={(v) => formatCurrency(Number(v ?? 0))}
+                              style={{ fill: "var(--text-secondary)", fontSize: 11, fontWeight: 700 }}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center text-center px-6 rounded-xl"
+                  style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}
+                >
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                    style={{ background: "var(--glow-aqua)", color: "var(--accent-aqua)" }}
+                  >
+                    <IoShirt size={24} />
+                  </div>
+                  <h3 className="text-sm font-bold text-fg mb-1">
+                    No costume revenue yet
+                  </h3>
+                  <p className="text-xs max-w-xs text-fg-dim">
+                    Add costumes and record sales or rentals from the Costumes
+                    screen to see revenue here.
+                  </p>
+                </div>
+              )}
+            </GlassCard>
+
             <div className="lg:grid lg:grid-cols-5 lg:gap-6 space-y-6 lg:space-y-0">
               {/* Revenue by Category */}
               <GlassCard className="lg:col-span-2">
@@ -436,9 +677,16 @@ export function ReportsPage() {
 
               {/* Recent Transactions */}
               <GlassCard className="lg:col-span-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-4 text-fg-muted">
-                  Recent Transactions
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                    Recent Transactions
+                  </h3>
+                  <Link to="/transactions">
+                    <GhostButton size="sm">
+                      View All
+                    </GhostButton>
+                  </Link>
+                </div>
                 {txnsLoading ? (
                   <SkeletonGlass lines={3} />
                 ) : txns && txns.length > 0 ? (
@@ -463,11 +711,7 @@ export function ReportsPage() {
                             }}
                           >
                             <span className="text-xs font-bold">
-                              {txn.serviceType === ServiceType.Membership
-                                ? "M"
-                                : txn.serviceType === ServiceType.Coaching
-                                  ? "C"
-                                  : "H"}
+                              M
                             </span>
                           </div>
                           <div>

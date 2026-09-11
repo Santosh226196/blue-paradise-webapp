@@ -204,7 +204,7 @@ graph LR
         MainMenu --> Reports["📈 Reports"]
         OpsMenu --> Attendance["👟 Attendance"]
         OpsMenu --> Plans["💳 Membership Plans"]
-        OpsMenu --> Staff["🏋️ Staff & Coaches"]
+        OpsMenu --> Staff["🏋️ Staff"]
         OpsMenu --> Schedule["📅 Pool Schedule"]
         OpsMenu --> DuePayments["🧾 Due Payments"]
         OpsMenu --> Announcements["📢 Announcements"]
@@ -294,7 +294,7 @@ DashboardPage
 CustomerListPage
   │
   ├─ Search bar (name, phone, Aadhaar)
-  ├─ Filter chips: All | Membership | Coaching | Hourly Pass
+  ├─ Filter chips: All | New Members | Membership
   │
   ├─ GET /customers?search=&type=
   │
@@ -371,12 +371,8 @@ flowchart TD
 
     SelectService --> SvcCards{"Service Type"}
     SvcCards -->|Membership| Price1["General Membership ₹1,500"]
-    SvcCards -->|Coaching| Price2["Swimming Coaching ₹2,000"]
-    SvcCards -->|Hourly| Price3["Hourly Swimming ₹200"]
 
     Price1 --> Step3["Step 3: Collect Payment"]
-    Price2 --> Step3
-    Price3 --> Step3
 
     Step3 --> Summary["Order Summary Card"]
     Summary --> PayMethod{"Payment Method"}
@@ -421,9 +417,7 @@ BillingPage
   │  Step 2: Select Service
   │    ├─ Shows selected customer card (with "Change" button)
   │    ├─ Service cards:
-  │    │     ├─ General Membership ── ₹1,500
-  │    │     ├─ Swimming Coaching ── ₹2,000
-  │    │     └─ Hourly Swimming ──── ₹200
+  │    │     └─ General Membership ── ₹1,500
   │    └─ "Continue to Payment" → step 3
   │
   │  Step 3: Collect Payment
@@ -460,14 +454,12 @@ BillPreviewPage
 ```
 ReportsPage
   │
-  ├─ Period filters: Hourly | Daily | Monthly | Yearly
+  ├─ Period filters: Daily | Monthly | Yearly
   │
-  ├─ Stats row: Total Revenue | Transactions | Avg. Sale | Revenue/Day
+  ├─ Stats row: Total Revenue | Transactions | Avg. Sale | Revenue/Period
   │
   ├─ Revenue Trend (stacked bar chart via Recharts)
-  │     ├─ Membership (teal)
-  │     ├─ Coaching (coral)
-  │     └─ Hourly Swim (dark blue)
+  │     └─ Membership (teal)
   │
   ├─ Revenue by Category (progress bars with % breakdown)
   │
@@ -500,13 +492,9 @@ flowchart TD
     SearchC --> Camera["📸 Camera Capture (optional)"]
     Camera --> VisitType{"Visit Type"}
     VisitType -->|Membership| VT1["Membership"]
-    VisitType -->|Coaching| VT2["Coaching"]
-    VisitType -->|Hourly| VT3["Hourly"]
     VisitType -->|Walk-in| VT4["Walk-in"]
 
     VT1 --> Lane["Lane Allocation (1-8, optional)"]
-    VT2 --> Lane
-    VT3 --> Lane
     VT4 --> Lane
 
     Lane --> ConfirmCheckin["Confirm Check In"]
@@ -543,7 +531,7 @@ AttendancePage
   ├─ "Check In" button → opens check-in form:
   │     ├─ Search & select customer
   │     ├─ Camera capture (optional verification photo)
-  │     ├─ Visit type: Membership | Coaching | Hourly | Walk-in
+  │     ├─ Visit type: Membership | Walk-in
   │     ├─ Lane allocation (1-8, optional)
   │     └─ POST /attendance/check-in
   │
@@ -554,12 +542,12 @@ AttendancePage
   └─ Today's Attendance history
 ```
 
-### 5.10 Staff & Coaches (`/staff`)
+### 5.10 Staff (`/staff`)
 
 ```
 StaffPage
   │
-  ├─ Staff roles: Coach | Lifeguard | Receptionist | Manager
+  ├─ Staff roles: Lifeguard | Receptionist | Manager
   │
   ├─ Staff directory (cards with photo, name, role, specialization)
   │
@@ -603,14 +591,13 @@ SchedulePage
   │
   ├─ Slot types:
   │     ├─ Lane (teal) ── lane number + capacity
-  │     ├─ Coaching (coral) ── assigned coach + capacity
   │     └─ Open Swim (blue) ── general capacity
   │
-  ├─ Stats: Total Slots | Lane Sessions | Coaching | Open Swim
+  ├─ Stats: Total Slots | Lane Sessions | Open Swim
   │
   ├─ "Add Slot" form:
   │     ├─ Day, start/end time, type
-  │     ├─ Lane number / Coach (based on type)
+  │     ├─ Lane number (for lane sessions)
   │     ├─ Max capacity
   │     └─ POST /schedule (create) or PUT (update)
   │
@@ -836,7 +823,7 @@ graph LR
         Reports["/reports<br/>Reports & Analytics"]
         Transaction["/transactions/:id<br/>Transaction Details"]
         Attendance["/attendance<br/>Live Attendance"]
-        Staff["/staff<br/>Staff & Coaches"]
+        Staff["/staff<br/>Staff"]
         Plans["/membership-plans<br/>Membership Plans"]
         Schedule["/schedule<br/>Pool Schedule"]
         DuePay["/due-payments<br/>Due Payments"]
@@ -881,7 +868,7 @@ graph LR
 | `/reports`                | Reports & Analytics   | Yes           |
 | `/transactions/:id`       | Transaction Details   | Yes           |
 | `/attendance`             | Live Attendance       | Yes           |
-| `/staff`                  | Staff & Coaches       | Yes           |
+| `/staff`                  | Staff       | Yes           |
 | `/membership-plans`       | Membership Plans      | Yes           |
 | `/schedule`               | Pool Schedule         | Yes           |
 | `/due-payments`           | Due Payments          | Yes           |
@@ -984,7 +971,7 @@ graph TB
 
     subgraph Ops["Operations"]
         Attendance["👟 Attendance"]
-        Staff["🏋️ Staff & Coaches"]
+        Staff["🏋️ Staff"]
         Plans["💳 Membership Plans"]
         Schedule["📅 Pool Schedule"]
         Announcements["📢 Announcements"]

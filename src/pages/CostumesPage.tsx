@@ -483,15 +483,12 @@ export function CostumesPage() {
               <GlassCard
                 key={c.id}
                 padding={false}
-                className="p-5 animate-fade-up"
+                className="p-5 animate-fade-up hover:brightness-110 active:scale-[0.99] transition-all duration-200"
                 style={{ animationDelay: `${i * 0.05}s` }}
+                onClick={() => navigate(`/costumes/${c.id}`)}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <button
-                    onClick={() => navigate(`/costumes/${c.id}`)}
-                    className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
-                    title="View details"
-                  >
+                  <div className="flex items-center gap-3 min-w-0 flex-1 text-left">
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                       style={{ background: chip.bg, color: chip.color }}
@@ -508,14 +505,23 @@ export function CostumesPage() {
                         {variantCount} size{variantCount === 1 ? "" : "s"}
                       </p>
                     </div>
-                  </button>
+                  </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <GhostButton size="sm" onClick={() => handleEdit(c)}>
+                    <GhostButton
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(c);
+                      }}
+                    >
                       <IoPencil size={14} />
                     </GhostButton>
                     <GhostButton
                       size="sm"
-                      onClick={() => handleDelete(c.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(c.id);
+                      }}
                       className="text-danger"
                     >
                       <IoTrash size={14} />

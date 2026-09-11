@@ -48,6 +48,7 @@ describe("CustomerProfilePage", () => {
     mockApi("/customers/c1/visits", []);
     mockApi("/customers/c1/transactions", []);
     mockApi("/customers/c1/memberships", []);
+    mockApi("/customers/c1/costume-transactions", []);
     mockApi("/customers/c1", customer);
     mockApi("/settings", settings);
 
@@ -85,9 +86,9 @@ describe("CustomerProfilePage", () => {
         id: "t1",
         billNumber: "BP000001",
         customerId: "c1",
-        serviceType: "HOURLY_SWIMMING",
-        serviceName: "Hourly Swimming",
-        amount: 200,
+        serviceType: "MEMBERSHIP",
+        serviceName: "General Membership",
+        amount: 2500,
         paymentMethod: "CASH",
         paidAt: "2026-08-28T10:00:00.000Z",
         createdAt: "2026-08-28T10:00:00.000Z",
@@ -104,6 +105,7 @@ describe("CustomerProfilePage", () => {
         status: "ACTIVE",
       },
     ]);
+    mockApi("/customers/c1/costume-transactions", []);
     mockApi("/customers/c1", customer);
     mockApi("/settings", settings);
 
@@ -121,9 +123,9 @@ describe("CustomerProfilePage", () => {
     expect(screen.getAllByText("₹1,500").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("button", { name: /Payments/ }));
-    expect(await screen.findByText("Hourly Swimming")).toBeInTheDocument();
+    expect(await screen.findByText("General Membership")).toBeInTheDocument();
     expect(screen.getByText(/BP000001/)).toBeInTheDocument();
-    expect(screen.getAllByText("₹200").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("₹2,500").length).toBeGreaterThan(0);
   });
 
   it("renders empty states when memberships, visits, and transactions are empty", async () => {
@@ -131,6 +133,7 @@ describe("CustomerProfilePage", () => {
     mockApi("/customers/c1/visits", []);
     mockApi("/customers/c1/transactions", []);
     mockApi("/customers/c1/memberships", []);
+    mockApi("/customers/c1/costume-transactions", []);
     mockApi("/customers/c1", customer);
     mockApi("/settings", settings);
 
@@ -146,5 +149,60 @@ describe("CustomerProfilePage", () => {
     await user.click(screen.getByRole("button", { name: /Payments/ }));
     expect(await screen.findByText("No payments")).toBeInTheDocument();
     expect(screen.getByText("This customer hasn't made any payments yet")).toBeInTheDocument();
+  });
+
+  it("renders bought and rented costumes in the Costumes tab", async () => {
+    const user = userEvent.setup();
+    mockApi("/customers/c1/visits", []);
+    mockApi("/customers/c1/transactions", []);
+    mockApi("/customers/c1/memberships", []);
+    mockApi("/customers/c1/costume-transactions", [
+      {
+        id: "ct1",
+        costumeId: "c22",
+        costumeName: "Classic Swim Trunks",
+        costumeType: "MENS",
+        variant: { size: "M", color: "Navy" },
+        type: "SALE",
+        customerId: "c1",
+        customerName: "Aarav Patel",
+        quantity: 2,
+        unitPrice: 500,
+        totalAmount: 1000,
+        status: "COMPLETED",
+        createdAt: "2026-08-28T10:00:00.000Z",
+      },
+      {
+        id: "ct2",
+        costumeId: "c23",
+        costumeName: "Bikini Set",
+        costumeType: "WOMENS",
+        variant: { size: "S", color: "Teal" },
+        type: "RENT",
+        customerId: "c1",
+        customerName: "Aarav Patel",
+        quantity: 1,
+        unitPrice: 150,
+        totalAmount: 150,
+        status: "ACTIVE",
+        createdAt: "2026-08-29T10:00:00.000Z",
+      },
+    ]);
+    mockApi("/customers/c1", customer);
+    mockApi("/settings", settings);
+
+    renderWithProviders(<ProfileRoute />, {
+      preloadedState: authenticatedState(),
+      initialEntries: ["/customers/c1"],
+    });
+
+    await user.click(await screen.findByRole("button", { name: /Costumes/ }));
+
+    expect(await screen.findByText("Classic Swim Trunks")).toBeInTheDocument();
+    expect(screen.getByText("Bikini Set")).toBeInTheDocument();
+    expect(screen.getByText("Sold")).toBeInTheDocument();
+    expect(screen.getAllByText("Rented").length).toBeGreaterThan(0);
+    expect(screen.getByText("₹1,000")).toBeInTheDocument();
+    expect(screen.getByText("₹150")).toBeInTheDocument();
   });
 });

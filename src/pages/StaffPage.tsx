@@ -52,7 +52,7 @@ export function StaffPage() {
   const [downloadFor, setDownloadFor] = useState<Staff | null>(null);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
-  const [role, setRole] = useState<StaffRole>(StaffRole.Coach);
+  const [role, setRole] = useState<StaffRole>(StaffRole.Lifeguard);
   const [specialization, setSpecialization] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -65,7 +65,7 @@ export function StaffPage() {
   function resetForm() {
     setName("");
     setMobile("");
-    setRole(StaffRole.Coach);
+    setRole(StaffRole.Lifeguard);
     setSpecialization("");
     setIsAvailable(true);
     setPhotoUrl(null);
@@ -189,7 +189,6 @@ export function StaffPage() {
   }
 
   const roleLabels: Record<string, string> = {
-    COACH: "Coach",
     LIFEGUARD: "Lifeguard",
     RECEPTIONIST: "Receptionist",
     MANAGER: "Manager",
@@ -221,7 +220,7 @@ export function StaffPage() {
             Staff
           </h1>
           <p className="text-sm mt-0.5 text-fg-muted">
-            Manage coaches and team members
+            Manage team members and staff
           </p>
         </div>
         <PrimaryButton

@@ -297,7 +297,6 @@ const planDurationLabels: Record<string, string> = {
                                 ? ` · ${formatTime12(b.startTime)}–${formatTime12(b.endTime)}`
                                 : ""}
                               {` · ${batchLabel[b.level] ?? b.level}`}
-                              {b.coach ? ` · ${b.coach}` : ""}
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-2">

@@ -69,18 +69,22 @@ export function DashboardPage() {
   const { data: settings } = useGetSettingsQuery();
 
   const timing = settings?.clubTiming;
-  const openTime = timing?.openTime ?? "05:00";
-  const closeTime = timing?.closeTime ?? "22:00";
+  const displayOpenTime = timing?.openTime ?? "05:00";
+  const displayCloseTime = timing?.closeTime ?? "22:00";
+  const mappedDaysOpen = timing?.daysOpen ?? ALL_DAYS;
   const todayName = new Date().toLocaleDateString("en-US", {
     weekday: "long",
   });
-  const isOpenToday = (timing?.daysOpen ?? ALL_DAYS).includes(todayName);
+  const isOpenToday = mappedDaysOpen.includes(todayName);
+  const sortedDaysOpen = ALL_DAYS.filter((d) =>
+    mappedDaysOpen.includes(d),
+  );
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const isOpenNow =
     isOpenToday &&
-    nowMinutes >= toMinutes(openTime) &&
-    nowMinutes <= toMinutes(closeTime);
+    nowMinutes >= toMinutes(displayOpenTime) &&
+    nowMinutes <= toMinutes(displayCloseTime);
 
   const greeting = getGreeting();
 
@@ -104,41 +108,54 @@ export function DashboardPage() {
         </p>
       </div>
 
-      {/* Club Timing */}
-      <GlassCard padding={false} className="p-4 animate-fade-up stagger-1">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{
-              background: "var(--glow-aqua)",
-              color: "var(--accent-aqua)",
-            }}
-          >
-            <IoTime size={18} />
-          </div>
-          <div className="flex-1">
-            <p
-              className="text-xs font-bold uppercase tracking-wider text-fg-muted"
-            >
-              Club Timing
-            </p>
-            <p
-              className="text-sm font-bold font-mono text-fg"
-            >
-              {openTime} — {closeTime}
-            </p>
-          </div>
-          <span
-            className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
-            style={{
-              background: isOpenNow ? "var(--glow-aqua)" : "var(--glow-coral)",
-              color: isOpenNow ? "var(--accent-aqua)" : "var(--accent-coral)",
-            }}
-          >
-            {isOpenNow ? "Open Now" : "Closed"}
-          </span>
+      {/* Club Timing & Operating Days */}
+      <div
+        className="flex items-center gap-4 p-4 rounded-2xl animate-fade-up stagger-1"
+        style={{
+          background: "var(--glass-bg)",
+          border: "1px solid var(--glass-border)",
+        }}
+      >
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+          style={{
+            background: "var(--glow-aqua)",
+            color: "var(--accent-aqua)",
+          }}
+        >
+          <IoTime size={20} />
         </div>
-      </GlassCard>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-bold font-mono text-fg">
+              {displayOpenTime} — {displayCloseTime}
+            </p>
+            <span
+              className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase shrink-0"
+              style={{
+                background: isOpenNow ? "var(--glow-aqua)" : "var(--glow-coral)",
+                color: isOpenNow ? "var(--accent-aqua)" : "var(--accent-coral)",
+              }}
+            >
+              {isOpenNow ? "Open" : "Closed"}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5">
+            {sortedDaysOpen.map((day, i) => (
+              <span
+                key={day}
+                className="text-[10px] font-bold"
+                style={{ color: "var(--accent-aqua)" }}
+              >
+                {day.slice(0, 3)}
+                {i < sortedDaysOpen.length - 1 && (
+                  <span className="text-fg-dim ml-2">·</span>
+                )}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {statsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

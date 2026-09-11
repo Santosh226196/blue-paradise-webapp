@@ -1,7 +1,5 @@
 export const ServiceType = {
   Membership: "MEMBERSHIP",
-  Coaching: "COACHING",
-  HourlySwimming: "HOURLY_SWIMMING",
 } as const;
 export type ServiceType = (typeof ServiceType)[keyof typeof ServiceType];
 
@@ -34,13 +32,6 @@ export interface ExpiringMembership {
   daysLeft: number;
 }
 
-export const CoachingType = {
-  Beginner: "BEGINNER",
-  Intermediate: "INTERMEDIATE",
-  Advanced: "ADVANCED",
-} as const;
-export type CoachingType = (typeof CoachingType)[keyof typeof CoachingType];
-
 export const Gender = {
   Male: "MALE",
   Female: "FEMALE",
@@ -51,8 +42,6 @@ export type Gender = (typeof Gender)[keyof typeof Gender];
 export const VisitType = {
   WalkIn: "WALK_IN",
   Membership: "MEMBERSHIP",
-  Coaching: "COACHING",
-  Hourly: "HOURLY",
 } as const;
 export type VisitType = (typeof VisitType)[keyof typeof VisitType];
 
@@ -90,7 +79,6 @@ export interface Membership {
     days: string[];
     startTime: string;
     endTime: string;
-    coach: string;
     level: string;
   } | null;
   membershipType: MembershipType;
@@ -99,16 +87,6 @@ export interface Membership {
   amount: number;
   totalSessions?: number | null;
   usedSessions?: number;
-  status: "ACTIVE" | "EXPIRED" | "CANCELLED";
-}
-
-export interface Coaching {
-  id: string;
-  customerId: string;
-  coachingType: CoachingType;
-  startDate: string;
-  endDate: string;
-  amount: number;
   status: "ACTIVE" | "EXPIRED" | "CANCELLED";
 }
 
@@ -152,14 +130,10 @@ export interface AuthState {
 
 export const SERVICE_NAMES: Record<ServiceType, string> = {
   [ServiceType.Membership]: "General Membership",
-  [ServiceType.Coaching]: "Coaching",
-  [ServiceType.HourlySwimming]: "Hourly Swimming",
 };
 
 export const SERVICE_AMOUNTS: Record<ServiceType, number> = {
   [ServiceType.Membership]: 1500,
-  [ServiceType.Coaching]: 2000,
-  [ServiceType.HourlySwimming]: 200,
 };
 
 export interface MembershipPlan {
@@ -201,8 +175,6 @@ export interface MembershipBatch {
   endTime: string;
   level: BatchLevel;
   ageGroup: AgeGroup;
-  coachId?: string | null;
-  coach: string;
   maxMembers: number;
   currentMembers: number;
   status: "ACTIVE" | "UPCOMING" | "COMPLETED" | "CANCELLED";
@@ -235,7 +207,6 @@ export interface ActiveBatchForCustomer {
   days: string[];
   startTime: string;
   endTime: string;
-  coach: string;
   level: string;
   planName: string;
   startDate: string;
@@ -244,7 +215,6 @@ export interface ActiveBatchForCustomer {
 }
 
 export const StaffRole = {
-  Coach: "COACH",
   Lifeguard: "LIFEGUARD",
   Receptionist: "RECEPTIONIST",
   Manager: "MANAGER",
@@ -302,10 +272,9 @@ export interface ScheduleSlot {
   day: DayOfWeek;
   startTime: string;
   endTime: string;
-  type: "LANE" | "COACHING" | "OPEN_SWIM";
+  type: "LANE" | "OPEN_SWIM";
   label: string;
   lane?: number;
-  coachId?: string;
   maxCapacity: number;
   currentBookings: number;
 }
@@ -433,6 +402,7 @@ export interface GlassCardProps {
   padding?: boolean;
   animate?: boolean;
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {

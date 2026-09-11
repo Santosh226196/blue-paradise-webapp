@@ -1,11 +1,11 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { Customer, Visit, Membership, Coaching, Transaction, ActiveBatchForCustomer } from "@/types";
+import type { Customer, Visit, Membership, Transaction, ActiveBatchForCustomer, CostumeTransaction } from "@/types";
 import { baseQueryFor } from "./base";
 
 export const customersApi = createApi({
   reducerPath: "customersApi",
   baseQuery: baseQueryFor("/customers"),
-  tagTypes: ["Customer", "Visit", "Membership", "Coaching"],
+  tagTypes: ["Customer", "Visit", "Membership"],
   endpoints: (builder) => ({
     getCustomers: builder.query<Customer[], { search?: string; type?: string }>({
       query: (params) => ({ url: "/", params }),
@@ -43,12 +43,12 @@ export const customersApi = createApi({
       query: (customerId) => `/${customerId}/batches`,
       providesTags: ["Membership"],
     }),
-    getCustomerCoaching: builder.query<Coaching[], string>({
-      query: (customerId) => `/${customerId}/coaching`,
-      providesTags: ["Coaching"],
-    }),
     getCustomerTransactions: builder.query<Transaction[], string>({
       query: (customerId) => `/${customerId}/transactions`,
+      providesTags: [],
+    }),
+    getCustomerCostumeTransactions: builder.query<CostumeTransaction[], string>({
+      query: (customerId) => `/${customerId}/costume-transactions`,
       providesTags: [],
     }),
   }),
@@ -64,6 +64,6 @@ export const {
   useGetCustomerVisitsQuery,
   useGetCustomerMembershipsQuery,
   useGetCustomerBatchesQuery,
-  useGetCustomerCoachingQuery,
   useGetCustomerTransactionsQuery,
+  useGetCustomerCostumeTransactionsQuery,
 } = customersApi;
