@@ -5,7 +5,7 @@ import {
   useGetTransactionListQuery,
 } from "@/store/api/reportsApi";
 import { useGetCostumesStatsQuery } from "@/store/api/costumesApi";
-import { GlassCard, StatCard, SkeletonGlass, GhostButton } from "@/components/ui";
+import { GlassCard, StatCard, SkeletonGlass, GhostButton, Input } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ServiceType } from "@/types";
 import {
@@ -32,21 +32,27 @@ import {
   IoDownload,
   IoBarChartOutline,
   IoShirt,
+  IoCloseCircle,
 } from "react-icons/io5";
 import type { Transaction, ReportSummary } from "@/types";
 
 const periods = [
-  { key: "daily", label: "Daily" },
-  { key: "monthly", label: "Monthly" },
-  { key: "yearly", label: "Yearly" },
+  { key: "all", label: "All Time" },
+  { key: "week", label: "Last 7 Days" },
+  { key: "month", label: "This Month" },
+  { key: "custom", label: "Custom Date Range" },
 ];
+
+const COSTUME_CATEGORY = "COSTUME";
 
 const CATEGORY_COLORS: Record<string, string> = {
   [ServiceType.Membership]: "#5FD9D6",
+  [COSTUME_CATEGORY]: "#818CF8",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
   [ServiceType.Membership]: "Membership",
+  [COSTUME_CATEGORY]: "Costume",
 };
 
 interface TooltipPayloadItem {
@@ -102,8 +108,9 @@ function CustomTooltip({
   );
 }
 
-const SERVICE_ORDER = [
+const CATEGORY_ORDER = [
   ServiceType.Membership,
+  COSTUME_CATEGORY,
 ] as const;
 
 const COSTUME_CHART_COLORS = ["#818CF8", "#F472B6"];
@@ -159,7 +166,7 @@ function exportReport(report: ReportSummary, txns: Transaction[] | undefined, pe
   csv.push("");
   csv.push("Revenue by Category");
   csv.push("Category,Amount,Count");
-  for (const type of SERVICE_ORDER) {
+  for (const type of CATEGORY_ORDER) {
     const data = report.byCategory[type];
     if (data) csv.push(`${CATEGORY_LABELS[type] || type},${data.total},${data.count}`);
   }
@@ -192,23 +199,36 @@ function exportReport(report: ReportSummary, txns: Transaction[] | undefined, pe
 }
 
 export function ReportsPage() {
-  const [period, setPeriod] = useState("daily");
+  const [period, setPeriod] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const invalidRange = period === "custom" && !!from && !!to && from > to;
+  const customEmpty = period === "custom" && !from && !to;
+  const skipReport = invalidRange || customEmpty;
+  const hasFilter = period !== "all" || !!from || !!to;
+  const reportParams =
+    period === "custom"
+      ? { period: "custom", from: from || undefined, to: to || undefined }
+      : { period };
   const { data: report, isLoading: reportLoading } = useGetRevenueReportQuery(
-    { period },
-    { refetchOnMountOrArgChange: true },
+    reportParams,
+    { refetchOnMountOrArgChange: true, skip: skipReport },
   );
   const { data: txns, isLoading: txnsLoading } = useGetTransactionListQuery(
-    { period },
-    { refetchOnMountOrArgChange: true },
+    reportParams,
+    { refetchOnMountOrArgChange: true, skip: skipReport },
   );
   const { data: costumeStats, isLoading: costumeLoading } =
     useGetCostumesStatsQuery(undefined, { refetchOnMountOrArgChange: true });
 
+  const costumeReport = report?.costume;
+  const costSold = costumeReport?.sale.total ?? costumeStats?.totalRevenue ?? 0;
+  const costRent = costumeReport?.rent.total ?? costumeStats?.totalRentRevenue ?? 0;
   const costumeChartData = [
-    { name: "Sold", revenue: costumeStats?.totalRevenue ?? 0, items: costumeStats?.totalSoldQty ?? 0 },
-    { name: "Rent", revenue: costumeStats?.totalRentRevenue ?? 0, items: costumeStats?.totalRentQty ?? 0 },
+    { name: "Sold", revenue: costSold, items: costumeReport?.sale.count ?? costumeStats?.totalSoldQty ?? 0 },
+    { name: "Rent", revenue: costRent, items: costumeReport?.rent.count ?? costumeStats?.totalRentQty ?? 0 },
   ];
-  const costumeTotal = (costumeStats?.totalRevenue ?? 0) + (costumeStats?.totalRentRevenue ?? 0);
+  const costumeTotal = costSold + costRent;
   const hasCostumeRevenue = costumeTotal > 0 || (costumeStats?.totalCostumes ?? 0) > 0;
 
   return (
@@ -222,13 +242,27 @@ export function ReportsPage() {
             Revenue analytics and transaction history
           </p>
         </div>
-        <GhostButton
-          size="sm"
-          onClick={() => report && exportReport(report, txns, period)}
-          disabled={!report}
-        >
-          <IoDownload size={15} /> Export
-        </GhostButton>
+        <div className="flex items-center gap-2">
+          {hasFilter && (
+            <GhostButton
+              size="sm"
+              onClick={() => {
+                setPeriod("all");
+                setFrom("");
+                setTo("");
+              }}
+            >
+              <IoCloseCircle size={15} /> Clear Filter
+            </GhostButton>
+          )}
+          <GhostButton
+            size="sm"
+            onClick={() => report && exportReport(report, txns, period)}
+            disabled={!report}
+          >
+            <IoDownload size={15} /> Export
+          </GhostButton>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
@@ -251,6 +285,38 @@ export function ReportsPage() {
           </button>
         ))}
       </div>
+
+      {period === "custom" && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 animate-fade-up">
+          <div className="w-full sm:w-48 space-y-2">
+            <Input
+              label="From"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="font-mono"
+            />
+          </div>
+          <div className="w-full sm:w-48 space-y-2">
+            <Input
+              label="To"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="font-mono"
+            />
+          </div>
+          {invalidRange ? (
+            <p className="text-xs font-bold text-danger sm:pb-3">
+              From date must be on or before To date
+            </p>
+          ) : customEmpty ? (
+            <p className="text-xs font-bold text-fg-muted sm:pb-3">
+              Select a start date to view the report
+            </p>
+          ) : null}
+        </div>
+      )}
 
       {reportLoading ? (
         <div className="space-y-4">
@@ -302,7 +368,7 @@ export function ReportsPage() {
                   Revenue Trend
                 </h3>
                 <div className="flex items-center gap-4">
-                  {SERVICE_ORDER.map((type) => (
+                  {CATEGORY_ORDER.map((type) => (
                     <div key={type} className="flex items-center gap-1.5">
                       <span
                         className="w-2.5 h-2.5 rounded-full"
@@ -316,7 +382,86 @@ export function ReportsPage() {
                 </div>
               </div>
 
-              {report.dailyRevenue.length > 0 ? (
+              {report.dailyRevenue.length === 0 ? (
+                <div className="h-80 sm:h-95 flex flex-col items-center justify-center text-center px-6">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                    style={{
+                      background: "var(--glow-aqua)",
+                      color: "var(--accent-aqua)",
+                    }}
+                  >
+                    <IoBarChartOutline size={28} />
+                  </div>
+                  <h3 className="text-sm font-bold text-fg mb-1">
+                    No revenue data for {periods.find((p) => p.key === period)?.label}
+                  </h3>
+                  <p className="text-xs max-w-xs text-fg-dim">
+                    Record transactions from the Billing screen and your revenue
+                    trend chart will show up here automatically.
+                  </p>
+                </div>
+              ) : report.dailyRevenue.length === 1 ? (
+                <div className="h-80 sm:h-95">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={report.dailyRevenue}
+                      margin={{ top: 10, right: 12, left: 0, bottom: 0 }}
+                      barCategoryGap="40%"
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--glass-border)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="period"
+                        tick={{
+                          fill: "var(--text-muted)",
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                        axisLine={false}
+                        tickLine={false}
+                        dy={8}
+                      />
+                      <YAxis
+                        tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                        dx={-4}
+                      />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      />
+                      <Legend
+                        wrapperStyle={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--text-secondary)",
+                        }}
+                      />
+                      {CATEGORY_ORDER.map((type) => (
+                        <Bar
+                          key={type}
+                          dataKey={`byCategory.${type}`}
+                          stackId="revenue"
+                          fill={CATEGORY_COLORS[type]}
+                          name={CATEGORY_LABELS[type]}
+                          maxBarSize={64}
+                          radius={
+                            type === CATEGORY_ORDER[CATEGORY_ORDER.length - 1]
+                              ? [10, 10, 0, 0]
+                              : [0, 0, 0, 0]
+                          }
+                        />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
                 <div className="h-80 sm:h-95">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -324,7 +469,7 @@ export function ReportsPage() {
                       margin={{ top: 10, right: 12, left: 0, bottom: 0 }}
                     >
                       <defs>
-                        {SERVICE_ORDER.map((type) => (
+                        {CATEGORY_ORDER.map((type) => (
                           <linearGradient
                             key={type}
                             id={`grad-${type}`}
@@ -382,7 +527,7 @@ export function ReportsPage() {
                           color: "var(--text-secondary)",
                         }}
                       />
-                      {SERVICE_ORDER.map((type) => (
+                      {CATEGORY_ORDER.map((type) => (
                         <Area
                           key={type}
                           type="monotone"
@@ -396,25 +541,6 @@ export function ReportsPage() {
                       ))}
                     </AreaChart>
                   </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="h-80 sm:h-95 flex flex-col items-center justify-center text-center px-6">
-                  <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                    style={{
-                      background: "var(--glow-aqua)",
-                      color: "var(--accent-aqua)",
-                    }}
-                  >
-                    <IoBarChartOutline size={28} />
-                  </div>
-                  <h3 className="text-sm font-bold text-fg mb-1">
-                    No revenue data for {periods.find((p) => p.key === period)?.label}
-                  </h3>
-                  <p className="text-xs max-w-xs text-fg-dim">
-                    Record transactions from the Billing screen and your revenue
-                    trend chart will show up here automatically.
-                  </p>
                 </div>
               )}
             </GlassCard>
@@ -624,7 +750,7 @@ export function ReportsPage() {
                   Revenue by Category
                 </h3>
                 <div className="space-y-3">
-                  {SERVICE_ORDER.map((type) => {
+                  {CATEGORY_ORDER.map((type) => {
                     const data = report.byCategory[type];
                     const amount = data?.total ?? 0;
                     const count = data?.count ?? 0;
