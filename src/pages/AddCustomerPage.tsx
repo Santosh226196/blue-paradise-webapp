@@ -33,7 +33,7 @@ const customerSchema = z.object({
   aadhaarNumber: z
     .string()
     .regex(
-      /^\d{4}\s?\d{4}\s?\d{4}$/,
+      /^[2-9]\d{3}\s?\d{4}\s?\d{4}$/,
       "Enter a valid 12-digit Aadhaar number (XXXX XXXX XXXX)",
     )
     .optional()
@@ -108,16 +108,33 @@ export function AddCustomerPage() {
       const result = await createCustomer(payload).unwrap();
       showToast("success", `${result.name} registered successfully!`);
       navigate(`/customers/${result.id}`);
-    } catch {
-      showToast("error", "A customer with this mobile already exists.");
-      setErrorModal({
-        open: true,
-        message:
-          "A customer with this mobile number already exists in the system. Please use a different mobile number.",
-      });
-      setError("mobile", {
-        message: "A customer with this mobile already exists",
-      });
+    } catch (err: unknown) {
+      const status =
+        err && typeof err === "object" && "status" in err
+          ? (err as { status?: number }).status
+          : undefined;
+      const message =
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        (err as { data?: { message?: string } }).data?.message
+          ? (err as { data: { message: string } }).data.message
+          : "Registration failed. Please try again.";
+
+      if (status === 409 || /already exists/i.test(message)) {
+        showToast("error", "A customer with this mobile already exists.");
+        setErrorModal({
+          open: true,
+          message:
+            "A customer with this mobile number already exists in the system. Please use a different mobile number.",
+        });
+        setError("mobile", {
+          message: "A customer with this mobile already exists",
+        });
+      } else {
+        showToast("error", message);
+        setErrorModal({ open: true, message });
+      }
     }
   }
 
