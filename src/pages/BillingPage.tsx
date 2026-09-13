@@ -80,7 +80,6 @@ export function BillingPage() {
 
   function handlePay() {
     if (!selectedCustomer || !selectedService) return;
-    setConfirmModal(false);
     const isMembership = selectedService === ServiceType.Membership;
     const payloadServiceName = isMembership && selectedPlan
       ? selectedPlan.name
@@ -112,6 +111,7 @@ export function BillingPage() {
             err?.data?.message ||
             "Payment processing failed. Please check the details and try again.",
         });
+        setConfirmModal(false);
       });
   }
 
@@ -515,6 +515,7 @@ export function BillingPage() {
             : SERVICE_AMOUNTS[selectedService!],
         )} for ${selectedCustomer?.name} via ${paymentMethod}?`}
         confirmLabel={paymentLoading ? "Processing..." : "Pay Now"}
+        confirmLoading={paymentLoading}
         cancelLabel="Cancel"
       />
 
