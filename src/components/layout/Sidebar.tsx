@@ -21,6 +21,8 @@ import {
   IoMegaphone,
   IoFitnessOutline,
   IoFitness,
+  IoPersonOutline,
+  IoPerson,
   IoConstructOutline,
   IoConstruct,
   IoQrCodeOutline,
@@ -79,6 +81,12 @@ const operationsNavItems: NavItemData[] = [
     iconOutline: IoFitnessOutline,
     iconFilled: IoFitness,
     label: "Staff",
+  },
+  {
+    to: "/coaches",
+    iconOutline: IoPersonOutline,
+    iconFilled: IoPerson,
+    label: "Coaches",
   },
   // {
   //   to: "/schedule",

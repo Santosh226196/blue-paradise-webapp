@@ -178,6 +178,8 @@ export interface MembershipBatch {
   maxMembers: number;
   currentMembers: number;
   status: "ACTIVE" | "UPCOMING" | "COMPLETED" | "CANCELLED";
+  coachId?: string | null;
+  coach?: string;
   createdAt: string;
 }
 
@@ -215,6 +217,7 @@ export interface ActiveBatchForCustomer {
 }
 
 export const StaffRole = {
+  Coach: "COACH",
   Lifeguard: "LIFEGUARD",
   Receptionist: "RECEPTIONIST",
   Manager: "MANAGER",
