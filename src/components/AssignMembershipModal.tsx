@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import {
   useGetMembershipPlansQuery,
 } from "@/store/api/membershipPlansApi";
@@ -63,6 +64,7 @@ const planDurationLabels: Record<string, string> = {
   const { data: settings, isLoading: settingsLoading } = useGetSettingsQuery();
   const [createTransaction, { isLoading: saving }] = useCreateTransactionMutation();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
@@ -102,9 +104,9 @@ const planDurationLabels: Record<string, string> = {
     setErrorMessage("");
     const serviceName = selectedPlan.name;
     const amount = selectedPlan.price;
-    const startDate = new Date().toISOString();
+const startDate = new Date().toISOString();
     try {
-      await createTransaction({
+      const result = await createTransaction({
         customerId,
         serviceType: ServiceType.Membership,
         serviceName,
@@ -118,6 +120,7 @@ const planDurationLabels: Record<string, string> = {
       reset();
       onClose();
       onAssigned?.();
+      navigate(`/bill/${result.id}`);
     } catch (err: unknown) {
       const message =
         (err as { data?: { message?: string } })?.data?.message ||
