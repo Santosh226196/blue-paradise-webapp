@@ -64,6 +64,7 @@ export function Modal({
   message,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
+  confirmLoading,
   showActions = true,
   children,
 }: ModalProps) {
@@ -72,11 +73,11 @@ export function Modal({
   useEffect(() => {
     if (!isOpen) return;
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !confirmLoading) onClose();
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, confirmLoading]);
 
   useEffect(() => {
     if (isOpen) {
@@ -99,7 +100,7 @@ export function Modal({
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-up"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        if (e.target === overlayRef.current && !confirmLoading) onClose();
       }}
     >
       <div
@@ -116,7 +117,8 @@ export function Modal({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted cursor-pointer"
+            disabled={confirmLoading}
+            className="absolute top-4 right-4 p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-95 text-fg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             <IoClose size={18} />
           </button>
@@ -153,18 +155,42 @@ export function Modal({
                 <>
                   <button
                     onClick={onClose}
-                    className="flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.97] liquid-glass text-fg cursor-pointer"
+                    disabled={confirmLoading}
+                    className="flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.97] liquid-glass text-fg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {cancelLabel}
                   </button>
                   <button
                     onClick={() => {
+                      if (confirmLoading) return;
                       onConfirm?.();
                       onClose();
                     }}
-                    className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-[0.97] hover:brightness-110 shadow-lg cursor-pointer"
+                    disabled={confirmLoading}
+                    className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-[0.97] hover:brightness-110 shadow-lg inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                     style={{ background: v.accentColor }}
                   >
+                    {confirmLoading && (
+                      <svg
+                        className="animate-spin h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                    )}
                     {confirmLabel}
                   </button>
                 </>

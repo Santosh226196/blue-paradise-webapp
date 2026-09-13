@@ -485,6 +485,7 @@ export interface ModalProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  confirmLoading?: boolean;
   showActions?: boolean;
   children?: React.ReactNode;
 }
