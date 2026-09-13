@@ -360,14 +360,15 @@ export interface RevenueByPeriod {
   period: string;
   total: number;
   count: number;
-  byCategory: Record<ServiceType, number>;
+  byCategory: Record<string, number>;
 }
 
 export interface ReportSummary {
   totalRevenue: number;
   totalTransactions: number;
-  byCategory: Record<ServiceType, { total: number; count: number }>;
+  byCategory: Record<string, { total: number; count: number }>;
   dailyRevenue: RevenueByPeriod[];
+  costume?: { sale: { total: number; count: number }; rent: { total: number; count: number } };
 }
 
 // ── Printer Types ──
