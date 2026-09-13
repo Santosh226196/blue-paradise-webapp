@@ -35,9 +35,22 @@ import { IdCardDownloader } from "@/components/IdCardDownloader";
 import { useToast } from "@/components/Toast";
 import { compressImageFile } from "@/lib/utils";
 
-export function StaffPage() {
+export function StaffPage({
+  title = "Staff",
+  subtitle = "Manage team members and staff",
+  forcedRole,
+}: {
+  title?: string;
+  subtitle?: string;
+  forcedRole?: string;
+}) {
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [roleFilterState, setRoleFilter] = useState<string>("ALL");
+  const roleFilter = forcedRole ?? roleFilterState;
+  const defaultRole =
+    forcedRole && (Object.values(StaffRole) as string[]).includes(forcedRole)
+      ? (forcedRole as StaffRole)
+      : StaffRole.Lifeguard;
   const { data: staff, isLoading } = useGetStaffQuery({
     search,
     role: roleFilter === "ALL" ? undefined : roleFilter,
@@ -52,7 +65,7 @@ export function StaffPage() {
   const [downloadFor, setDownloadFor] = useState<Staff | null>(null);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
-  const [role, setRole] = useState<StaffRole>(StaffRole.Lifeguard);
+  const [role, setRole] = useState<StaffRole>(defaultRole);
   const [specialization, setSpecialization] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -65,7 +78,7 @@ export function StaffPage() {
   function resetForm() {
     setName("");
     setMobile("");
-    setRole(StaffRole.Lifeguard);
+    setRole(defaultRole);
     setSpecialization("");
     setIsAvailable(true);
     setPhotoUrl(null);
@@ -189,10 +202,17 @@ export function StaffPage() {
   }
 
   const roleLabels: Record<string, string> = {
+    COACH: "Coach",
     LIFEGUARD: "Lifeguard",
     RECEPTIONIST: "Receptionist",
     MANAGER: "Manager",
   };
+
+  const noun = forcedRole ? "Coach" : "Staff";
+  const filterRoles = forcedRole ? [forcedRole] : ["ALL", ...Object.values(StaffRole)];
+  const formRoles: StaffRole[] = forcedRole
+    ? [forcedRole as StaffRole]
+    : Object.values(StaffRole);
 
   if (isLoading)
     return (
@@ -217,10 +237,10 @@ export function StaffPage() {
           <h1
             className="font-display text-2xl sm:text-3xl font-bold text-fg"
           >
-            Staff
+            {title}
           </h1>
           <p className="text-sm mt-0.5 text-fg-muted">
-            Manage team members and staff
+            {subtitle}
           </p>
         </div>
         <PrimaryButton
@@ -230,7 +250,7 @@ export function StaffPage() {
             setShowForm(true);
           }}
         >
-          <IoAdd size={16} /> Add Staff
+          <IoAdd size={16} /> Add {noun}
         </PrimaryButton>
       </div>
 
@@ -242,7 +262,7 @@ export function StaffPage() {
       />
 
       <div className="flex gap-2 flex-wrap">
-        {["ALL", ...Object.values(StaffRole)].map((r) => (
+        {filterRoles.map((r) => (
           <button
             key={r}
             onClick={() => setRoleFilter(r)}
@@ -268,7 +288,7 @@ export function StaffPage() {
             <h2
               className="text-sm font-bold text-fg"
             >
-              {editingId ? "Edit Staff" : "Add Staff"}
+              {editingId ? `Edit ${noun}` : `Add ${noun}`}
             </h2>
             <button onClick={resetForm} className="text-fg-muted cursor-pointer">
               <IoClose size={20} />
@@ -362,7 +382,7 @@ export function StaffPage() {
                   Role
                 </label>
                 <div className="flex gap-2 flex-wrap">
-                  {Object.values(StaffRole).map((r) => (
+                  {formRoles.map((r) => (
                     <button
                       key={r}
                       onClick={() => setRole(r)}
@@ -428,7 +448,7 @@ export function StaffPage() {
               fullWidth
               disabled={!name || !mobile}
             >
-              {editingId ? "Update Staff" : "Add Staff"}
+              {editingId ? `Update ${noun}` : `Add ${noun}`}
             </PrimaryButton>
           </div>
         </GlassCard>
@@ -581,11 +601,15 @@ export function StaffPage() {
       ) : (
         <EmptyState
           icon={<IoPeople size={36} />}
-          title="No staff members"
-          description="Add your first staff member to get started"
+          title={forcedRole ? "No coaches" : "No staff members"}
+          description={
+            forcedRole
+              ? "Add your first coach to get started"
+              : "Add your first staff member to get started"
+          }
           action={
             <PrimaryButton onClick={() => setShowForm(true)}>
-              <IoAdd size={18} /> Add Staff
+              <IoAdd size={18} /> Add {noun}
             </PrimaryButton>
           }
         />

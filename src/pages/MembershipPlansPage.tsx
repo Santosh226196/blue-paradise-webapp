@@ -11,6 +11,7 @@ import {
   useUpdateMembershipBatchMutation,
   useDeleteMembershipBatchMutation,
 } from "@/store/api/membershipBatchesApi";
+import { useGetStaffQuery } from "@/store/api/staffApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -32,6 +33,7 @@ import {
   IoClose,
   IoPeople,
   IoTime,
+  IoPerson,
 } from "react-icons/io5";
 
 const DURATIONS = [
@@ -412,6 +414,7 @@ function BatchesTab({
 }) {
   const { data: batches, isLoading } = useGetMembershipBatchesQuery();
   const { data: plans } = useGetMembershipPlansQuery();
+  const { data: coaches } = useGetStaffQuery({ role: "COACH" });
   const [createBatch] = useCreateMembershipBatchMutation();
   const [updateBatch] = useUpdateMembershipBatchMutation();
   const [deleteBatch] = useDeleteMembershipBatchMutation();
@@ -428,6 +431,7 @@ function BatchesTab({
   const [endTime, setEndTime] = useState("");
   const [level, setLevel] = useState<BatchLevel>("BEGINNER");
   const [ageGroup, setAgeGroup] = useState<AgeGroup>("ALL");
+  const [coachId, setCoachId] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
   const [status, setStatus] = useState<BatchStatus>("ACTIVE");
   const [batchError, setBatchError] = useState("");
@@ -443,6 +447,7 @@ function BatchesTab({
     setEndTime("");
     setLevel("BEGINNER");
     setAgeGroup("ALL");
+    setCoachId("");
     setMaxMembers("");
     setStatus("ACTIVE");
     setEditingId(null);
@@ -461,6 +466,7 @@ function BatchesTab({
     endTime?: string;
     level?: BatchLevel;
     ageGroup?: AgeGroup;
+    coachId?: string | null;
     maxMembers: number;
     status: BatchStatus;
   }) {
@@ -475,12 +481,14 @@ function BatchesTab({
     setEndTime(batch.endTime ?? "");
     setLevel(batch.level ?? "BEGINNER");
     setAgeGroup(batch.ageGroup ?? "ALL");
+    setCoachId(batch.coachId ?? "");
     setMaxMembers(String(batch.maxMembers));
     setStatus(batch.status);
     setShowForm(true);
   }
 
   async function handleSave() {
+    const selectedCoach = coaches?.find((c) => c.id === coachId);
     const payload: Record<string, unknown> = {
       name,
       description,
@@ -490,6 +498,8 @@ function BatchesTab({
       endTime,
       level,
       ageGroup,
+      coachId: coachId || null,
+      coach: selectedCoach?.name ?? "",
       maxMembers: Number(maxMembers),
       status,
     };
@@ -669,6 +679,39 @@ function BatchesTab({
 
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                Coach
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {coaches && coaches.length > 0 ? (
+                  coaches.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setCoachId(coachId === c.id ? "" : c.id)}
+                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-9 cursor-pointer"
+                      style={{
+                        background:
+                          coachId === c.id ? "var(--glow-aqua)" : "var(--glass-bg)",
+                        border: `1.5px solid ${coachId === c.id ? "var(--accent-aqua)" : "var(--glass-border)"}`,
+                        color:
+                          coachId === c.id
+                            ? "var(--accent-aqua)"
+                            : "var(--text-secondary)",
+                      }}
+                    >
+                      <IoPerson size={12} className="inline mr-1" />
+                      {c.name}
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-fg-muted">
+                    No coaches yet. Add a coach first from the Coaches page.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
                 Status
               </label>
               <div className="flex gap-2 flex-wrap">
@@ -790,6 +833,12 @@ function BatchesTab({
                         {ageGroupLabels[batch.ageGroup]}
                       </span>
                     )}
+                    {batch.coach && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-glass text-accent">
+                        <IoPerson size={10} className="inline mr-1" />
+                        {batch.coach}
+                      </span>
+                    )}
                   </div>
                 )}
                 <p className="text-xs mb-4 text-fg-dim">{batch.description}</p>
@@ -826,6 +875,7 @@ function BatchesTab({
                         endTime: batch.endTime,
                         level: batch.level,
                         ageGroup: batch.ageGroup,
+                        coachId: batch.coachId,
                         maxMembers: batch.maxMembers,
                         status: batch.status,
                       })

@@ -23,6 +23,7 @@ const TransactionDetailsPage = lazy(() => import("./pages/TransactionDetailsPage
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const MembershipPlansPage = lazy(() => import("./pages/MembershipPlansPage").then(m => ({ default: m.MembershipPlansPage })));
 const StaffPage = lazy(() => import("./pages/StaffPage").then(m => ({ default: m.StaffPage })));
+const CoachesPage = lazy(() => import("./pages/CoachesPage").then(m => ({ default: m.CoachesPage })));
 const AttendancePage = lazy(() => import("./pages/AttendancePage").then(m => ({ default: m.AttendancePage })));
 const DuePaymentsPage = lazy(() => import("./pages/DuePaymentsPage").then(m => ({ default: m.DuePaymentsPage })));
 const SchedulePage = lazy(() => import("./pages/SchedulePage").then(m => ({ default: m.SchedulePage })));
@@ -69,6 +70,7 @@ function AppContent() {
           <Route path="settings" element={<Suspense fallback={<RouteSpinner />}><SettingsPage /></Suspense>} />
           <Route path="membership-plans" element={<Suspense fallback={<RouteSpinner />}><MembershipPlansPage /></Suspense>} />
           <Route path="staff" element={<Suspense fallback={<RouteSpinner />}><StaffPage /></Suspense>} />
+          <Route path="coaches" element={<Suspense fallback={<RouteSpinner />}><CoachesPage /></Suspense>} />
           <Route path="attendance" element={<Suspense fallback={<RouteSpinner />}><AttendancePage /></Suspense>} />
           <Route path="due-payments" element={<Suspense fallback={<RouteSpinner />}><DuePaymentsPage /></Suspense>} />
           <Route path="schedule" element={<Suspense fallback={<RouteSpinner />}><SchedulePage /></Suspense>} />

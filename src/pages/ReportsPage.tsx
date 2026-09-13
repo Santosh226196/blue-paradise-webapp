@@ -193,13 +193,16 @@ function exportReport(report: ReportSummary, txns: Transaction[] | undefined, pe
 
 export function ReportsPage() {
   const [period, setPeriod] = useState("daily");
-  const { data: report, isLoading: reportLoading } = useGetRevenueReportQuery({
-    period,
-  });
-  const { data: txns, isLoading: txnsLoading } = useGetTransactionListQuery({
-    period,
-  });
-  const { data: costumeStats, isLoading: costumeLoading } = useGetCostumesStatsQuery();
+  const { data: report, isLoading: reportLoading } = useGetRevenueReportQuery(
+    { period },
+    { refetchOnMountOrArgChange: true },
+  );
+  const { data: txns, isLoading: txnsLoading } = useGetTransactionListQuery(
+    { period },
+    { refetchOnMountOrArgChange: true },
+  );
+  const { data: costumeStats, isLoading: costumeLoading } =
+    useGetCostumesStatsQuery(undefined, { refetchOnMountOrArgChange: true });
 
   const costumeChartData = [
     { name: "Sold", revenue: costumeStats?.totalRevenue ?? 0, items: costumeStats?.totalSoldQty ?? 0 },
