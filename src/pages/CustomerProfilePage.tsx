@@ -56,17 +56,27 @@ type Tab = "overview" | "visits" | "membership" | "payments" | "costumes";
 export function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: customer, isLoading } = useGetCustomerQuery(id!);
+  const { data: customer, isLoading } = useGetCustomerQuery(id!, {
+    refetchOnMountOrArgChange: true,
+  });
   const [updateCustomer] = useUpdateCustomerMutation();
   const [deleteCustomer, { isLoading: isDeleting }] =
     useDeleteCustomerMutation();
   const { showToast } = useToast();
-  const { data: visits } = useGetCustomerVisitsQuery(id!);
+  const { data: visits } = useGetCustomerVisitsQuery(id!, {
+    refetchOnMountOrArgChange: true,
+  });
   const { data: transactions, refetch: refetchTransactions } =
-    useGetCustomerTransactionsQuery(id!);
+    useGetCustomerTransactionsQuery(id!, {
+      refetchOnMountOrArgChange: true,
+    });
   const { data: memberships, refetch: refetchMemberships } =
-    useGetCustomerMembershipsQuery(id!);
-  const { data: costumeTxns } = useGetCustomerCostumeTransactionsQuery(id!);
+    useGetCustomerMembershipsQuery(id!, {
+      refetchOnMountOrArgChange: true,
+    });
+  const { data: costumeTxns } = useGetCustomerCostumeTransactionsQuery(id!, {
+    refetchOnMountOrArgChange: true,
+  });
   const [removeBatchFromMembership] = useRemoveBatchFromMembershipMutation();
   const settings = useCachedSettings();
 
@@ -582,23 +592,59 @@ export function CustomerProfilePage() {
             </div>
             {activeMembership ? (
               <div
-                className="flex items-center justify-between p-4 rounded-xl"
+                className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 rounded-xl"
                 style={{
                   background: "var(--glow-aqua)",
                   border: "1px solid var(--accent-aqua)",
                 }}
               >
-                <div>
-                  <p className="text-sm font-bold text-fg">
-                    {activeMembership.membershipType} Membership
-                  </p>
-                  <p className="text-xs font-mono mt-0.5 text-fg-muted">
-                    {formatDate(activeMembership.startDate)} —{" "}
-                    {formatDate(activeMembership.endDate)}
-                  </p>
+                <div className="min-w-0 flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "var(--accent-aqua)", color: "white" }}
+                  >
+                    <IoWater size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-fg truncate">
+                      {activeMembership.planName ??
+                        `${activeMembership.membershipType} Membership`}
+                    </p>
+                    <p className="text-[11px] font-mono text-fg-muted">
+                      {formatDate(activeMembership.startDate)} —{" "}
+                      {formatDate(activeMembership.endDate)}
+                    </p>
+                  </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-accent text-white">
-                  Active
+
+                <div className="flex items-center gap-1.5 text-xs font-bold text-fg">
+                  <IoCalendar size={13} className="text-accent" />
+                  {Math.max(0, Math.ceil((new Date(activeMembership.endDate).getTime() - Date.now()) / 86400000))}{" "}
+                  days left
+                </div>
+
+                {activeMembership.totalSessions != null && (
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-fg">
+                    <IoTime size={13} className="text-accent" />
+                    {activeMembership.usedSessions ?? 0}/{activeMembership.totalSessions} sessions
+                  </div>
+                )}
+
+                {activeMembership.batchName && (
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-accent">
+                    <IoPeople size={13} />
+                    {activeMembership.batchName}
+                  </div>
+                )}
+
+                <span className="text-sm font-bold font-mono text-danger ml-auto">
+                  {formatCurrency(activeMembership.amount)}
+                </span>
+
+                <span
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-accent text-white"
+                >
+                  {activeMembership.status}
                 </span>
               </div>
             ) : (

@@ -67,7 +67,7 @@ describe("CustomerProfilePage", () => {
     expect(screen.getByText("Member Since")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Overview/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Visits/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Membership/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Membership" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Payments/ })).toBeInTheDocument();
   });
 
@@ -118,7 +118,7 @@ describe("CustomerProfilePage", () => {
     expect(screen.getByText("MONTHLY Membership")).toBeInTheDocument();
     expect(screen.getByText("WALK IN")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Membership/ }));
+    await user.click(screen.getByRole("button", { name: "Membership" }));
     expect(await screen.findByText("Amount Paid")).toBeInTheDocument();
     expect(screen.getAllByText("₹1,500").length).toBeGreaterThan(0);
 

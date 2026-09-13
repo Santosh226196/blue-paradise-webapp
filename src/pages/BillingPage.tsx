@@ -575,6 +575,17 @@ export function BillingPage() {
         title="Payment Failed"
         message={errorModal.message}
       />
+
+      {/* Processing overlay */}
+      {paymentLoading && (
+        <div
+          className="fixed inset-0 z-[250] flex flex-col items-center justify-center gap-4 animate-fade-in"
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
+        >
+          <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-bold text-white">Processing payment...</p>
+        </div>
+      )}
     </div>
   );
 }

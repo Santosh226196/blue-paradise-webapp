@@ -5,7 +5,7 @@ import { baseQueryFor } from "./base";
 export const customersApi = createApi({
   reducerPath: "customersApi",
   baseQuery: baseQueryFor("/customers"),
-  tagTypes: ["Customer", "Visit", "Membership"],
+  tagTypes: ["Customer", "Visit", "Membership", "Transaction"],
   endpoints: (builder) => ({
     getCustomers: builder.query<Customer[], { search?: string; type?: string }>({
       query: (params) => ({ url: "/", params }),
@@ -45,7 +45,7 @@ export const customersApi = createApi({
     }),
     getCustomerTransactions: builder.query<Transaction[], string>({
       query: (customerId) => `/${customerId}/transactions`,
-      providesTags: [],
+      providesTags: ["Transaction"],
     }),
     getCustomerCostumeTransactions: builder.query<CostumeTransaction[], string>({
       query: (customerId) => `/${customerId}/costume-transactions`,
