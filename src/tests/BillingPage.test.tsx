@@ -79,6 +79,43 @@ describe("BillingPage", () => {
     expect(screen.getAllByText("Selected Member").length).toBeGreaterThan(0);
   });
 
+  it("shows the payment step when a plan is selected from a preselected customer route", async () => {
+    const plans = [
+      {
+        id: "p1",
+        name: "Monthly Gold",
+        description: "",
+        duration: "MONTHLY",
+        price: 3000,
+        features: [],
+        isActive: true,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      },
+    ];
+    mockApi("/customers/c7", {
+      id: "c7",
+      name: "Bob Smith",
+      mobile: "9876599999",
+      firstVisitAt: "2026-01-01T00:00:00.000Z",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    mockApi("/customers", []);
+    mockApi("/membership-plans", plans);
+    renderWithProviders(
+      <Routes>
+        <Route path="/billing/:customerId" element={<BillingPage />} />
+      </Routes>,
+      { preloadedState: authenticatedState(), initialEntries: ["/billing/c7"] }
+    );
+
+    fireEvent.click(await screen.findByText("Monthly Gold"));
+    fireEvent.click(screen.getByText(/Continue to Payment/));
+
+    expect(screen.getByText("Select Payment Method")).toBeInTheDocument();
+    expect(screen.getByText("Total Due")).toBeInTheDocument();
+  });
+
   it("lets the cashier pick a membership plan and submits the planId on payment", async () => {
     const plans = [
       {

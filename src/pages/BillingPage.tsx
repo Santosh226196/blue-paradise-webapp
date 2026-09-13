@@ -6,6 +6,7 @@ import {
 } from "@/store/api/customersApi";
 import { useCreateTransactionMutation } from "@/store/api/billingApi";
 import { useGetMembershipPlansQuery } from "@/store/api/membershipPlansApi";
+import { useGetSettingsQuery } from "@/store/api/settingsApi";
 import {
   GlassCard,
   PrimaryButton,
@@ -56,6 +57,8 @@ export function BillingPage() {
   );
   const { data: plans, isLoading: plansLoading } =
     useGetMembershipPlansQuery();
+  const { data: settings, isLoading: settingsLoading } =
+    useGetSettingsQuery();
   const [step, setStep] = useState(customerId ? 1 : 0);
   const [createTransaction, { isLoading: paymentLoading }] =
     useCreateTransactionMutation();
@@ -71,12 +74,11 @@ export function BillingPage() {
   }>({ open: false, message: "" });
 
   useEffect(() => {
-    if (preselectedCustomer && !selectedCustomer) {
-      setSelectedCustomer(preselectedCustomer);
-      setSelectedService(ServiceType.Membership);
-      if (step === 0) setStep(1);
-    }
-  }, [preselectedCustomer, selectedCustomer, step]);
+    if (!preselectedCustomer) return;
+    setSelectedCustomer(preselectedCustomer);
+    setSelectedService(ServiceType.Membership);
+    if (step === 0) setStep(1);
+  }, [preselectedCustomer, step]);
 
   function handlePay() {
     if (!selectedCustomer || !selectedService) return;
@@ -388,6 +390,52 @@ export function BillingPage() {
                   ))}
                 </div>
               </div>
+
+                {paymentMethod === "UPI" && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2.5">
+                      Scan to Pay
+                    </p>
+                    {settingsLoading ? (
+                      <div className="w-full aspect-square max-w-[240px] mx-auto flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : settings?.scannerImage ? (
+                      <div
+                        className="rounded-2xl overflow-hidden p-5"
+                        style={{
+                          background: "white",
+                          border: "1px solid var(--glass-border)",
+                        }}
+                      >
+                        <img
+                          src={settings.scannerImage}
+                          alt="Payment Scanner QR Code"
+                          className="block object-contain mx-auto"
+                          style={{ maxWidth: "240px", maxHeight: "240px", width: "100%" }}
+                        />
+                        <p className="text-[11px] text-slate-400 mt-3 text-center">
+                          Scan to pay via {settings.businessName ?? "UPI"} and confirm with the front desk.
+                        </p>
+                      </div>
+                    ) : (
+                      <div
+                        className="rounded-2xl p-5 text-center"
+                        style={{
+                          background: "rgba(95,217,214,0.08)",
+                          border: "1px dashed var(--accent-aqua)",
+                        }}
+                      >
+                        <IoQrCodeOutline size={28} className="mx-auto mb-2 text-fg-muted" />
+                        <p className="text-xs text-slate-400">
+                          {settings?.businessName
+                            ? `${settings.businessName} — scanner not uploaded`
+                            : "No payment QR available. Please ask for payment details at the front desk."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
               <div className="flex gap-3">
                 <GhostButton
